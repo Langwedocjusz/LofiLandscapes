@@ -1,0 +1,26 @@
+#Directories
+.vs/
+bin/
+bin-obj/
+
+#Files
+*.vcxproj.user
+*.vcxproj.filters
+*.vcxproj
+*.sln
+
+###Build directory
+build/
+
+###Cmake files
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
