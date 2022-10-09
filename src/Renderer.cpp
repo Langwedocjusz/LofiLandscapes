@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Keycodes.h"
 
 #include "glad/glad.h"
 
@@ -14,7 +15,14 @@ void Renderer::OnUpdate() {
 }
 
 void Renderer::OnImGuiUpdate() {
+    if (!m_ShowMenu) return;
+
     ImGui::Begin("WE");
     ImGui::ColorEdit3("ClearColor", m_ClearColor);
     ImGui::End();
+}
+
+void Renderer::OnKeyPressed(int keycode, bool repeat) {
+    if (keycode == LOFI_KEY_ESCAPE && !repeat)
+        m_ShowMenu = (!m_ShowMenu);
 }

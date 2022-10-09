@@ -24,6 +24,24 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
     //initialize GLAD:
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         throw "Failed to initialize glad!";
+
+    //user pointer:
+    glfwSetWindowUserPointer(m_Window, &m_WindowData);
+
+    //callbacks:
+    glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode,
+                                    int action, int mods){
+        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+        switch(action) {
+            case GLFW_PRESS: {
+                KeyPressedEvent event(key, 0);
+                data.EventCallback(event);
+                break;
+            }
+        }
+    });
+
 }
 
 Window::~Window() {
@@ -38,3 +56,8 @@ void Window::OnUpdate() {
 bool Window::ShouldClose() {
     return glfwWindowShouldClose(m_Window);
 }
+
+void Window::setEventCallback(std::function<void(Event&)> callback) {
+    m_WindowData.EventCallback = callback;
+}
+

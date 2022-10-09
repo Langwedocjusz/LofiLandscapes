@@ -13,6 +13,9 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     ImGui_ImplGlfw_InitForOpenGL(m_Window.getGLFWPointer(), true);
     ImGui_ImplOpenGL3_Init();
     ImGui::StyleColorsDark();
+
+    //Redirect window callbacks to application's on event function
+    m_Window.setEventCallback(std::bind(&Application::OnEvent, this, std::placeholders::_1));
 }
 
 Application::~Application() {}
@@ -31,5 +34,16 @@ void Application::Run() {
 
         m_Window.OnUpdate();
     }
+}
+
+void Application::OnEvent(Event& e) {
+   EventType type = e.getEventType();
+
+   switch(type) {
+        case EventType::KeyPressed:
+            KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
+            m_Renderer.OnKeyPressed(ptr->getKeycode(), ptr->getRepeat());
+            break;
+   }
 }
 

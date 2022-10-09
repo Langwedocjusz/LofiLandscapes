@@ -9,6 +9,7 @@ public:
     ~Application();
 
     void Run();
+    void OnEvent(Event& e);
 private:
     Window m_Window;
     Renderer m_Renderer;
