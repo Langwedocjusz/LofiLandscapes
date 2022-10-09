@@ -1,18 +1,21 @@
-#Directories
-.vs/
-bin/
-bin-obj/
+###Actually sensible part:
 
-#Files
+#Build directory
+build/
+
+#Imgui config
+imgui.ini
+
+###Prevention:
+
+#Visual Studio files:
+.vs/
 *.vcxproj.user
 *.vcxproj.filters
 *.vcxproj
 *.sln
 
-###Build directory
-build/
-
-###Cmake files
+#Cmake files:
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
