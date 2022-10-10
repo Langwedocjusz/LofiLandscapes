@@ -79,6 +79,9 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
 
     //Enable vsync
     glfwSwapInterval(1);
+    
+    //Set initial viewport dimensions
+    glViewport(0, 0, m_WindowData.Width, m_WindowData.Height);
 }
 
 Window::~Window() {

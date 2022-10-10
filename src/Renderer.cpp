@@ -69,6 +69,8 @@ void Renderer::OnImGuiRender() {
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
     m_WindowWidth = width;
     m_WindowHeight = height;
+
+    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
 }
 
 void Renderer::OnKeyPressed(int keycode, bool repeat) {
