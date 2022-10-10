@@ -93,6 +93,14 @@ void Window::OnUpdate() {
     glfwPollEvents();
 }
 
+void Window::CaptureCursor() {
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::FreeCursor() {
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
 bool Window::ShouldClose() {
     return glfwWindowShouldClose(m_Window);
 }

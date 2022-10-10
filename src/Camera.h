@@ -55,6 +55,8 @@ public:
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
     void OnMouseMoved(float x, float y, unsigned int width, unsigned int height);
+
+    void setMouseInit(bool p) {m_MouseInit = p;}
 private:
     bool m_MouseInit = true;
     float m_MouseLastX = 0.0f, m_MouseLastY = 0.0f;

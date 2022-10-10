@@ -56,8 +56,6 @@ void Renderer::OnRender() {
 }
 
 void Renderer::OnImGuiRender() {
-    if (!m_ShowMenu) return;
-
     ImGui::Begin("WE");
     ImGui::ColorEdit3("ClearColor", m_ClearColor);
     ImGui::End();
@@ -71,9 +69,6 @@ void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
 }
 
 void Renderer::OnKeyPressed(int keycode, bool repeat) {
-    if (keycode == LOFI_KEY_ESCAPE && !repeat)
-        m_ShowMenu = (!m_ShowMenu);
-
     m_Camera.OnKeyPressed(keycode, repeat);
 
 }
@@ -84,4 +79,8 @@ void Renderer::OnKeyReleased(int keycode) {
 
 void Renderer::OnMouseMoved(float x, float y) {
     m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight);
+}
+
+void Renderer::RestartMouse() {
+    m_Camera.setMouseInit(true);
 }

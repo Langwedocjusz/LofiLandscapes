@@ -21,6 +21,9 @@ public:
 
     void OnUpdate();
 
+    void CaptureCursor();
+    void FreeCursor();
+
     bool ShouldClose();
     GLFWwindow* getGLFWPointer() {return m_Window;}
     void setEventCallback(std::function<void(Event&)> callback);

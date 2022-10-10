@@ -12,6 +12,8 @@ public:
     void Run();
     void OnEvent(Event& e);
 private:
+    bool m_ShowMenu = true;
+
     Window m_Window;
     Renderer m_Renderer;
     Timer m_Timer;

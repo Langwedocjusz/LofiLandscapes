@@ -4,6 +4,8 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
+#include "Keycodes.h"
+
 Application::Application(const std::string& title, unsigned int width, unsigned int height) 
     : m_Window(title, width, height), m_Renderer(width, height) 
 {
@@ -30,7 +32,7 @@ void Application::Run() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        m_Renderer.OnImGuiRender();
+        if (m_ShowMenu) m_Renderer.OnImGuiRender();
         m_Renderer.OnRender();
 
         ImGui::Render();
@@ -51,17 +53,35 @@ void Application::OnEvent(Event& e) {
         }
         case EventType::KeyPressed: {
             KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
-            m_Renderer.OnKeyPressed(ptr->getKeycode(), ptr->getRepeat());
+
+            if(ptr->getKeycode() == LOFI_KEY_ESCAPE) {
+                if (m_ShowMenu) {
+                    m_Renderer.RestartMouse();
+                    m_Window.CaptureCursor();
+                }
+                else
+                    m_Window.FreeCursor();
+
+                m_ShowMenu = (!m_ShowMenu);
+            }
+
+            else if(!m_ShowMenu)
+                m_Renderer.OnKeyPressed(ptr->getKeycode(), ptr->getRepeat());
+
             break;
         }
         case EventType::KeyReleased: {
-            KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
-            m_Renderer.OnKeyReleased(ptr->getKeycode());
+            if (!m_ShowMenu) {
+                KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
+                m_Renderer.OnKeyReleased(ptr->getKeycode());
+            }
             break;
         }
         case EventType::MouseMoved: {
-            MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
-            m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
+            if (!m_ShowMenu) {
+                MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
+                m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
+            }
             break;
         }
    }
