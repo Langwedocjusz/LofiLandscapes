@@ -40,3 +40,24 @@ private:
 
     void updateVectors();
 };
+
+class FPCamera {
+public:
+    FPCamera();
+    ~FPCamera();
+
+    void Update(float deltatime);
+
+    glm::mat4 getViewMatrix() {return m_Camera.getViewMatrix();}
+    glm::mat4 getProjMatrix(unsigned int width, unsigned int height);
+
+    void OnWindowResize(unsigned int width, unsigned int height);
+    void OnKeyPressed(int keycode, bool repeat);
+    void OnKeyReleased(int keycode);
+    void OnMouseMoved(float x, float y, unsigned int width, unsigned int height);
+private:
+    bool m_MouseInit = true;
+    float m_MouseLastX = 0.0f, m_MouseLastY = 0.0f;
+
+    Camera m_Camera;
+};

@@ -34,12 +34,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 Renderer::~Renderer() {}
 
 void Renderer::OnUpdate(float deltatime) {
-    m_Camera.ProcessKeyboard(deltatime);
+    m_Camera.Update(deltatime);
 
-   float aspect = float(m_WindowWidth) / float(m_WindowHeight);
-
-    glm::mat4 proj = glm::perspective(glm::radians(m_Camera.getFov()), aspect,
-                                     0.1f, 100.0f);
+    glm::mat4 proj = m_Camera.getProjMatrix(m_WindowWidth, m_WindowHeight);
     glm::mat4 view = m_Camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -77,72 +74,14 @@ void Renderer::OnKeyPressed(int keycode, bool repeat) {
     if (keycode == LOFI_KEY_ESCAPE && !repeat)
         m_ShowMenu = (!m_ShowMenu);
 
-    if (!repeat) {
-        switch(keycode) {
-            case LOFI_KEY_W: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Forward;
-                break;
-            }
-            case LOFI_KEY_S: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Backward;
-                break;
-            }
-            case LOFI_KEY_A: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Left;
-                break;
-            }
-            case LOFI_KEY_D: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Right;
-                break;
-            }
-        }
-    }
+    m_Camera.OnKeyPressed(keycode, repeat);
+
 }
 
 void Renderer::OnKeyReleased(int keycode) {
-    switch(keycode) {
-        case LOFI_KEY_W: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Forward;
-            break;
-        }
-        case LOFI_KEY_S: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Backward;
-            break;
-        }
-        case LOFI_KEY_A: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Left;
-            break;
-        }
-        case LOFI_KEY_D: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Right;
-            break;
-        }
-    }
+    m_Camera.OnKeyReleased(keycode);
 }
 
 void Renderer::OnMouseMoved(float x, float y) {
-    float xpos = x/m_WindowWidth;
-    float ypos = y/m_WindowHeight;
-
-    if (m_MouseInit) {
-        m_MouseLastX = xpos;
-        m_MouseLastY = ypos;
-        m_MouseInit = false;
-    }
-
-    float xoffset = xpos - m_MouseLastX;
-    float yoffset = m_MouseLastY - ypos;
-
-    m_MouseLastX = xpos;
-    m_MouseLastY = ypos;
-
-    const float max_offset = 0.1f;
-
-    if (abs(xoffset) > max_offset)
-        xoffset = (xoffset > 0.0f) ? max_offset : -max_offset;
-    
-    if (abs(yoffset) > max_offset)
-        yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
-
-    m_Camera.ProcessMouse(xoffset, yoffset);
+    m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight);
 }
