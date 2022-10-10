@@ -76,6 +76,8 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
         MouseMovedEvent event(xPos, yPos);
         data.EventCallback(event);
     });
+
+    glfwSwapInterval(1);
 }
 
 Window::~Window() {
