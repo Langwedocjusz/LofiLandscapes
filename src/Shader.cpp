@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include <iostream>
 
@@ -86,4 +87,24 @@ Shader::~Shader() {
 
 void Shader::Bind() {
     glUseProgram(m_ID);
+}
+
+unsigned int Shader::getUniformLocation(const std::string& name) {
+    auto search_res = std::find_if(
+            m_UniformCache.begin(), m_UniformCache.end(),
+            [&name](const std::pair<std::string, unsigned int> element){
+                return element.first == name;
+            });
+
+    if (search_res != m_UniformCache.end())
+        return search_res->second;
+
+    const unsigned int location = glGetUniformLocation(m_ID, name.c_str());
+    m_UniformCache.push_back(std::make_pair(name, location));
+    return location;
+}
+
+void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
 }

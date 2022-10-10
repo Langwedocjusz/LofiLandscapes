@@ -2,6 +2,7 @@
 
 #include "Window.h"
 #include "Renderer.h"
+#include "Timer.h"
 
 class Application{
 public:
@@ -13,4 +14,5 @@ public:
 private:
     Window m_Window;
     Renderer m_Renderer;
+    Timer m_Timer;
 };

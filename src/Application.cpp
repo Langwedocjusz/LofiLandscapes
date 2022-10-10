@@ -4,7 +4,8 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-Application::Application(const std::string& title, unsigned int width, unsigned int height) : m_Window(title, width, height) 
+Application::Application(const std::string& title, unsigned int width, unsigned int height) 
+    : m_Window(title, width, height), m_Renderer(width, height) 
 {
     //initialize ImGui:
     IMGUI_CHECKVERSION();
@@ -22,12 +23,15 @@ Application::~Application() {}
 
 void Application::Run() {
     while (!m_Window.ShouldClose()) {
+        m_Timer.Update();
+        m_Renderer.OnUpdate(m_Timer.getDeltaTime());
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        m_Renderer.OnImGuiUpdate();
-        m_Renderer.OnUpdate();
+        m_Renderer.OnImGuiRender();
+        m_Renderer.OnRender();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

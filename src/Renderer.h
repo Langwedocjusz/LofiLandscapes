@@ -1,14 +1,16 @@
 #pragma once
 
 #include "Shader.h"
+#include "Camera.h"
 
 class Renderer {
 public:
-    Renderer();
+    Renderer(unsigned int width, unsigned int height);
     ~Renderer();
 
-    void OnUpdate();
-    void OnImGuiUpdate();
+    void OnUpdate(float deltatime);
+    void OnRender();
+    void OnImGuiRender();
 
     void OnWindowResize(unsigned int width, unsigned int height);
     void OnKeyPressed(int keycode, bool repeat);
@@ -26,5 +28,10 @@ private:
     unsigned int m_QuadIndices[6] = {0,1,2, 2,3,0};
 
     unsigned int m_VAO=0, m_VBO=0, m_EBO=0;
+    unsigned int m_WindowWidth, m_WindowHeight;
+
     Shader m_Shader;
+    Camera m_Camera;
+
+    glm::mat4 m_MVP = glm::mat4(1.0f);
 };

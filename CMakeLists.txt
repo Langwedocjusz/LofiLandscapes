@@ -49,3 +49,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC vendor/imgui)
 target_link_directories(${PROJECT_NAME} PRIVATE vendor/imgui)
 target_link_libraries(${PROJECT_NAME} imgui)
 
+#Add glm
+target_include_directories(${PROJECT_NAME} PUBLIC vendor/glm)
+
