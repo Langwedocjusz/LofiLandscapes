@@ -22,7 +22,12 @@ void Renderer::OnImGuiUpdate() {
     ImGui::End();
 }
 
+void Renderer::OnWindowResize(unsigned int width, unsigned int height) {}
+
 void Renderer::OnKeyPressed(int keycode, bool repeat) {
     if (keycode == LOFI_KEY_ESCAPE && !repeat)
         m_ShowMenu = (!m_ShowMenu);
 }
+
+void Renderer::OnKeyReleased(int keycode) {}
+void Renderer::OnMouseMoved(float x, float y) {}

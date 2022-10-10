@@ -40,10 +40,26 @@ void Application::OnEvent(Event& e) {
    EventType type = e.getEventType();
 
    switch(type) {
-        case EventType::KeyPressed:
+        case EventType::WindowResize: {
+            WindowResizeEvent* ptr = dynamic_cast<WindowResizeEvent*>(&e);
+            m_Renderer.OnWindowResize(ptr->getWidth(), ptr->getHeight());
+            break; 
+        }
+        case EventType::KeyPressed: {
             KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
             m_Renderer.OnKeyPressed(ptr->getKeycode(), ptr->getRepeat());
             break;
+        }
+        case EventType::KeyReleased: {
+            KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
+            m_Renderer.OnKeyReleased(ptr->getKeycode());
+            break;
+        }
+        case EventType::MouseMoved: {
+            MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
+            m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
+            break;
+        }
    }
 }
 
