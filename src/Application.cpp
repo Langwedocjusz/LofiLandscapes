@@ -22,15 +22,15 @@ Application::~Application() {}
 
 void Application::Run() {
     while (!m_Window.ShouldClose()) {
-        //ImGui_ImplOpenGL3_NewFrame();
-        //ImGui_ImplGlfw_NewFrame();
-        //ImGui::NewFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-        //m_Renderer.OnImGuiUpdate();
+        m_Renderer.OnImGuiUpdate();
         m_Renderer.OnUpdate();
 
-        //ImGui::Render();
-        //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         m_Window.OnUpdate();
     }

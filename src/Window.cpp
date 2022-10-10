@@ -77,6 +77,7 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
         data.EventCallback(event);
     });
 
+    //Enable vsync
     glfwSwapInterval(1);
 }
 
