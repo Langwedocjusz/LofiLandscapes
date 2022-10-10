@@ -120,4 +120,29 @@ void Renderer::OnKeyReleased(int keycode) {
     }
 }
 
-void Renderer::OnMouseMoved(float x, float y) {}
+void Renderer::OnMouseMoved(float x, float y) {
+    float xpos = x/m_WindowWidth;
+    float ypos = y/m_WindowHeight;
+
+    if (m_MouseInit) {
+        m_MouseLastX = xpos;
+        m_MouseLastY = ypos;
+        m_MouseInit = false;
+    }
+
+    float xoffset = xpos - m_MouseLastX;
+    float yoffset = m_MouseLastY - ypos;
+
+    m_MouseLastX = xpos;
+    m_MouseLastY = ypos;
+
+    const float max_offset = 0.1f;
+
+    if (abs(xoffset) > max_offset)
+        xoffset = (xoffset > 0.0f) ? max_offset : -max_offset;
+    
+    if (abs(yoffset) > max_offset)
+        yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
+
+    m_Camera.ProcessMouse(xoffset, yoffset);
+}
