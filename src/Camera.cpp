@@ -45,7 +45,7 @@ void Camera::ProcessMouse(float xoffset, float yoffset) {
     m_Yaw += m_Sensitivity * xoffset;
 
     if (m_Pitch > 89.0f) m_Pitch = 89.0f;
-    if (m_Pitch < -89.0f) m_Pitch = 89.0f;
+    if (m_Pitch < -89.0f) m_Pitch = -89.0f;
 
     updateVectors();
 }
