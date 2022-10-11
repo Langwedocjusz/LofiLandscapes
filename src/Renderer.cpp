@@ -30,6 +30,9 @@ void Renderer::RenderHeightmap() {
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
+    
+    if (m_Wireframe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
@@ -85,7 +88,6 @@ void Renderer::OnRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (m_Wireframe) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         m_WireframeShader.Bind();
         m_WireframeShader.setUniform1f("uL", m_L);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
@@ -93,7 +95,6 @@ void Renderer::OnRender() {
     }
 
     else {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         m_ShadedShader.Bind();
         m_ShadedShader.setUniform1f("uL", m_L);
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
@@ -105,21 +106,52 @@ void Renderer::OnRender() {
 }
 
 void Renderer::OnImGuiRender() {
-    ImGui::Begin("WE");
-    ImGui::ColorEdit3("ClearColor", m_ClearColor);
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("View")) {
+            if (ImGui::MenuItem("Shaded")) {
+                m_Wireframe = false;
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            if (ImGui::MenuItem("Wireframe")) {
+                m_Wireframe = true;
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            }
+            ImGui::EndMenu();
+        }
 
-    if (ImGui::Button("WE"))
-        m_Wireframe = !m_Wireframe;
+        if (ImGui::BeginMenu("Windows")) {
+            if (ImGui::MenuItem("Terrain")) {
+                m_ShowTerrainMenu = !m_ShowTerrainMenu;
+            }
 
-    int temp_octaves = m_HeightmapParams.Octaves;
-    ImGui::SliderInt("Octaves", &temp_octaves, 1, 16);
-    
-    if (temp_octaves != m_HeightmapParams.Octaves) {
-        m_HeightmapParams.Octaves = temp_octaves;
-        RenderHeightmap();
+            if (ImGui::MenuItem("Background")) {
+                m_ShowBackgroundMenu = !m_ShowBackgroundMenu;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
     }
 
-    ImGui::End();
+    if (m_ShowBackgroundMenu) {
+        ImGui::Begin("Background");
+        ImGui::ColorEdit3("ClearColor", m_ClearColor);
+        ImGui::End();
+    }
+
+    if (m_ShowTerrainMenu) {
+        ImGui::Begin("Terrain");
+        int temp_octaves = m_HeightmapParams.Octaves;
+        ImGui::SliderInt("Octaves", &temp_octaves, 1, 10);
+    
+        if (temp_octaves != m_HeightmapParams.Octaves) {
+            m_HeightmapParams.Octaves = temp_octaves;
+            RenderHeightmap();
+        }
+
+        ImGui::End();
+    }
 
 }
 

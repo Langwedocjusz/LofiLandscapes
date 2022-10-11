@@ -27,7 +27,7 @@ public:
     void OnMouseMoved(float x, float y);
     void RestartMouse();
 private:
-    unsigned int m_N = 192;
+    unsigned int m_N = 128;
     float m_L = 10.0f;
 
     unsigned int m_FBO, m_TargetTexture;
@@ -36,6 +36,8 @@ private:
 
     unsigned int m_WindowWidth, m_WindowHeight;
 
+    bool m_ShowTerrainMenu = false, m_ShowBackgroundMenu = false;
+     
     bool m_Wireframe = false;
     HeightmapParams m_HeightmapParams;
 
