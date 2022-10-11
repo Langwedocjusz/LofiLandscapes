@@ -50,7 +50,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
-
+    glEnable(GL_DEPTH_TEST);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
@@ -68,7 +68,7 @@ void Renderer::OnUpdate(float deltatime) {
 
 void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_Shader.Bind();
     m_Shader.setUniform1f("uL", m_L);
