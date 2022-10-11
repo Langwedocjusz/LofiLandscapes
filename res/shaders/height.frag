@@ -52,23 +52,8 @@ float fbm(in vec2 p, int octaves) {
     return scale_y * res;
 }
 
-float getHeight(vec2 p) {
-    return fbm(p, uOctaves);
-}
-
-vec3 getNorm(vec2 p) {
-    vec2 h = vec2(0.0, 0.00001);
-
-    return normalize(vec3(
-        getHeight(p+h.yx) - getHeight(p-h.yx),
-        2.0*h.y,
-        getHeight(p+h.xy) - getHeight(p-h.xy)
-    ));
-}
-
 void main() {
-    float height = getHeight(uv);
-    vec3 norm = getNorm(uv);
-
-    frag_col = vec4(norm, height);    
+    float height = fbm(2.0*uv-1.0, uOctaves);
+    
+    frag_col = vec4(height);    
 }

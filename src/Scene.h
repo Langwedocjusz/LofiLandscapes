@@ -11,6 +11,11 @@ public:
     void DrawTerrain();
     void BindQuad();
     void DrawQuad();
+
+    unsigned int getTerrainVAO() {return m_TerrainVAO;}
+    unsigned int getTerrainVBO() {return m_TerrainVBO;}
+    unsigned int getTerrainVertCount() {return m_TerrainVertexData.size();}
+
 private:
     int m_N;
 

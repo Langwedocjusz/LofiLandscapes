@@ -14,6 +14,7 @@ Scene::Scene(int N, float L)
         m_TerrainVertexData.push_back(origin[0] + offset[0]);
         m_TerrainVertexData.push_back(0.0f);
         m_TerrainVertexData.push_back(origin[1] + offset[1]);
+        m_TerrainVertexData.push_back(1.0f);
     }
 
     //Index data:
@@ -49,7 +50,7 @@ Scene::Scene(int N, float L)
             sizeof(unsigned int) * m_TerrainIndexData.size(),
             &m_TerrainIndexData[0], GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     //Quad (GL Buffers only):

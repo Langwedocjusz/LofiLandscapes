@@ -10,6 +10,7 @@
 class Shader{
 public:
     Shader(const std::string& vert_path, const std::string& frag_path);
+    Shader(const std::string& compute_path);
     ~Shader();
 
     void Bind();

@@ -81,6 +81,55 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
     glDeleteShader(frag_id);
 }
 
+
+Shader::Shader(const std::string& compute_path) {
+    std::string compute_code;
+
+    std::ifstream compute_file(compute_path);
+
+    if(!compute_file)
+        std::cerr << "Error: Compute Shader file not read successfully: " 
+                  << compute_path << '\n';
+
+    std::stringstream compute_stream;
+    compute_stream << compute_file.rdbuf();
+
+    compute_code = compute_stream.str();
+
+    const char* compute_code_c = compute_code.c_str();
+
+    unsigned int compute_id=0;
+    int success;
+    char info_log[512];
+
+    compute_id = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute_id, 1, &compute_code_c, NULL);
+    glCompileShader(compute_id);
+
+    glGetShaderiv(compute_id, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+        glGetShaderInfoLog(compute_id, 512, NULL, info_log);
+        std::cerr << "Error: Compute shader compilation failed (" 
+                  << compute_path << "): \n" << info_log << '\n';
+        glDeleteShader(compute_id);
+        return;
+    }
+
+    m_ID = glCreateProgram();
+    glAttachShader(m_ID, compute_id);
+    glLinkProgram(m_ID);
+
+    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(m_ID, 512, NULL, info_log);
+        std::cerr << "Error: Shader program linking failed: \n" 
+                  << info_log << '\n';
+    }
+
+    glDeleteShader(compute_id);
+}
+
 Shader::~Shader() {
     glDeleteProgram(m_ID);
 }

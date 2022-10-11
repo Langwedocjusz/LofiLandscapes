@@ -1,6 +1,6 @@
 #version 450 core
 
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec4 aPos;
 
 uniform float uL;
 uniform mat4 uMVP;
@@ -11,7 +11,5 @@ void main() {
     vec2 uv = (2.0/uL) * aPos.xz;
     uv = 0.5*uv + 0.5;
 
-    float height = 0.5*uL * texture(tex, uv).a;
-
-    gl_Position = uMVP * vec4(aPos + vec3(0.0, height, 0.0), 1.0);
+    gl_Position = uMVP * aPos;
 }

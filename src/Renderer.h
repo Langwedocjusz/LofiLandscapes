@@ -5,7 +5,7 @@
 #include "Scene.h"
 
 struct HeightmapParams{
-    int Octaves = 4;
+    int Octaves = 10;
     int Resolution = 4096;
 };
 
@@ -29,20 +29,24 @@ public:
 private:
     unsigned int m_N = 128;
     float m_L = 10.0f;
+    float m_Phi = 1.032f, m_Theta = 0.695f;
 
-    unsigned int m_FBO, m_TargetTexture;
+    unsigned int m_HeightmapFBO, m_HeightmapTexture;
+    unsigned int m_NormalFBO, m_NormalTexture;
 
     float m_ClearColor[3] = {0.2f, 0.2f, 0.2f};
 
     unsigned int m_WindowWidth, m_WindowHeight;
 
-    bool m_ShowTerrainMenu = false, m_ShowBackgroundMenu = false;
+    bool m_ShowTerrainMenu = false, m_ShowBackgroundMenu = false,
+         m_ShowLightMenu = false;
      
     bool m_Wireframe = false;
     HeightmapParams m_HeightmapParams;
 
     Shader m_ShadedShader, m_WireframeShader;
-    Shader m_QuadShader;
+    Shader m_HeightmapShader, m_NormalShader;
+    Shader m_DisplaceShader;
     FPCamera m_Camera;
 
     glm::mat4 m_MVP = glm::mat4(1.0f);
