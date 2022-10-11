@@ -10,71 +10,9 @@
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height),
       m_Shader("res/shaders/test.vert", "res/shaders/test.frag"),
-      m_QuadShader("res/shaders/quad.vert", "res/shaders/quad.frag")
+      m_QuadShader("res/shaders/quad.vert", "res/shaders/quad.frag"),
+      m_Scene(m_N, m_L)
 {
-    //Vertex data:
-    for (int i=0; i<m_N*m_N; i++) {
-        float origin[2] = {-m_L/2.0f, -m_L/2.0f};
-        float offset[2] = {float(i%m_N)*(m_L/m_N), float(i/m_N)*(m_L/m_N)};
-
-        m_VertexData.push_back(origin[0] + offset[0]);
-        m_VertexData.push_back(0.0f);
-        m_VertexData.push_back(origin[1] + offset[1]);
-    }
-
-    //Index data:
-    for (int i=0; i<m_N*m_N; i++) {
-        unsigned int ix = i % m_N;
-        unsigned int iy = i/m_N;
-
-        if (ix == m_N-1) continue;
-        if (iy == m_N-1) continue;
-
-        m_IndexData.push_back(i);
-        m_IndexData.push_back(i+1);
-        m_IndexData.push_back(i+m_N);
-        
-        m_IndexData.push_back(i+1);
-        m_IndexData.push_back(i+1+m_N);
-        m_IndexData.push_back(i+m_N);
-    }
-
-    //Buffers:
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_EBO);
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_VertexData.size(), &m_VertexData[0], 
-            GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_IndexData.size(), &m_IndexData[0],
-            GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    //Quad
-    glGenVertexArrays(1, &m_QuadVAO);
-    glGenBuffers(1, &m_QuadVBO);
-    glGenBuffers(1, &m_QuadEBO);
-
-    glBindVertexArray(m_QuadVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_QuadVertexData), &m_QuadVertexData, 
-            GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_QuadIndexData), 
-                    &m_QuadIndexData, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
     //Framebuffer
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
@@ -106,9 +44,8 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_QuadShader.Bind();
-    glBindVertexArray(m_QuadVAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    m_Scene.BindQuad();
+    m_Scene.DrawQuad();
 
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -138,10 +75,8 @@ void Renderer::OnRender() {
     m_Shader.setUniformMatrix4fv("uMVP", m_MVP);
 
     glBindTexture(GL_TEXTURE_2D, m_TargetTexture);
-
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glDrawElements(GL_TRIANGLES, 6*m_N*m_N, GL_UNSIGNED_INT, 0);
+    m_Scene.BindTerrain();
+    m_Scene.DrawTerrain();
 }
 
 void Renderer::OnImGuiRender() {
