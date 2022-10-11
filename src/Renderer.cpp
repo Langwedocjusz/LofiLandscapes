@@ -5,9 +5,12 @@
 
 #include "imgui.h"
 
+#include <iostream>
+
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height),
-      m_Shader("res/shaders/test.vert", "res/shaders/test.frag")
+      m_Shader("res/shaders/test.vert", "res/shaders/test.frag"),
+      m_QuadShader("res/shaders/quad.vert", "res/shaders/quad.frag")
 {
     //Vertex data:
     for (int i=0; i<m_N*m_N; i++) {
@@ -54,7 +57,64 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //Quad
+    glGenVertexArrays(1, &m_QuadVAO);
+    glGenBuffers(1, &m_QuadVBO);
+    glGenBuffers(1, &m_QuadEBO);
+
+    glBindVertexArray(m_QuadVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_QuadVertexData), &m_QuadVertexData, 
+            GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_QuadIndexData), 
+                    &m_QuadIndexData, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    //Framebuffer
+    glGenFramebuffers(1, &m_FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+
+    //Texture
+    const unsigned int tex_res = 4096;
+    glGenTextures(1, &m_TargetTexture);
+    glBindTexture(GL_TEXTURE_2D, m_TargetTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_res, tex_res, 0, 
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    //Attach texture to framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, m_TargetTexture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "FRAMEBUFFER NOT READY \n";
+
+    //Render to texture:
+    glViewport(0, 0, tex_res, tex_res);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    m_QuadShader.Bind();
+    glBindVertexArray(m_QuadVAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    //Return to normal rendering
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
+
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 Renderer::~Renderer() {}
@@ -74,7 +134,10 @@ void Renderer::OnRender() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_Shader.Bind();
+    m_Shader.setUniform1f("uL", m_L);
     m_Shader.setUniformMatrix4fv("uMVP", m_MVP);
+
+    glBindTexture(GL_TEXTURE_2D, m_TargetTexture);
 
     glBindVertexArray(m_VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);

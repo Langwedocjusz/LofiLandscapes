@@ -14,6 +14,7 @@ public:
 
     void Bind();
 
+    void setUniform1f(const std::string& name, float x);
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
 private:
     unsigned int m_ID = 0;

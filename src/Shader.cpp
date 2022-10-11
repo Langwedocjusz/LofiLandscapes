@@ -44,7 +44,7 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
 
     if (!success) {
         glGetShaderInfoLog(vert_id, 512, NULL, info_log);
-        std::cerr << "Error: Vertex compilation failed: \n" 
+        std::cerr << "Error: Vertex compilation failed (" << vert_path << "): \n" 
                   << info_log << '\n';
         glDeleteShader(vert_id);
         return;
@@ -58,7 +58,7 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
 
     if (!success) {
         glGetShaderInfoLog(frag_id, 512, NULL, info_log);
-        std::cerr << "Error: Fragment compilation failed: \n" 
+        std::cerr << "Error: Fragment compilation failed (" << frag_path << "): \n" 
                   << info_log << '\n';
         glDeleteShader(vert_id);
         glDeleteShader(frag_id);
@@ -102,6 +102,11 @@ unsigned int Shader::getUniformLocation(const std::string& name) {
     const unsigned int location = glGetUniformLocation(m_ID, name.c_str());
     m_UniformCache.push_back(std::make_pair(name, location));
     return location;
+}
+
+void Shader::setUniform1f(const std::string& name, float x) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform1f(location, x);
 }
 
 void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) {
