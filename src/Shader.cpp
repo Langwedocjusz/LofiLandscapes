@@ -104,6 +104,11 @@ unsigned int Shader::getUniformLocation(const std::string& name) {
     return location;
 }
 
+void Shader::setUniform1i(const std::string& name, int x) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform1i(location, x);
+}
+
 void Shader::setUniform1f(const std::string& name, float x) {
     const unsigned int location = getUniformLocation(name.c_str());
     glUniform1f(location, x);

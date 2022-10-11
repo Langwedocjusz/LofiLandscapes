@@ -14,6 +14,7 @@ public:
 
     void Bind();
 
+    void setUniform1i(const std::string& name, int x);
     void setUniform1f(const std::string& name, float x);
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
 private:

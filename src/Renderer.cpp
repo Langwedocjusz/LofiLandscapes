@@ -7,9 +7,35 @@
 
 #include <iostream>
 
+bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs) {
+    return (lhs.Octaves == rhs.Octaves);
+}
+
+void Renderer::RenderHeightmap() {
+    //Render to texture:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glBindTexture(GL_TEXTURE_2D, m_TargetTexture);
+    glViewport(0, 0, m_HeightmapParams.Resolution, m_HeightmapParams.Resolution);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    m_QuadShader.Bind();
+    m_QuadShader.setUniform1i("uOctaves", m_HeightmapParams.Octaves);
+
+    m_Scene.BindQuad();
+    m_Scene.DrawQuad();
+
+    //Return to normal rendering
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
+}
+
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height),
-      m_Shader("res/shaders/test.vert", "res/shaders/test.frag"),
+      m_ShadedShader("res/shaders/shaded.vert", "res/shaders/shaded.frag"),
+      m_WireframeShader("res/shaders/wireframe.vert", "res/shaders/wireframe.frag"),
       m_QuadShader("res/shaders/quad.vert", "res/shaders/quad.frag"),
       m_Scene(m_N, m_L)
 {
@@ -37,21 +63,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cerr << "FRAMEBUFFER NOT READY \n";
 
-    //Render to texture:
-    glViewport(0, 0, tex_res, tex_res);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    m_QuadShader.Bind();
-    m_Scene.BindQuad();
-    m_Scene.DrawQuad();
-
-    //Return to normal rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
     glEnable(GL_DEPTH_TEST);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    RenderHeightmap();
 }
 
 Renderer::~Renderer() {}
@@ -70,9 +84,20 @@ void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_Shader.Bind();
-    m_Shader.setUniform1f("uL", m_L);
-    m_Shader.setUniformMatrix4fv("uMVP", m_MVP);
+    if (m_Wireframe) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        m_WireframeShader.Bind();
+        m_WireframeShader.setUniform1f("uL", m_L);
+        m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
+
+    }
+
+    else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        m_ShadedShader.Bind();
+        m_ShadedShader.setUniform1f("uL", m_L);
+        m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
+    }
 
     glBindTexture(GL_TEXTURE_2D, m_TargetTexture);
     m_Scene.BindTerrain();
@@ -82,7 +107,20 @@ void Renderer::OnRender() {
 void Renderer::OnImGuiRender() {
     ImGui::Begin("WE");
     ImGui::ColorEdit3("ClearColor", m_ClearColor);
+
+    if (ImGui::Button("WE"))
+        m_Wireframe = !m_Wireframe;
+
+    int temp_octaves = m_HeightmapParams.Octaves;
+    ImGui::SliderInt("Octaves", &temp_octaves, 1, 16);
+    
+    if (temp_octaves != m_HeightmapParams.Octaves) {
+        m_HeightmapParams.Octaves = temp_octaves;
+        RenderHeightmap();
+    }
+
     ImGui::End();
+
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {

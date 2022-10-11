@@ -4,6 +4,13 @@
 #include "Camera.h"
 #include "Scene.h"
 
+struct HeightmapParams{
+    int Octaves = 4;
+    int Resolution = 4096;
+};
+
+bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs);
+
 class Renderer {
 public:
     Renderer(unsigned int width, unsigned int height);
@@ -12,6 +19,7 @@ public:
     void OnUpdate(float deltatime);
     void OnRender();
     void OnImGuiRender();
+    void RenderHeightmap();
 
     void OnWindowResize(unsigned int width, unsigned int height);
     void OnKeyPressed(int keycode, bool repeat);
@@ -28,7 +36,10 @@ private:
 
     unsigned int m_WindowWidth, m_WindowHeight;
 
-    Shader m_Shader;
+    bool m_Wireframe = false;
+    HeightmapParams m_HeightmapParams;
+
+    Shader m_ShadedShader, m_WireframeShader;
     Shader m_QuadShader;
     FPCamera m_Camera;
 

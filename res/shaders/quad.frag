@@ -2,7 +2,9 @@
 
 in vec2 uv;
 
-out vec4 col;
+out vec4 frag_col;
+
+uniform int uOctaves;
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)-0.5;
@@ -51,7 +53,7 @@ float fbm(in vec2 p, int octaves) {
 }
 
 float getHeight(vec2 p) {
-    return fbm(p,8);
+    return fbm(p, uOctaves);
 }
 
 vec3 getNorm(vec2 p) {
@@ -68,5 +70,5 @@ void main() {
     float height = getHeight(uv);
     vec3 norm = getNorm(uv);
 
-    col = vec4(norm, height);    
+    frag_col = vec4(norm, height);    
 }
