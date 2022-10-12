@@ -28,6 +28,8 @@ file(GLOB_RECURSE headers src/*.h)
 file(GLOB_RECURSE sources src/*.cpp)
 target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources})
 
+target_include_directories(${PROJECT_NAME} PUBLIC src)
+
 #Set current project as Visual Studio start project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 

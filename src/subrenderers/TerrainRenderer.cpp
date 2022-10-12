@@ -1,11 +1,11 @@
-#include "Scene.h"
+#include "TerrainRenderer.h"
 
 #include "glad/glad.h"
 
-Scene::Scene(int N, float L) 
-    : m_N(N)
+TerrainRenderer::TerrainRenderer(unsigned int N, float L) 
+    : m_DisplaceShader("res/shaders/displace.glsl"),
+      m_N(N), m_L(L)
 {
-    //Terrain
     //Vertex data:
     for (int i=0; i<N*N; i++) {
         float origin[2] = {-L/2.0f, -L/2.0f};
@@ -52,44 +52,29 @@ Scene::Scene(int N, float L)
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    //Quad (GL Buffers only):
-    glGenVertexArrays(1, &m_QuadVAO);
-    glGenBuffers(1, &m_QuadVBO);
-    glGenBuffers(1, &m_QuadEBO);
-
-    glBindVertexArray(m_QuadVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_QuadVertexData), &m_QuadVertexData, 
-            GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_QuadIndexData), 
-                    &m_QuadIndexData, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 }
 
-Scene::~Scene() {
+TerrainRenderer::~TerrainRenderer() {
 
 }
 
-void Scene::BindTerrain() {
+void TerrainRenderer::DisplaceVertices() {
+    m_DisplaceShader.Bind();
+    m_DisplaceShader.setUniform1f("uL", m_L);
+    
+    glBindVertexArray(m_TerrainVAO);
+    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
+                | GL_SHADER_STORAGE_BUFFER);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_TerrainVBO);
+    glDispatchCompute(2 * m_TerrainVertexData.size() / 1024, 1, 1);
+}
+
+void TerrainRenderer::BindGeometry() {
     glBindVertexArray(m_TerrainVAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO);
 }
 
-void Scene::DrawTerrain() {
+void TerrainRenderer::Draw() {
     glDrawElements(GL_TRIANGLES, 6*m_N*m_N, GL_UNSIGNED_INT, 0);
-}
-
-void Scene::BindQuad() {
-    glBindVertexArray(m_QuadVAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-}
-
-void Scene::DrawQuad() {
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

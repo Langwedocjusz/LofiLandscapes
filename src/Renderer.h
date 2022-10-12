@@ -1,15 +1,8 @@
 #pragma once
 
-#include "Shader.h"
+#include "subrenderers/MapRenderer.h"
+#include "subrenderers/TerrainRenderer.h"
 #include "Camera.h"
-#include "Scene.h"
-
-struct HeightmapParams{
-    int Octaves = 10;
-    int Resolution = 4096;
-};
-
-bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs);
 
 class Renderer {
 public:
@@ -31,9 +24,6 @@ private:
     float m_L = 10.0f;
     float m_Phi = 1.032f, m_Theta = 0.695f;
 
-    unsigned int m_HeightmapFBO, m_HeightmapTexture;
-    unsigned int m_NormalFBO, m_NormalTexture;
-
     float m_ClearColor[3] = {0.2f, 0.2f, 0.2f};
 
     unsigned int m_WindowWidth, m_WindowHeight;
@@ -42,14 +32,12 @@ private:
          m_ShowLightMenu = false;
      
     bool m_Wireframe = false;
-    HeightmapParams m_HeightmapParams;
 
     Shader m_ShadedShader, m_WireframeShader;
-    Shader m_HeightmapShader, m_NormalShader;
-    Shader m_DisplaceShader;
     FPCamera m_Camera;
 
     glm::mat4 m_MVP = glm::mat4(1.0f);
 
-    Scene m_Scene;
+    TerrainRenderer m_Terrain;
+    MapRenderer m_Map;
 };

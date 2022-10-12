@@ -7,43 +7,16 @@
 
 #include <iostream>
 
-bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs) {
-    return (lhs.Octaves == rhs.Octaves);
-}
 
 void Renderer::RenderHeightmap() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glViewport(0, 0, m_HeightmapParams.Resolution, m_HeightmapParams.Resolution);
     
-    //Render to heightmap:
-    glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    m_HeightmapShader.Bind();
-    m_HeightmapShader.setUniform1i("uOctaves", m_HeightmapParams.Octaves);
-    m_Scene.BindQuad();
-    m_Scene.DrawQuad();
-
-    //Render to normal map:
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_NormalFBO);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    m_NormalShader.Bind();
-    m_Scene.BindQuad();
-    m_Scene.DrawQuad();
+    //Render to heightmap/normalmap:
+    m_Map.Update();
 
     //Update vertex data:
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
-    m_DisplaceShader.Bind();
-    m_DisplaceShader.setUniform1f("uL", m_L);
-    
-    glBindVertexArray(m_Scene.getTerrainVAO());
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
-                | GL_SHADER_STORAGE_BUFFER);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_Scene.getTerrainVBO());
-    glDispatchCompute(2 * m_Scene.getTerrainVertCount() / 1024, 1, 1);
+    m_Map.BindHeightmap();
+    m_Terrain.DisplaceVertices();
 
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -55,65 +28,14 @@ void Renderer::RenderHeightmap() {
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height),
-      m_ShadedShader("res/shaders/shaded.vert", "res/shaders/shaded.frag"),
-      m_WireframeShader("res/shaders/wireframe.vert", "res/shaders/wireframe.frag"),
-      m_HeightmapShader("res/shaders/quad.vert", "res/shaders/height.frag"),
-      m_NormalShader("res/shaders/quad.vert", "res/shaders/normal.frag"),
-      m_DisplaceShader("res/shaders/displace.glsl"),
-      m_Scene(m_N, m_L)
+      m_ShadedShader("res/shaders/shaded.vert", 
+                     "res/shaders/shaded.frag"),
+      m_WireframeShader("res/shaders/wireframe.vert", 
+                        "res/shaders/wireframe.frag"),
+      m_Terrain(m_N, m_L),
+      m_Map()
 {
-    const int tex_res = m_HeightmapParams.Resolution;
-
-    //Heightmap
-    //Framebuffer
-    glGenFramebuffers(1, &m_HeightmapFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
-
-    //Texture
-    glGenTextures(1, &m_HeightmapTexture);
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, tex_res, tex_res, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, m_HeightmapTexture, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "FRAMEBUFFER NOT READY \n";
-
-    //Normal map:
-    //Framebuffer
-    glGenFramebuffers(1, &m_NormalFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_NormalFBO);
-
-    //Texture
-    glGenTextures(1, &m_NormalTexture);
-    glBindTexture(GL_TEXTURE_2D, m_NormalTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_res, tex_res, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, m_NormalTexture, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "FRAMEBUFFER NOT READY \n";
-
     glEnable(GL_DEPTH_TEST);
-
     RenderHeightmap();
 }
 
@@ -148,9 +70,9 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
     }
 
-    glBindTexture(GL_TEXTURE_2D, m_NormalTexture);
-    m_Scene.BindTerrain();
-    m_Scene.DrawTerrain();
+    m_Map.BindNormalmap();
+    m_Terrain.BindGeometry();
+    m_Terrain.Draw();
 }
 
 void Renderer::OnImGuiRender() {
@@ -194,11 +116,11 @@ void Renderer::OnImGuiRender() {
 
     if (m_ShowTerrainMenu) {
         ImGui::Begin("Terrain");
-        int temp_octaves = m_HeightmapParams.Octaves;
-        ImGui::SliderInt("Octaves", &temp_octaves, 1, 10);
+        HeightmapParams temp = m_Map.getHeightmapParams();
+        ImGui::SliderInt("Octaves", &(temp.Octaves), 1, 10);
     
-        if (temp_octaves != m_HeightmapParams.Octaves) {
-            m_HeightmapParams.Octaves = temp_octaves;
+        if (temp.Octaves != m_Map.getHeightmapParams().Octaves) {
+            m_Map.setHeightmapParams(temp);
             RenderHeightmap();
         }
 
@@ -222,7 +144,6 @@ void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
 
 void Renderer::OnKeyPressed(int keycode, bool repeat) {
     m_Camera.OnKeyPressed(keycode, repeat);
-
 }
 
 void Renderer::OnKeyReleased(int keycode) {
