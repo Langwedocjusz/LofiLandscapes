@@ -5,6 +5,7 @@ in vec2 uv;
 out vec4 frag_col;
 
 uniform int uOctaves;
+uniform vec2 uOffset;
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)-0.5;
@@ -53,7 +54,8 @@ float fbm(in vec2 p, int octaves) {
 }
 
 void main() {
-    float height = fbm(2.0*uv-1.0, uOctaves);
+    vec2 ts = 2.0*uv - 1.0;
+    float height = fbm(ts - uOffset, uOctaves);
     
     frag_col = vec4(height);    
 }

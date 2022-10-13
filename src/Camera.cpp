@@ -16,6 +16,15 @@ CameraMovement operator&(CameraMovement x, CameraMovement y) {
                                      & static_cast<int>(y));
 }
 
+bool operator==(const CameraSettings& lhs, const CameraSettings& rhs) {
+    return (lhs.Speed == rhs.Speed) && (lhs.Sensitivity == rhs.Sensitivity)
+                                    && (lhs.Fov == rhs.Fov);
+}
+
+bool operator!=(const CameraSettings& lhs, const CameraSettings& rhs) {
+    return !(lhs == rhs);
+}
+
 Camera::Camera(glm::vec3 pos, glm::vec3 wup, float pitch, float yaw)
     : m_Pos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
 {
@@ -27,22 +36,22 @@ glm::mat4 Camera::getViewMatrix() {
 }
 
 void Camera::ProcessKeyboard(float deltatime) {
-    float velocity = deltatime * m_Speed;
+    float velocity = deltatime * m_Settings.Speed;
 
-    if ((Movement & CameraMovement::Forward) != CameraMovement::None)
+    if ((m_Movement & CameraMovement::Forward) != CameraMovement::None)
         m_Pos += velocity * m_Front;
-    if ((Movement & CameraMovement::Backward) != CameraMovement::None)
+    if ((m_Movement & CameraMovement::Backward) != CameraMovement::None)
         m_Pos -= velocity * m_Front;
-    if ((Movement & CameraMovement::Left) != CameraMovement::None)
+    if ((m_Movement & CameraMovement::Left) != CameraMovement::None)
         m_Pos -= velocity * m_Right;
-    if ((Movement & CameraMovement::Right) != CameraMovement::None)
+    if ((m_Movement & CameraMovement::Right) != CameraMovement::None)
         m_Pos += velocity * m_Right;
 
 }
 
 void Camera::ProcessMouse(float xoffset, float yoffset) {
-    m_Pitch += m_Sensitivity * yoffset;
-    m_Yaw += m_Sensitivity * xoffset;
+    m_Pitch += m_Settings.Sensitivity * yoffset;
+    m_Yaw += m_Settings.Sensitivity * xoffset;
 
     if (m_Pitch > 89.0f) m_Pitch = 89.0f;
     if (m_Pitch < -89.0f) m_Pitch = -89.0f;
@@ -64,13 +73,13 @@ FPCamera::FPCamera() {}
 FPCamera::~FPCamera() {}
 
 void FPCamera::Update(float deltatime) {
-    m_Camera.ProcessKeyboard(deltatime);
+    ProcessKeyboard(deltatime);
 }
 
 glm::mat4 FPCamera::getProjMatrix(unsigned int width, unsigned int height) {
     float aspect = float(width) / float(height);
 
-    return glm::perspective(glm::radians(m_Camera.getFov()), 
+    return glm::perspective(glm::radians(m_Settings.Fov), 
                             aspect, 0.1f, 100.0f);
 }
 
@@ -78,19 +87,19 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat) {
     if (!repeat) {
         switch(keycode) {
             case LOFI_KEY_W: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Forward;
+                m_Movement = m_Movement | CameraMovement::Forward;
                 break;
             }
             case LOFI_KEY_S: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Backward;
+                m_Movement = m_Movement | CameraMovement::Backward;
                 break;
             }
             case LOFI_KEY_A: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Left;
+                m_Movement = m_Movement | CameraMovement::Left;
                 break;
             }
             case LOFI_KEY_D: {
-                m_Camera.Movement = m_Camera.Movement | CameraMovement::Right;
+                m_Movement = m_Movement | CameraMovement::Right;
                 break;
             }
         }
@@ -101,19 +110,19 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat) {
 void FPCamera::OnKeyReleased(int keycode) {
     switch(keycode) {
         case LOFI_KEY_W: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Forward;
+            m_Movement = m_Movement & ~CameraMovement::Forward;
             break;
         }
         case LOFI_KEY_S: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Backward;
+            m_Movement = m_Movement & ~CameraMovement::Backward;
             break;
         }
         case LOFI_KEY_A: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Left;
+            m_Movement = m_Movement & ~CameraMovement::Left;
             break;
         }
         case LOFI_KEY_D: {
-            m_Camera.Movement = m_Camera.Movement & ~CameraMovement::Right;
+            m_Movement = m_Movement & ~CameraMovement::Right;
             break;
         }
     }
@@ -143,5 +152,5 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
     if (abs(yoffset) > max_offset)
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
-    m_Camera.ProcessMouse(xoffset, yoffset);
+    ProcessMouse(xoffset, yoffset);
 }

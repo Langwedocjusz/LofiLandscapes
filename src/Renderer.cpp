@@ -102,6 +102,10 @@ void Renderer::OnImGuiRender() {
                 m_ShowLightMenu = !m_ShowLightMenu;
             }
 
+            if (ImGui::MenuItem("Camera")) {
+                m_ShowCamMenu = !m_ShowCamMenu;
+            }
+
             ImGui::EndMenu();
         }
 
@@ -118,8 +122,10 @@ void Renderer::OnImGuiRender() {
         ImGui::Begin("Terrain");
         HeightmapParams temp = m_Map.getHeightmapParams();
         ImGui::SliderInt("Octaves", &(temp.Octaves), 1, 10);
-    
-        if (temp.Octaves != m_Map.getHeightmapParams().Octaves) {
+        ImGui::SliderFloat("Offset x", &(temp.Offset[0]), 0.0f, 20.0f);
+        ImGui::SliderFloat("Offset y", &(temp.Offset[1]), 0.0f, 20.0f);
+
+        if (temp != m_Map.getHeightmapParams()) {
             m_Map.setHeightmapParams(temp);
             RenderHeightmap();
         }
@@ -132,6 +138,18 @@ void Renderer::OnImGuiRender() {
         ImGui::SliderFloat("phi", &m_Phi, 0.0, 6.28);
         ImGui::SliderFloat("theta", &m_Theta, 0.0, 0.5*3.14);
         ImGui::End();
+    }
+
+    if (m_ShowCamMenu) {
+        CameraSettings temp = m_Camera.getSettings();
+
+        ImGui::Begin("Camera");
+        ImGui::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
+        ImGui::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
+        ImGui::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
+        ImGui::End();
+
+        m_Camera.setSettings(temp);
     }
 }
 

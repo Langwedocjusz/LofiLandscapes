@@ -5,7 +5,11 @@
 #include <iostream>
 
 bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs) {
-    return (lhs.Octaves == rhs.Octaves);
+    return (lhs.Octaves == rhs.Octaves) && (lhs.Offset[0] == rhs.Offset[0]) && (lhs.Offset[1] == rhs.Offset[1]);
+}
+
+bool operator!=(const HeightmapParams& lhs, const HeightmapParams& rhs) {
+    return !(lhs==rhs);
 }
 
 MapRenderer::MapRenderer()
@@ -105,6 +109,8 @@ void MapRenderer::Update() {
     glClear(GL_COLOR_BUFFER_BIT);
     m_HeightmapShader.Bind();
     m_HeightmapShader.setUniform1i("uOctaves", m_HeightmapParams.Octaves);
+    m_HeightmapShader.setUniform2f("uOffset", m_HeightmapParams.Offset[0],
+                                              m_HeightmapParams.Offset[1]);
     BindGeometry();
     Draw();
 

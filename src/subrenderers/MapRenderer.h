@@ -3,11 +3,13 @@
 #include "Shader.h"
 
 struct HeightmapParams{
-    int Octaves = 10;
     int Resolution = 4096;
+    int Octaves = 10;
+    float Offset[2] = {0.0f, 0.0f};
 };
 
 bool operator==(const HeightmapParams& lhs, const HeightmapParams& rhs);
+bool operator!=(const HeightmapParams& lhs, const HeightmapParams& rhs);
 
 class MapRenderer {
 public:

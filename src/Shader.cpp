@@ -163,6 +163,11 @@ void Shader::setUniform1f(const std::string& name, float x) {
     glUniform1f(location, x);
 }
 
+void Shader::setUniform2f(const std::string& name, float x, float y){
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform2f(location, x, y);
+}
+
 void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) {
     const unsigned int location = getUniformLocation(name.c_str());
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
