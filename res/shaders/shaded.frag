@@ -20,5 +20,5 @@ void main() {
 
     float dif = clamp(dot(l_dir, norm), 0.0, 1.0); //texture(tex, uv);
     frag_col = vec4(vec3(dif), 1.0);
-    //frag_col = vec4(norm, 1.0);
+    //frag_col = vec4(vec3(res.w), 1.0);
 }

@@ -21,8 +21,8 @@ vec3 getNorm(vec2 p) {
 }
 
 void main() {
-    //float height = getHeight(uv);
+    float height = getHeight(uv);
     vec3 norm = getNorm(uv);
 
-    frag_col = vec4(0.5*norm+0.5, 1.0);    
+    frag_col = vec4(0.5*norm+0.5, height);    
 }

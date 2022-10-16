@@ -8,15 +8,15 @@
 #include <iostream>
 
 
-void Renderer::RenderHeightmap() {
+void Renderer::RenderHeightmap(bool normal_only) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     //Render to heightmap/normalmap:
-    m_Map.Update();
+    m_Map.Update(normal_only);
 
     //Update vertex data:
-    m_Map.BindHeightmap();
-    m_Terrain.DisplaceVertices();
+    //m_Map.BindHeightmap();
+    //m_Terrain.DisplaceVertices();
 
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -32,11 +32,11 @@ Renderer::Renderer(unsigned int width, unsigned int height)
                      "res/shaders/shaded.frag"),
       m_WireframeShader("res/shaders/wireframe.vert", 
                         "res/shaders/wireframe.frag"),
-      m_Terrain(m_N, m_L),
+      m_Terrain(),
       m_Map()
 {
     glEnable(GL_DEPTH_TEST);
-    RenderHeightmap();
+    RenderHeightmap(false);
 }
 
 Renderer::~Renderer() {}
@@ -55,16 +55,26 @@ void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    if (m_UpdatePos) {
+        glm::vec3 dif = m_Camera.getPos() - m_LastPos;
+        m_LastPos = m_Camera.getPos();
+
+        m_Map.BindHeightmap();
+        m_Terrain.DisplaceVertices(dif.x, dif.z,
+                                   m_Map.getSettings().ScaleXZ,
+                                   m_Map.getSettings().ScaleY);
+    }
+
     if (m_Wireframe) {
         m_WireframeShader.Bind();
-        m_WireframeShader.setUniform1f("uL", m_L);
+        m_WireframeShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
 
     }
 
     else {
         m_ShadedShader.Bind();
-        m_ShadedShader.setUniform1f("uL", m_L);
+        m_ShadedShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
         m_ShadedShader.setUniform1f("uTheta", m_Theta);
         m_ShadedShader.setUniform1f("uPhi", m_Phi);
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
@@ -120,14 +130,22 @@ void Renderer::OnImGuiRender() {
 
     if (m_ShowTerrainMenu) {
         ImGui::Begin("Terrain");
-        HeightmapParams temp = m_Map.getHeightmapParams();
-        ImGui::SliderInt("Octaves", &(temp.Octaves), 1, 10);
+        HeightmapSettings temp = m_Map.getSettings();
+        ImGui::Checkbox("Update position", &m_UpdatePos);
+        ImGui::SliderFloat("Scale xz", &(temp.ScaleXZ), 0.0f, 400.0f);
+        ImGui::SliderFloat("Scale y" , &(temp.ScaleY ), 0.0f, 100.0f);
+        ImGui::SliderInt("Octaves", &(temp.Octaves), 1, 16);
         ImGui::SliderFloat("Offset x", &(temp.Offset[0]), 0.0f, 20.0f);
         ImGui::SliderFloat("Offset y", &(temp.Offset[1]), 0.0f, 20.0f);
 
-        if (temp != m_Map.getHeightmapParams()) {
-            m_Map.setHeightmapParams(temp);
-            RenderHeightmap();
+        if (temp != m_Map.getSettings()) {
+            m_Map.setSettings(temp);
+            RenderHeightmap(false);
+        }
+
+        else if (temp.ScaleY != m_Map.getSettings().ScaleY || temp.ScaleXZ != m_Map.getSettings().ScaleXZ) {
+            m_Map.setSettings(temp);
+            RenderHeightmap(true);
         }
 
         ImGui::End();

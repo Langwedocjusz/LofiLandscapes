@@ -13,14 +13,19 @@ layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
 uniform sampler2D heightmap;
 
-uniform float uL;
+uniform vec2 uPos;
+uniform float uScaleXZ;
+uniform float uScaleY;
 
 void main() {
     uint i = gl_GlobalInvocationID.x;
-    vec2 uv = (2.0/uL) * verts[i].pos.xz;
+
+    verts[i].pos.xz += uPos;
+
+    vec2 uv = (2.0/uScaleXZ) * verts[i].pos.xz;
     uv = 0.5*uv + 0.5;
     
-    float height = 0.5 * uL * texture(heightmap, uv).r;
+    float height = 0.5 * uScaleY * texture(heightmap, uv).r;
 
     verts[i].pos.y = height;
 }
