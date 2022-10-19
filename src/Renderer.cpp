@@ -15,8 +15,9 @@ void Renderer::RenderHeightmap(bool normal_only) {
     m_Map.Update(normal_only);
 
     //Update vertex data:
-    //m_Map.BindHeightmap();
-    //m_Terrain.DisplaceVertices();
+    m_Map.BindHeightmap();
+    m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, m_Map.getSettings().ScaleY,
+                               m_Camera.getPos().x, m_Camera.getPos().z);
 
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -56,18 +57,15 @@ void Renderer::OnRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (m_UpdatePos) {
-        glm::vec3 dif = m_Camera.getPos() - m_LastPos;
-        m_LastPos = m_Camera.getPos();
-
         m_Map.BindHeightmap();
-        m_Terrain.DisplaceVertices(dif.x, dif.z,
-                                   m_Map.getSettings().ScaleXZ,
-                                   m_Map.getSettings().ScaleY);
+        m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, m_Map.getSettings().ScaleY,
+                                   m_Camera.getPos().x, m_Camera.getPos().z);
     }
 
     if (m_Wireframe) {
         m_WireframeShader.Bind();
         m_WireframeShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
+        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
 
     }
@@ -77,6 +75,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
         m_ShadedShader.setUniform1f("uTheta", m_Theta);
         m_ShadedShader.setUniform1f("uPhi", m_Phi);
+        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
     }
 

@@ -10,10 +10,12 @@ bool operator!=(const TerrainSettings& lhs, const TerrainSettings& rhs) {
     return ~(lhs==rhs);
 }
 
-void GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx, 
-        unsigned int N, float L, float global_offset_x, float global_offset_y) 
+void TerrainRenderer::GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx, 
+        unsigned int N, float L, float global_offset_x, float global_offset_y, 
+        unsigned int LodLevel) 
 {
     unsigned int start = static_cast<unsigned int>(vert.size())/4;
+    float base_offset = m_Settings.L/float(m_Settings.N-1);
 
     //Vertex data:
     for (int i=0; i<N*N; i++) {
@@ -23,7 +25,7 @@ void GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx,
         vert.push_back(origin[0] + offset[0]);
         vert.push_back(0.0f);
         vert.push_back(origin[1] + offset[1]);
-        vert.push_back(1.0f);
+        vert.push_back(std::pow(2, LodLevel) * base_offset); //m_L/float(m_N-1));
     }
 
     //Index data:
@@ -71,7 +73,7 @@ TerrainRenderer::TerrainRenderer()
 {
     //Lod 0
     GenerateGrid(m_TerrainVertexData, m_TerrainIndexData, 
-            4*m_Settings.N, 4.0f*m_Settings.L, 0.0f, 0.0f);
+            4*m_Settings.N, 4.0f*m_Settings.L, 0.0f, 0.0f, 0);
     GenBuffers(m_TerrainVAO, m_TerrainVBO, m_TerrainEBO,
                m_TerrainVertexData, m_TerrainIndexData);
 
@@ -83,7 +85,8 @@ TerrainRenderer::TerrainRenderer()
     for (int i=0; i<12; i++){
         GenerateGrid(m_TerrainVertexData2, m_TerrainIndexData2, 
                 m_Settings.N, 2.0f*m_Settings.L, 
-                m_Settings.L*offsets[2*i], m_Settings.L*offsets[2*i+1]);    
+                m_Settings.L*offsets[2*i], m_Settings.L*offsets[2*i+1],
+                1);    
     }
 
     GenBuffers(m_TerrainVAO2, m_TerrainVBO2, m_TerrainEBO2,
@@ -94,7 +97,8 @@ TerrainRenderer::TerrainRenderer()
         GenerateGrid(m_TerrainVertexData3, m_TerrainIndexData3, 
                 m_Settings.N, 4.0f*m_Settings.L, 
                 2.0f*m_Settings.L*offsets[2*i], 
-                2.0f*m_Settings.L*offsets[2*i+1]);    
+                2.0f*m_Settings.L*offsets[2*i+1],
+                2);    
     }
 
     GenBuffers(m_TerrainVAO3, m_TerrainVBO3, m_TerrainEBO3, 
@@ -105,7 +109,8 @@ TerrainRenderer::TerrainRenderer()
         GenerateGrid(m_TerrainVertexData4, m_TerrainIndexData4, 
                 m_Settings.N, 8.0f*m_Settings.L, 
                 4.0f*m_Settings.L*offsets[2*i], 
-                4.0f*m_Settings.L*offsets[2*i+1]);    
+                4.0f*m_Settings.L*offsets[2*i+1],
+                3);    
     }
 
     GenBuffers(m_TerrainVAO4, m_TerrainVBO4, m_TerrainEBO4, 
@@ -117,10 +122,10 @@ TerrainRenderer::~TerrainRenderer() {
 
 }
 
-void TerrainRenderer::DisplaceVertices(float pos_x, float pos_y, 
-                                       float scale_xz, float scale_y) {
+void TerrainRenderer::DisplaceVertices(float scale_xz, float scale_y,
+                                       float offset_x, float offset_z) {
     m_DisplaceShader.Bind();
-    m_DisplaceShader.setUniform2f("uPos", pos_x, pos_y);
+    m_DisplaceShader.setUniform2f("uPos", offset_x, offset_z);
     m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
     m_DisplaceShader.setUniform1f("uScaleY", scale_y);
     

@@ -3,7 +3,7 @@
 #include "Shader.h"
 
 struct TerrainSettings{
-    int N = 17;
+    int N = 33;
     float L = 4.0f;
 };
 
@@ -18,7 +18,8 @@ public:
     void setSettings(TerrainSettings x) {m_Settings = x;}
     TerrainSettings getSettings() {return m_Settings;}
 
-    void DisplaceVertices(float pos_x, float pos_y, float scale_xz, float scale_y);
+    void DisplaceVertices(float scale_xz, float scale_y,
+                          float offset_x, float offset_z);
     void BindGeometry();
     void Draw();
 
@@ -42,4 +43,8 @@ private:
     TerrainSettings m_Settings;
 
     Shader m_DisplaceShader;
+
+    void GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx, 
+        unsigned int N, float L, float global_offset_x, float global_offset_y, 
+        unsigned int LodLevel); 
 };

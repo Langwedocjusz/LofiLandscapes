@@ -5,7 +5,7 @@
 struct HeightmapSettings{
     int Resolution = 4096;
     int Octaves = 10;
-    float ScaleXZ = 16.0f;
+    float ScaleXZ = 100.0f;
     float ScaleY = 20.0f;
     float Offset[2] = {0.0f, 0.0f};
 };

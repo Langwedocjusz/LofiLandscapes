@@ -80,7 +80,7 @@ glm::mat4 FPCamera::getProjMatrix(unsigned int width, unsigned int height) {
     float aspect = float(width) / float(height);
 
     return glm::perspective(glm::radians(m_Settings.Fov), 
-                            aspect, 0.1f, 100.0f);
+                            aspect, 0.1f, 1000.0f);
 }
 
 void FPCamera::OnKeyPressed(int keycode, bool repeat) {

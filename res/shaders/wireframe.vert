@@ -5,11 +5,12 @@ layout (location = 0) in vec4 aPos;
 uniform float uL;
 uniform mat4 uMVP;
 
+uniform vec2 uPos;
+
 uniform sampler2D tex;
 
 void main() {
-    vec2 uv = (2.0/uL) * aPos.xz;
-    uv = 0.5*uv + 0.5;
-
-    gl_Position = uMVP * aPos;
+    vec2 hoffset = uPos - mod(uPos, aPos.w);
+    
+    gl_Position = uMVP * vec4(aPos.xyz + vec3(hoffset.x, 0.0, hoffset.y), 1.0);
 }

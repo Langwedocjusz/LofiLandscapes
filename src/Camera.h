@@ -17,7 +17,7 @@ CameraMovement operator|(CameraMovement x, CameraMovement y);
 CameraMovement operator&(CameraMovement x, CameraMovement y);
 
 struct CameraSettings{
-    float Speed = 1.0f;
+    float Speed = 5.0f;
     float Sensitivity = 100.0f;
     float Fov = 45.0f;
 };
