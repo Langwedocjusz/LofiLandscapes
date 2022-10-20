@@ -20,10 +20,11 @@ public:
 
     void BindGeometry();
     void Draw();
-    void Update(bool normal_only);
+    void Update(bool normal_only, float theta, float phi);
 
-    void BindHeightmap();
-    void BindNormalmap();
+    void BindHeightmap(int id=0);
+    void BindNormalmap(int id=0);
+    void BindShadowmap(int id=0);
 
     void setSettings(const HeightmapSettings& we) 
     {m_Settings = we;}
@@ -34,6 +35,7 @@ private:
     unsigned int m_QuadVAO, m_QuadVBO, m_QuadEBO;
     unsigned int m_HeightmapFBO, m_HeightmapTexture;
     unsigned int m_NormalmapFBO, m_NormalmapTexture;
+    unsigned int m_ShadowFBO, m_ShadowTexture;
 
     float m_QuadVertexData[12] = {-1.0f, 1.0f, 1.0f,
                                    1.0f, 1.0f, 1.0f,
@@ -41,6 +43,6 @@ private:
                                   -1.0f,-1.0f, 1.0f };
     unsigned int m_QuadIndexData[6] = {0,1,3, 1,2,3};
 
-    Shader m_HeightmapShader, m_NormalmapShader;
+    Shader m_HeightmapShader, m_NormalmapShader, m_ShadowShader;
     HeightmapSettings m_Settings;
 };

@@ -26,8 +26,12 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "GLFW_INCLUDE_NONE")
 #Specify source files
 file(GLOB_RECURSE headers src/*.h)
 file(GLOB_RECURSE sources src/*.cpp)
-target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources})
+#Glfw implementation files for imgui
+file(GLOB imgui_impl vendor/imgui/backends/imgui_impl_opengl3.cpp vendor/imgui/backends/imgui_impl_glfw.cpp)
 
+target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources} ${imgui_impl})
+
+#Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
 #Set current project as Visual Studio start project

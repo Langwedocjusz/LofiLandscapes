@@ -46,31 +46,31 @@ void TerrainRenderer::GenerateGrid(std::vector<float>& vert, std::vector<unsigne
     }
 }
 
-void GenBuffers(unsigned int& vao, unsigned int& vbo, unsigned int& ebo,
-                std::vector<float>& vertex_data,
-                std::vector<unsigned int>& index_data) {
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
-
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), 
-            &vertex_data[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
-            sizeof(unsigned int) * index_data.size(), 
-            &index_data[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-}
-
 TerrainRenderer::TerrainRenderer() 
     : m_DisplaceShader("res/shaders/displace.glsl")
 {
+    auto GenBuffers = [](unsigned int&vao, unsigned int&vbo, unsigned int& ebo,
+            std::vector<float>& vertex_data,
+            std::vector<unsigned int>& index_data){
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+
+        glBindVertexArray(vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), 
+                &vertex_data[0], GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
+                sizeof(unsigned int) * index_data.size(), 
+                &index_data[0], GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    };
+
     //Lod 0
     GenerateGrid(m_TerrainVertexData, m_TerrainIndexData, 
             4*m_Settings.N, 4.0f*m_Settings.L, 0.0f, 0.0f, 0);

@@ -27,7 +27,8 @@ private:
     unsigned int m_WindowWidth, m_WindowHeight;
 
     bool m_ShowTerrainMenu = false, m_ShowBackgroundMenu = false,
-         m_ShowLightMenu = false, m_ShowCamMenu = false, m_UpdatePos = true;
+         m_ShowLightMenu = false, m_ShowCamMenu = false,
+         m_UpdatePos = true, m_Shadows = true;
      
     bool m_Wireframe = false;
 

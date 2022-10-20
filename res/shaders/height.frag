@@ -54,8 +54,10 @@ float fbm(in vec2 p, int octaves) {
 }
 
 void main() {
-    vec2 ts = 16.0*uv - uOffset;
-    float height = fbm(ts, uOctaves);
-    
+    vec2 ts = 32.0*uv - uOffset;
+    float height = max(fbm(ts, uOctaves)-0.8, 0.0);
+    //float d2 = dot(uv - 0.5, uv - 0.5);
+    //float height = 4.0*exp(-32.0*d2);
+
     frag_col = vec4(height);    
 }

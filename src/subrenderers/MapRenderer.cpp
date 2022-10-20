@@ -16,7 +16,8 @@ bool operator!=(const HeightmapSettings& lhs, const HeightmapSettings& rhs) {
 
 MapRenderer::MapRenderer()
     : m_HeightmapShader("res/shaders/quad.vert", "res/shaders/height.frag"),
-      m_NormalmapShader("res/shaders/quad.vert", "res/shaders/normal.frag")
+      m_NormalmapShader("res/shaders/quad.vert", "res/shaders/normal.frag"),
+      m_ShadowShader("res/shaders/quad.vert", "res/shaders/shadow.frag")
 {
     //Quad (GL Buffers only):
     glGenVertexArrays(1, &m_QuadVAO);
@@ -62,8 +63,8 @@ MapRenderer::MapRenderer()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, m_HeightmapTexture, 0);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "FRAMEBUFFER NOT READY \n";
+    //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    //    std::cerr << "FRAMEBUFFER NOT READY \n";
 
     //Normal map:
     //Framebuffer
@@ -90,9 +91,30 @@ MapRenderer::MapRenderer()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, m_NormalmapTexture, 0);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "FRAMEBUFFER NOT READY \n";
+    //Shadow map
+    //Framebuffer
+    glGenFramebuffers(1, &m_ShadowFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFBO);
+
+    //Texture
+    glGenTextures(1, &m_ShadowTexture);
+    glBindTexture(GL_TEXTURE_2D, m_ShadowTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, tex_res, tex_res, 0, 
+                 GL_RED, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    float shadow_border[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, shadow_border);
     
+    //Attach texture to framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, m_ShadowTexture, 0);
+
 }
 
 MapRenderer::~MapRenderer() {
@@ -108,7 +130,7 @@ void MapRenderer::Draw() {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void MapRenderer::Update(bool normal_only) {
+void MapRenderer::Update(bool normal_only, float theta, float phi) {
     glViewport(0, 0, m_Settings.Resolution, 
                      m_Settings.Resolution);
     
@@ -126,7 +148,7 @@ void MapRenderer::Update(bool normal_only) {
     }
 
     //Render to normal map:
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
+    BindHeightmap();
     glBindFramebuffer(GL_FRAMEBUFFER, m_NormalmapFBO);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -135,13 +157,33 @@ void MapRenderer::Update(bool normal_only) {
     m_NormalmapShader.setUniform1f("uScaleY", m_Settings.ScaleY);
     BindGeometry();
     Draw();
+
+    //Render to shadow map:
+    BindHeightmap();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFBO);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    m_ShadowShader.Bind();
+    m_ShadowShader.setUniform1f("uScaleXZ", m_Settings.ScaleXZ);
+    m_ShadowShader.setUniform1f("uScaleY", m_Settings.ScaleY);
+    m_ShadowShader.setUniform1f("uTheta", theta);
+    m_ShadowShader.setUniform1f("uPhi", phi);
+    BindGeometry();
+    Draw();
 }
 
-void MapRenderer::BindHeightmap() {
+void MapRenderer::BindHeightmap(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
 }
 
-void MapRenderer::BindNormalmap() {
+void MapRenderer::BindNormalmap(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_NormalmapTexture);
+}
+
+void MapRenderer::BindShadowmap(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_2D, m_ShadowTexture);
 }
 

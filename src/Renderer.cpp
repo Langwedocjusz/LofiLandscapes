@@ -12,7 +12,7 @@ void Renderer::RenderHeightmap(bool normal_only) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     //Render to heightmap/normalmap:
-    m_Map.Update(normal_only);
+    m_Map.Update(normal_only, m_Theta, m_Phi);
 
     //Update vertex data:
     m_Map.BindHeightmap();
@@ -75,11 +75,16 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
         m_ShadedShader.setUniform1f("uTheta", m_Theta);
         m_ShadedShader.setUniform1f("uPhi", m_Phi);
-        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
+        m_ShadedShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
+        m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
+
+        m_Map.BindNormalmap(0);
+        m_ShadedShader.setUniform1i("normalmap", 0);
+        m_Map.BindShadowmap(1);
+        m_ShadedShader.setUniform1i("shadowmap", 1);
     }
 
-    m_Map.BindNormalmap();
     m_Terrain.BindGeometry();
     m_Terrain.Draw();
 }
@@ -152,8 +157,15 @@ void Renderer::OnImGuiRender() {
 
     if (m_ShowLightMenu) {
         ImGui::Begin("Lighting");
-        ImGui::SliderFloat("phi", &m_Phi, 0.0, 6.28);
-        ImGui::SliderFloat("theta", &m_Theta, 0.0, 0.5*3.14);
+        float phi = m_Phi, theta = m_Theta;
+        ImGui::Checkbox("Shadows", &m_Shadows);
+        ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
+        ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
+        if (phi != m_Phi || theta != m_Theta) {
+            m_Phi = phi;
+            m_Theta = theta;
+            RenderHeightmap(true);
+        }
         ImGui::End();
     }
 
