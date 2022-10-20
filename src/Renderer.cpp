@@ -101,9 +101,13 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
         m_ShadedShader.setUniform1f("uTheta", m_Theta);
         m_ShadedShader.setUniform1f("uPhi", m_Phi);
-        m_ShadedShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
+        m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
+        m_ShadedShader.setUniform3f("sun_col", m_SunCol);
+        m_ShadedShader.setUniform3f("sky_col", m_SkyCol);
+        m_ShadedShader.setUniform3f("ref_col", m_RefCol);
+        m_ShadedShader.setUniform1f("shininess", m_Shininess);
 
         m_Map.BindNormalmap(0);
         m_ShadedShader.setUniform1i("normalmap", 0);
@@ -197,6 +201,10 @@ void Renderer::OnImGuiRender() {
         ImGui::Checkbox("Shadows", &shadows);
         ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
         ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
+        ImGui::ColorEdit3("SunColor" , glm::value_ptr(m_SunCol));
+        ImGui::ColorEdit3("SkyColor" , glm::value_ptr(m_SkyCol));
+        ImGui::ColorEdit3("ReflColor", glm::value_ptr(m_RefCol));
+        ImGui::SliderFloat("shininess", &m_Shininess, 0.0, 32.0);
         ImGui::End();
         
         if (phi != m_Phi || theta != m_Theta) {

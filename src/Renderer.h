@@ -32,7 +32,12 @@ public:
 private:
     float m_Phi = 1.032f, m_Theta = 0.695f;
 
-    float m_ClearColor[3] = {0.2f, 0.2f, 0.2f};
+    float m_ClearColor[3] = {1.0f, 1.0f, 1.0f};
+
+    glm::vec3 m_SunCol = glm::vec3(0.85f, 0.87f, 0.75f);
+    glm::vec3 m_SkyCol = glm::vec3(0.07f, 0.08f, 0.15f);
+    glm::vec3 m_RefCol = glm::vec3(0.15f, 0.06f, 0.06f);
+    float m_Shininess = 32.0f;
 
     unsigned int m_WindowWidth, m_WindowHeight;
 
