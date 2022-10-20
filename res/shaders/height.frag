@@ -55,7 +55,8 @@ float fbm(in vec2 p, int octaves) {
 
 void main() {
     vec2 ts = 32.0*uv - uOffset;
-    float height = max(fbm(ts, uOctaves)-0.8, 0.0);
+    float hoffset = 0.5 + 4.0 * dot(uv-0.5, uv-0.5);
+    float height = max(fbm(ts, uOctaves) - hoffset, 0.0);
     //float d2 = dot(uv - 0.5, uv - 0.5);
     //float height = 4.0*exp(-32.0*d2);
 

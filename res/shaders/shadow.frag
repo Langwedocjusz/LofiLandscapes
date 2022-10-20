@@ -16,7 +16,7 @@ float getHeight(vec2 p) {
 }
 
 void main() {
-    const int shadow_steps = 16;
+    const int shadow_steps = 32;
     const float mint = 0.001;
     const float voffset = 5.0 * mint;
     
@@ -30,7 +30,7 @@ void main() {
     dir *= vec3(-1.0, 1.0, -1.0);
 
     //Raymarch:
-    float t = 0.0;
+    float t = mint;
     float shadow = 1.0;
 
     for (int i=0; i<shadow_steps; i++) {
@@ -44,6 +44,7 @@ void main() {
 
         if (p.x < 0.0 || p.x > 1.0  || p.z < 0.0 || p.z > 1.0) break;
         
+        shadow = min(shadow, 2.0*h/t);
         t += h;
     }
 

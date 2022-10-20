@@ -4,6 +4,16 @@
 #include "subrenderers/TerrainRenderer.h"
 #include "Camera.h"
 
+enum class UpdateFlags {
+    None   =      0,
+    Height = (1<<0),
+    Normal = (1<<1),
+    Shadow = (1<<2)
+};
+
+UpdateFlags operator|(UpdateFlags x, UpdateFlags y);
+UpdateFlags operator&(UpdateFlags x, UpdateFlags y);
+
 class Renderer {
 public:
     Renderer(unsigned int width, unsigned int height);
@@ -12,7 +22,7 @@ public:
     void OnUpdate(float deltatime);
     void OnRender();
     void OnImGuiRender();
-    void RenderHeightmap(bool normal_only);
+    void UpdateMaps(UpdateFlags flags);
 
     void OnWindowResize(unsigned int width, unsigned int height);
     void OnKeyPressed(int keycode, bool repeat);

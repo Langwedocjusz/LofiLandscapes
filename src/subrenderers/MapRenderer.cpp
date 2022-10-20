@@ -130,24 +130,25 @@ void MapRenderer::Draw() {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void MapRenderer::Update(bool normal_only, float theta, float phi) {
+void MapRenderer::UpdateHeight() {
+    glViewport(0, 0, m_Settings.Resolution, 
+                     m_Settings.Resolution);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    m_HeightmapShader.Bind();
+    m_HeightmapShader.setUniform1i("uOctaves", m_Settings.Octaves);
+    m_HeightmapShader.setUniform2f("uOffset" , m_Settings.Offset[0],
+                                                   m_Settings.Offset[1]);
+    BindGeometry();
+    Draw();
+}
+
+void MapRenderer::UpdateNormal() {
     glViewport(0, 0, m_Settings.Resolution, 
                      m_Settings.Resolution);
     
-    //Render to heightmap
-    if (!normal_only) {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        m_HeightmapShader.Bind();
-        m_HeightmapShader.setUniform1i("uOctaves", m_Settings.Octaves);
-        m_HeightmapShader.setUniform2f("uOffset" , m_Settings.Offset[0],
-                                                   m_Settings.Offset[1]);
-        BindGeometry();
-        Draw();
-    }
-
-    //Render to normal map:
     BindHeightmap();
     glBindFramebuffer(GL_FRAMEBUFFER, m_NormalmapFBO);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
@@ -158,7 +159,12 @@ void MapRenderer::Update(bool normal_only, float theta, float phi) {
     BindGeometry();
     Draw();
 
-    //Render to shadow map:
+}
+
+void MapRenderer::UpdateShadow(float theta, float phi) {
+    glViewport(0, 0, m_Settings.Resolution, 
+                     m_Settings.Resolution);
+    
     BindHeightmap();
     glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFBO);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
@@ -170,6 +176,7 @@ void MapRenderer::Update(bool normal_only, float theta, float phi) {
     m_ShadowShader.setUniform1f("uPhi", phi);
     BindGeometry();
     Draw();
+
 }
 
 void MapRenderer::BindHeightmap(int id) {

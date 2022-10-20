@@ -20,7 +20,10 @@ public:
 
     void BindGeometry();
     void Draw();
-    void Update(bool normal_only, float theta, float phi);
+
+    void UpdateHeight();
+    void UpdateNormal();
+    void UpdateShadow(float theta, float phi);
 
     void BindHeightmap(int id=0);
     void BindNormalmap(int id=0);

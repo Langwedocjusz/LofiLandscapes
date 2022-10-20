@@ -7,17 +7,38 @@
 
 #include <iostream>
 
+UpdateFlags operator|(UpdateFlags x, UpdateFlags y) {
+    return static_cast<UpdateFlags>(static_cast<int>(x) 
+                                     | static_cast<int>(y));
+}
 
-void Renderer::RenderHeightmap(bool normal_only) {
+UpdateFlags operator&(UpdateFlags x, UpdateFlags y) {
+    return static_cast<UpdateFlags>(static_cast<int>(x) 
+                                     & static_cast<int>(y));
+}
+
+void Renderer::UpdateMaps(UpdateFlags flags) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
-    //Render to heightmap/normalmap:
-    m_Map.Update(normal_only, m_Theta, m_Phi);
+    //Update Maps
+    if ((flags & UpdateFlags::Height) != UpdateFlags::None)
+        m_Map.UpdateHeight();
 
-    //Update vertex data:
     m_Map.BindHeightmap();
-    m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, m_Map.getSettings().ScaleY,
-                               m_Camera.getPos().x, m_Camera.getPos().z);
+
+    if ((flags & UpdateFlags::Normal) != UpdateFlags::None)
+        m_Map.UpdateNormal();
+
+    if ((flags & UpdateFlags::Shadow) != UpdateFlags::None)
+        m_Map.UpdateShadow(m_Theta, m_Phi);
+
+    //Update Verticies
+    if ((flags & UpdateFlags::Height) != UpdateFlags::None ||
+        (flags & UpdateFlags::Normal) != UpdateFlags::None) {
+        m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, 
+                                   m_Map.getSettings().ScaleY,
+                                   m_Camera.getPos().x, m_Camera.getPos().z);
+    }
 
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -37,7 +58,12 @@ Renderer::Renderer(unsigned int width, unsigned int height)
       m_Map()
 {
     glEnable(GL_DEPTH_TEST);
-    RenderHeightmap(false);
+
+    UpdateFlags flags = UpdateFlags::Height;
+    flags = flags | UpdateFlags::Normal;
+    flags = flags | UpdateFlags::Shadow;
+
+    UpdateMaps(flags);
 }
 
 Renderer::~Renderer() {}
@@ -90,6 +116,7 @@ void Renderer::OnRender() {
 }
 
 void Renderer::OnImGuiRender() {
+    //Menu bar
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Shaded")) {
@@ -126,6 +153,9 @@ void Renderer::OnImGuiRender() {
         ImGui::EndMainMenuBar();
     }
 
+    //Windows
+    UpdateFlags flags = UpdateFlags::None;
+    
     if (m_ShowBackgroundMenu) {
         ImGui::Begin("Background");
         ImGui::ColorEdit3("ClearColor", m_ClearColor);
@@ -144,29 +174,42 @@ void Renderer::OnImGuiRender() {
 
         if (temp != m_Map.getSettings()) {
             m_Map.setSettings(temp);
-            RenderHeightmap(false);
+            flags = flags | UpdateFlags::Height;
+            flags = flags | UpdateFlags::Normal;
+            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
         }
 
-        else if (temp.ScaleY != m_Map.getSettings().ScaleY || temp.ScaleXZ != m_Map.getSettings().ScaleXZ) {
+        else if (temp.ScaleY != m_Map.getSettings().ScaleY || 
+                 temp.ScaleXZ != m_Map.getSettings().ScaleXZ) {
             m_Map.setSettings(temp);
-            RenderHeightmap(true);
+            flags = flags | UpdateFlags::Normal;
+            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
         }
 
         ImGui::End();
     }
 
     if (m_ShowLightMenu) {
-        ImGui::Begin("Lighting");
         float phi = m_Phi, theta = m_Theta;
-        ImGui::Checkbox("Shadows", &m_Shadows);
+        bool shadows = m_Shadows;
+
+        ImGui::Begin("Lighting");
+        ImGui::Checkbox("Shadows", &shadows);
         ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
         ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
+        ImGui::End();
+        
         if (phi != m_Phi || theta != m_Theta) {
             m_Phi = phi;
             m_Theta = theta;
-            RenderHeightmap(true);
+            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
         }
-        ImGui::End();
+
+        if (shadows != m_Shadows) {
+            m_Shadows = shadows;
+            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
+        }
+
     }
 
     if (m_ShowCamMenu) {
@@ -180,6 +223,8 @@ void Renderer::OnImGuiRender() {
 
         m_Camera.setSettings(temp);
     }
+
+    UpdateMaps(flags);
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
