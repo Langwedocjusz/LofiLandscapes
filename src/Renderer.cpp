@@ -18,8 +18,14 @@ Renderer::Renderer(unsigned int width, unsigned int height)
       m_Map()
 {
     glEnable(GL_DEPTH_TEST);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    //Update Maps
     m_Map.Update(m_Theta, m_Phi);
+
+    //Return to normal rendering
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
 }
 
 Renderer::~Renderer() {}
@@ -75,7 +81,7 @@ void Renderer::OnRender() {
 }
 
 void Renderer::OnImGuiRender() {
-    //Menu bar
+    //-----Menu bar
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Shaded")) {
@@ -111,9 +117,13 @@ void Renderer::OnImGuiRender() {
         ImGui::EndMainMenuBar();
     }
 
-    //Windows
+    //-----Dockspace
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspace_flags);
+
+    //-----Windows
     if (m_ShowBackgroundMenu) {
-        ImGui::Begin("Background");
+        ImGui::Begin("Background", &m_ShowBackgroundMenu);
         ImGui::ColorEdit3("ClearColor", m_ClearColor);
         ImGui::End();
     }
@@ -121,7 +131,7 @@ void Renderer::OnImGuiRender() {
     if (m_ShowCamMenu) {
         CameraSettings temp = m_Camera.getSettings();
 
-        ImGui::Begin("Camera");
+        ImGui::Begin("Camera", &m_ShowCamMenu);
         ImGui::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
         ImGui::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
         ImGui::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
@@ -130,18 +140,17 @@ void Renderer::OnImGuiRender() {
         m_Camera.setSettings(temp);
     }
     
-
     if (m_ShowTerrainMenu)
-        m_Map.ImGuiTerrain(m_Shadows);
+        m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_Shadows);
 
     if(m_ShowShadowMenu)
-        m_Map.ImGuiShadowmap(m_Shadows);
+        m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
 
     if (m_ShowLightMenu) {
         float phi = m_Phi, theta = m_Theta;
         bool shadows = m_Shadows;
 
-        ImGui::Begin("Lighting");
+        ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGui::Checkbox("Shadows", &shadows);
         ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
         ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);

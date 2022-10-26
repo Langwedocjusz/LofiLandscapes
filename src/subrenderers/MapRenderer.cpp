@@ -218,11 +218,11 @@ void MapRenderer::BindShadowmap(int id) {
     glBindTexture(GL_TEXTURE_2D, m_ShadowTexture);
 }
 
-void MapRenderer::ImGuiTerrain(bool update_shadows) {
+void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
     HeightmapSettings temp_h = m_HeightSettings;
     ScaleSettings temp_s = m_ScaleSettings;
 
-    ImGui::Begin("Terrain settings");
+    ImGui::Begin("Terrain settings", &open);
     ImGui::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
     ImGui::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
     ImGui::SliderInt("Octaves", &temp_h.Octaves, 1, 16);
@@ -248,10 +248,10 @@ void MapRenderer::ImGuiTerrain(bool update_shadows) {
     }
 }
 
-void MapRenderer::ImGuiShadowmap(bool update_shadows) {
+void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
 
-    ImGui::Begin("Shadowmap settings");
+    ImGui::Begin("Shadowmap settings", &open);
     ImGui::SliderFloat("Min t", &temp.MinT, 0.0, 0.5);
     ImGui::SliderFloat("Max t", &temp.MaxT, 0.0, 1.0);
     ImGui::SliderFloat("Mip bias", &temp.Bias, 0.0, 20.0);

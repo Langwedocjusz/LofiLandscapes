@@ -39,8 +39,8 @@ public:
     void BindNormalmap(int id=0);
     void BindShadowmap(int id=0);
 
-    void ImGuiTerrain(bool update_shadows);
-    void ImGuiShadowmap(bool update_shadows);
+    void ImGuiTerrain(bool &open, bool update_shadows);
+    void ImGuiShadowmap(bool &open, bool update_shadows);
     void RequestShadowUpdate();
 
     bool GeometryShouldUpdate();
