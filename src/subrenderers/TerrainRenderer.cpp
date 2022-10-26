@@ -2,15 +2,8 @@
 
 #include "glad/glad.h"
 
-bool operator==(const TerrainSettings& lhs, const TerrainSettings& rhs) {
-    return (lhs.N == rhs.N) && (lhs.L == rhs.L);
-}
-
-bool operator!=(const TerrainSettings& lhs, const TerrainSettings& rhs) {
-    return ~(lhs==rhs);
-}
-
-void TerrainRenderer::GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx, 
+void TerrainRenderer::GenerateGrid(std::vector<float>& vert, 
+                                   std::vector<unsigned int>& idx, 
         unsigned int N, float L, float global_offset_x, float global_offset_y, 
         unsigned int LodLevel) 
 {
@@ -25,7 +18,7 @@ void TerrainRenderer::GenerateGrid(std::vector<float>& vert, std::vector<unsigne
         vert.push_back(origin[0] + offset[0]);
         vert.push_back(0.0f);
         vert.push_back(origin[1] + offset[1]);
-        vert.push_back(std::pow(2, LodLevel) * base_offset); //m_L/float(m_N-1));
+        vert.push_back(std::pow(2, LodLevel) * base_offset);
     }
 
     //Index data:
@@ -67,7 +60,8 @@ TerrainRenderer::TerrainRenderer()
                 sizeof(unsigned int) * index_data.size(), 
                 &index_data[0], GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), 
+                              (void*)0);
         glEnableVertexAttribArray(0);
     };
 
@@ -119,7 +113,21 @@ TerrainRenderer::TerrainRenderer()
 }
 
 TerrainRenderer::~TerrainRenderer() {
-
+    glDeleteVertexArrays(1, &m_TerrainVAO);
+    glDeleteBuffers(1, &m_TerrainVBO);
+    glDeleteBuffers(1, &m_TerrainEBO);
+    
+    glDeleteVertexArrays(1, &m_TerrainVAO2);
+    glDeleteBuffers(1, &m_TerrainVBO2);
+    glDeleteBuffers(1, &m_TerrainEBO2);
+    
+    glDeleteVertexArrays(1, &m_TerrainVAO3);
+    glDeleteBuffers(1, &m_TerrainVBO3);
+    glDeleteBuffers(1, &m_TerrainEBO3);
+    
+    glDeleteVertexArrays(1, &m_TerrainVAO4);
+    glDeleteBuffers(1, &m_TerrainVBO4);
+    glDeleteBuffers(1, &m_TerrainEBO4);
 }
 
 void TerrainRenderer::DisplaceVertices(float scale_xz, float scale_y,
@@ -162,10 +170,7 @@ void TerrainRenderer::DisplaceVertices(float scale_xz, float scale_y,
     glDispatchCompute(2 * m_TerrainVertexData4.size() / 1024, 1, 1);
 }
 
-void TerrainRenderer::BindGeometry() {
-}
-
-void TerrainRenderer::Draw() {
+void TerrainRenderer::BindAndDraw() {
     glBindVertexArray(m_TerrainVAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO);
     glDrawElements(GL_TRIANGLES, 6*4*m_Settings.N*4*m_Settings.N,

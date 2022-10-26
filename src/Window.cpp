@@ -30,9 +30,21 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
     //user pointer:
     glfwSetWindowUserPointer(m_Window, &m_WindowData);
 
-    //callbacks:
+    //Opengl error callback:
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, 
+                GLenum severity, GLsizei length, const GLchar* message,
+                const void* userParam) {
+        if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return ;
+
+        std::cout << "GL CALLBACK: type = " << type 
+                  << ", severity = " << severity 
+                  << ", message = " << message << '\n';
+    }, 0);
+
+    //Glfw callbacks:
     glfwSetErrorCallback([](int code, const char* message){
-        std::cerr << "OpenGL Error: \n" << "Code: " << code
+        std::cerr << "Glfw Error: \n" << "Code: " << code
                   << "Message: " << message << '\n';
     });
 
@@ -85,6 +97,7 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
 }
 
 Window::~Window() {
+    glfwDestroyWindow(m_Window);
     glfwTerminate();
 }
 

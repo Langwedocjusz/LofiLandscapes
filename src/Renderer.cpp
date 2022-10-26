@@ -7,46 +7,6 @@
 
 #include <iostream>
 
-UpdateFlags operator|(UpdateFlags x, UpdateFlags y) {
-    return static_cast<UpdateFlags>(static_cast<int>(x) 
-                                     | static_cast<int>(y));
-}
-
-UpdateFlags operator&(UpdateFlags x, UpdateFlags y) {
-    return static_cast<UpdateFlags>(static_cast<int>(x) 
-                                     & static_cast<int>(y));
-}
-
-void Renderer::UpdateMaps(UpdateFlags flags) {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    
-    //Update Maps
-    if ((flags & UpdateFlags::Height) != UpdateFlags::None)
-        m_Map.UpdateHeight();
-
-    m_Map.BindHeightmap();
-
-    if ((flags & UpdateFlags::Normal) != UpdateFlags::None)
-        m_Map.UpdateNormal();
-
-    if ((flags & UpdateFlags::Shadow) != UpdateFlags::None)
-        m_Map.UpdateShadow(m_Theta, m_Phi);
-
-    //Update Verticies
-    if ((flags & UpdateFlags::Height) != UpdateFlags::None ||
-        (flags & UpdateFlags::Normal) != UpdateFlags::None) {
-        m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, 
-                                   m_Map.getSettings().ScaleY,
-                                   m_Camera.getPos().x, m_Camera.getPos().z);
-    }
-
-    //Return to normal rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
-    
-    if (m_Wireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-}
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height),
@@ -59,11 +19,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 {
     glEnable(GL_DEPTH_TEST);
 
-    UpdateFlags flags = UpdateFlags::Height;
-    flags = flags | UpdateFlags::Normal;
-    flags = flags | UpdateFlags::Shadow;
-
-    UpdateMaps(flags);
+    m_Map.Update(m_Theta, m_Phi);
 }
 
 Renderer::~Renderer() {}
@@ -81,24 +37,24 @@ void Renderer::OnUpdate(float deltatime) {
 void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    if (m_UpdatePos) {
-        m_Map.BindHeightmap();
-        m_Terrain.DisplaceVertices(m_Map.getSettings().ScaleXZ, m_Map.getSettings().ScaleY,
-                                   m_Camera.getPos().x, m_Camera.getPos().z);
-    }
+    
+    m_Map.BindHeightmap();
+    m_Terrain.DisplaceVertices(m_Map.getScaleSettings().ScaleXZ, 
+                               m_Map.getScaleSettings().ScaleY,
+                               m_Camera.getPos().x, m_Camera.getPos().z);
 
     if (m_Wireframe) {
         m_WireframeShader.Bind();
-        m_WireframeShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
-        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
+        m_WireframeShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, 
+                                               m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
 
     }
 
     else {
         m_ShadedShader.Bind();
-        m_ShadedShader.setUniform1f("uL", m_Map.getSettings().ScaleXZ);
+        m_ShadedShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
         m_ShadedShader.setUniform1f("uTheta", m_Theta);
         m_ShadedShader.setUniform1f("uPhi", m_Phi);
         m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
@@ -115,8 +71,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("shadowmap", 1);
     }
 
-    m_Terrain.BindGeometry();
-    m_Terrain.Draw();
+    m_Terrain.BindAndDraw();
 }
 
 void Renderer::OnImGuiRender() {
@@ -135,21 +90,20 @@ void Renderer::OnImGuiRender() {
         }
 
         if (ImGui::BeginMenu("Windows")) {
-            if (ImGui::MenuItem("Terrain")) {
+            if (ImGui::MenuItem("Terrain"))
                 m_ShowTerrainMenu = !m_ShowTerrainMenu;
-            }
 
-            if (ImGui::MenuItem("Background")) {
+            if (ImGui::MenuItem("Background"))
                 m_ShowBackgroundMenu = !m_ShowBackgroundMenu;
-            }
 
-            if (ImGui::MenuItem("Lighting")) {
+            if (ImGui::MenuItem("Lighting"))
                 m_ShowLightMenu = !m_ShowLightMenu;
-            }
 
-            if (ImGui::MenuItem("Camera")) {
+            if (ImGui::MenuItem("Shadows"))
+                m_ShowShadowMenu = !m_ShowShadowMenu;
+
+            if (ImGui::MenuItem("Camera"))
                 m_ShowCamMenu = !m_ShowCamMenu;
-            }
 
             ImGui::EndMenu();
         }
@@ -158,40 +112,30 @@ void Renderer::OnImGuiRender() {
     }
 
     //Windows
-    UpdateFlags flags = UpdateFlags::None;
-    
     if (m_ShowBackgroundMenu) {
         ImGui::Begin("Background");
         ImGui::ColorEdit3("ClearColor", m_ClearColor);
         ImGui::End();
     }
+    
+    if (m_ShowCamMenu) {
+        CameraSettings temp = m_Camera.getSettings();
 
-    if (m_ShowTerrainMenu) {
-        ImGui::Begin("Terrain");
-        HeightmapSettings temp = m_Map.getSettings();
-        ImGui::Checkbox("Update position", &m_UpdatePos);
-        ImGui::SliderFloat("Scale xz", &(temp.ScaleXZ), 0.0f, 400.0f);
-        ImGui::SliderFloat("Scale y" , &(temp.ScaleY ), 0.0f, 100.0f);
-        ImGui::SliderInt("Octaves", &(temp.Octaves), 1, 16);
-        ImGui::SliderFloat("Offset x", &(temp.Offset[0]), 0.0f, 20.0f);
-        ImGui::SliderFloat("Offset y", &(temp.Offset[1]), 0.0f, 20.0f);
-
-        if (temp != m_Map.getSettings()) {
-            m_Map.setSettings(temp);
-            flags = flags | UpdateFlags::Height;
-            flags = flags | UpdateFlags::Normal;
-            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
-        }
-
-        else if (temp.ScaleY != m_Map.getSettings().ScaleY || 
-                 temp.ScaleXZ != m_Map.getSettings().ScaleXZ) {
-            m_Map.setSettings(temp);
-            flags = flags | UpdateFlags::Normal;
-            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
-        }
-
+        ImGui::Begin("Camera");
+        ImGui::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
+        ImGui::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
+        ImGui::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
         ImGui::End();
+
+        m_Camera.setSettings(temp);
     }
+    
+
+    if (m_ShowTerrainMenu)
+        m_Map.ImGuiTerrain(m_Shadows);
+
+    if(m_ShowShadowMenu)
+        m_Map.ImGuiShadowmap(m_Shadows);
 
     if (m_ShowLightMenu) {
         float phi = m_Phi, theta = m_Theta;
@@ -210,29 +154,28 @@ void Renderer::OnImGuiRender() {
         if (phi != m_Phi || theta != m_Theta) {
             m_Phi = phi;
             m_Theta = theta;
-            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
+            if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 
         if (shadows != m_Shadows) {
             m_Shadows = shadows;
-            if (m_Shadows) flags = flags | UpdateFlags::Shadow;
+            if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 
     }
 
-    if (m_ShowCamMenu) {
-        CameraSettings temp = m_Camera.getSettings();
+    //-----Process updates:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        ImGui::Begin("Camera");
-        ImGui::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
-        ImGui::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
-        ImGui::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
-        ImGui::End();
+    //Update Maps
+    m_Map.Update(m_Theta, m_Phi);
 
-        m_Camera.setSettings(temp);
-    }
-
-    UpdateMaps(flags);
+    //Return to normal rendering
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
+    
+    if (m_Wireframe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {

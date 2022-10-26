@@ -7,21 +7,14 @@ struct TerrainSettings{
     float L = 4.0f;
 };
 
-bool operator==(const TerrainSettings& lhs, const TerrainSettings& rhs);
-bool operator!=(const TerrainSettings& lhs, const TerrainSettings& rhs);
-
 class TerrainRenderer {
 public:
     TerrainRenderer();
     ~TerrainRenderer();
 
-    void setSettings(TerrainSettings x) {m_Settings = x;}
-    TerrainSettings getSettings() {return m_Settings;}
-
     void DisplaceVertices(float scale_xz, float scale_y,
                           float offset_x, float offset_z);
-    void BindGeometry();
-    void Draw();
+    void BindAndDraw();
 
 private:
     unsigned int m_TerrainVAO, m_TerrainVBO, m_TerrainEBO;

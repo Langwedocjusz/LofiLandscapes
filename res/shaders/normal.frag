@@ -16,12 +16,12 @@ float getHeight(vec2 p) {
 }
 
 vec3 getNorm(vec2 p) {
-    vec2 h = vec2(0.0, 0.0001);
+    vec2 h = vec2(0.0, 1.0/4096.0);
 
     return normalize(vec3(
-        uScaleY*0.5*(getHeight(p+h.yx) - getHeight(p-h.yx))/h.y,
-        uScaleXZ*1.0,
-        uScaleY*0.5*(getHeight(p+h.xy) - getHeight(p-h.xy))/h.y
+        0.5*(getHeight(p+h.yx) - getHeight(p-h.yx))/h.y,
+        uScaleXZ/uScaleY,
+        0.5*(getHeight(p+h.xy) - getHeight(p-h.xy))/h.y
     ));
 }
 
@@ -49,5 +49,5 @@ void main() {
     float ao = getAO(uv);
     vec3 norm = getNorm(uv);
 
-    frag_col = vec4(0.5*norm+0.5, ao);    
+    frag_col = vec4(0.5*norm+0.5, ao);
 }
