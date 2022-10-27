@@ -2,18 +2,20 @@
 
 #include "glad/glad.h"
 
-void TerrainRenderer::GenerateGrid(std::vector<float>& vert, 
-                                   std::vector<unsigned int>& idx, 
-        unsigned int N, float L, float global_offset_x, float global_offset_y, 
-        unsigned int LodLevel) 
+#include <iostream>
+
+void ClipmapRing::GenerateGrid(
+        std::vector<float>& vert, std::vector<unsigned int>& idx, 
+        unsigned int N, unsigned int n, float L, float l, 
+        float global_offset_x, float global_offset_y, unsigned int LodLevel)  
 {
     unsigned int start = static_cast<unsigned int>(vert.size())/4;
-    float base_offset = m_Settings.L/float(m_Settings.N-1);
+    float base_offset = L/float(N-1);
 
     //Vertex data:
-    for (int i=0; i<N*N; i++) {
-        float origin[2] = {global_offset_x - L/2.0f, global_offset_y - L/2.0f};
-        float offset[2] = {float(i%N)*(L/(N-1)), float(i/N)*(L/(N-1))};
+    for (int i=0; i<n*n; i++) {
+        float origin[2] = {global_offset_x - l/2.0f, global_offset_y - l/2.0f};
+        float offset[2] = {float(i%n)*(l/(n-1)), float(i/n)*(l/(n-1))};
 
         vert.push_back(origin[0] + offset[0]);
         vert.push_back(0.0f);
@@ -22,113 +24,102 @@ void TerrainRenderer::GenerateGrid(std::vector<float>& vert,
     }
 
     //Index data:
-    for (int i=0; i<N*N; i++) {
-        unsigned int ix = i % N;
-        unsigned int iy = i/N;
+    for (int i=0; i<n*n; i++) {
+        unsigned int ix = i % n;
+        unsigned int iy = i/n;
 
-        if (ix == N-1) continue;
-        if (iy == N-1) continue;
+        if (ix == n-1) continue;
+        if (iy == n-1) continue;
 
         idx.push_back(start+i);
         idx.push_back(start+i+1);
-        idx.push_back(start+i+N);
+        idx.push_back(start+i+n);
         
         idx.push_back(start+i+1);
-        idx.push_back(start+i+1+N);
-        idx.push_back(start+i+N);
+        idx.push_back(start+i+1+n);
+        idx.push_back(start+i+n);
     }
 }
+
+ClipmapRing::ClipmapRing(int N, float L, unsigned int level) {
+    //Provide Vertes & Index data:
+    if (level == 0) {
+        GenerateGrid(m_VertexData, m_IndexData, N, 4*N, L, 4.0f*L, 0.0f, 0.0f, 0);
+        m_ElementCount = 6*4*N*4*N;
+    }
+
+    else {
+        const float offsets[24] = 
+            {-3.0f, 3.0f, -1.0f, 3.0f,  1.0f, 3.0f,  3.0f, 3.0f,
+             -3.0f, 1.0f,  3.0f, 1.0f, -3.0f,-1.0f,  3.0f,-1.0f,
+             -3.0f,-3.0f, -1.0f,-3.0f,  1.0f,-3.0f,  3.0f,-3.0f};
+
+        auto pow2 = [](unsigned int x){
+            unsigned int res = 1;
+            for (int i=0; i<x; i++) {res *= 2;}
+            return res;
+        };
+        
+        const float scale = static_cast<float>(pow2(level-1));
+
+        for (int i=0; i<12; i++){
+            GenerateGrid(m_VertexData, m_IndexData, N, N, L, 2.0f*scale*L, 
+                         scale*L*offsets[2*i], scale*L*offsets[2*i+1], level);    
+        }
+        m_ElementCount = 12*6*N*N;
+    }
+    
+    //Generate GL Buffers
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
+
+    glBindVertexArray(m_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * m_VertexData.size(), 
+                &m_VertexData[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
+                sizeof(unsigned int) * m_IndexData.size(), 
+                &m_IndexData[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), 
+                              (void*)0);
+    glEnableVertexAttribArray(0);
+}
+
+ClipmapRing::~ClipmapRing() {
+    glDeleteVertexArrays(1, &m_VAO);
+    glDeleteBuffers(1, &m_VBO);
+    glDeleteBuffers(1, &m_EBO);
+}
+
+void ClipmapRing::DispatchCompute() {
+    glBindVertexArray(m_VAO);
+    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
+                | GL_SHADER_STORAGE_BUFFER);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_VBO);
+    glDispatchCompute(2 * m_VertexData.size() / 1024, 1, 1);
+}
+
+void ClipmapRing::Draw() {
+    glBindVertexArray(m_VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glDrawElements(GL_TRIANGLES, m_ElementCount, GL_UNSIGNED_INT, 0);
+}
+
 
 TerrainRenderer::TerrainRenderer() 
-    : m_DisplaceShader("res/shaders/displace.glsl")
-{
-    auto GenBuffers = [](unsigned int&vao, unsigned int&vbo, unsigned int& ebo,
-            std::vector<float>& vertex_data,
-            std::vector<unsigned int>& index_data){
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
+    : m_DisplaceShader("res/shaders/displace.glsl"),
+      m_Lod0(m_N, m_L, 0),
+      m_Lod1(m_N, m_L, 1),
+      m_Lod2(m_N, m_L, 2),
+      m_Lod3(m_N, m_L, 3)
+{}
 
-        glBindVertexArray(vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(), 
-                &vertex_data[0], GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
-                sizeof(unsigned int) * index_data.size(), 
-                &index_data[0], GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), 
-                              (void*)0);
-        glEnableVertexAttribArray(0);
-    };
-
-    //Lod 0
-    GenerateGrid(m_TerrainVertexData, m_TerrainIndexData, 
-            4*m_Settings.N, 4.0f*m_Settings.L, 0.0f, 0.0f, 0);
-    GenBuffers(m_TerrainVAO, m_TerrainVBO, m_TerrainEBO,
-               m_TerrainVertexData, m_TerrainIndexData);
-
-    //Lod 1
-    float offsets[24] = {-3.0f, 3.0f, -1.0f, 3.0f,  1.0f, 3.0f,  3.0f, 3.0f,
-                         -3.0f, 1.0f,  3.0f, 1.0f, -3.0f,-1.0f,  3.0f,-1.0f,
-                         -3.0f,-3.0f, -1.0f,-3.0f,  1.0f,-3.0f,  3.0f,-3.0f};
-
-    for (int i=0; i<12; i++){
-        GenerateGrid(m_TerrainVertexData2, m_TerrainIndexData2, 
-                m_Settings.N, 2.0f*m_Settings.L, 
-                m_Settings.L*offsets[2*i], m_Settings.L*offsets[2*i+1],
-                1);    
-    }
-
-    GenBuffers(m_TerrainVAO2, m_TerrainVBO2, m_TerrainEBO2,
-               m_TerrainVertexData2, m_TerrainIndexData2);
-
-    //Lod 2
-    for (int i=0; i<12; i++){
-        GenerateGrid(m_TerrainVertexData3, m_TerrainIndexData3, 
-                m_Settings.N, 4.0f*m_Settings.L, 
-                2.0f*m_Settings.L*offsets[2*i], 
-                2.0f*m_Settings.L*offsets[2*i+1],
-                2);    
-    }
-
-    GenBuffers(m_TerrainVAO3, m_TerrainVBO3, m_TerrainEBO3, 
-            m_TerrainVertexData3, m_TerrainIndexData3);
-    
-    //Lod 3
-    for (int i=0; i<12; i++){
-        GenerateGrid(m_TerrainVertexData4, m_TerrainIndexData4, 
-                m_Settings.N, 8.0f*m_Settings.L, 
-                4.0f*m_Settings.L*offsets[2*i], 
-                4.0f*m_Settings.L*offsets[2*i+1],
-                3);    
-    }
-
-    GenBuffers(m_TerrainVAO4, m_TerrainVBO4, m_TerrainEBO4, 
-            m_TerrainVertexData4, m_TerrainIndexData4);
-
-}
-
-TerrainRenderer::~TerrainRenderer() {
-    glDeleteVertexArrays(1, &m_TerrainVAO);
-    glDeleteBuffers(1, &m_TerrainVBO);
-    glDeleteBuffers(1, &m_TerrainEBO);
-    
-    glDeleteVertexArrays(1, &m_TerrainVAO2);
-    glDeleteBuffers(1, &m_TerrainVBO2);
-    glDeleteBuffers(1, &m_TerrainEBO2);
-    
-    glDeleteVertexArrays(1, &m_TerrainVAO3);
-    glDeleteBuffers(1, &m_TerrainVBO3);
-    glDeleteBuffers(1, &m_TerrainEBO3);
-    
-    glDeleteVertexArrays(1, &m_TerrainVAO4);
-    glDeleteBuffers(1, &m_TerrainVBO4);
-    glDeleteBuffers(1, &m_TerrainEBO4);
-}
+TerrainRenderer::~TerrainRenderer() {}
 
 void TerrainRenderer::DisplaceVertices(float scale_xz, float scale_y,
                                        float offset_x, float offset_z) {
@@ -136,58 +127,16 @@ void TerrainRenderer::DisplaceVertices(float scale_xz, float scale_y,
     m_DisplaceShader.setUniform2f("uPos", offset_x, offset_z);
     m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
     m_DisplaceShader.setUniform1f("uScaleY", scale_y);
-    
-    //Lod0
-    glBindVertexArray(m_TerrainVAO);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
-                | GL_SHADER_STORAGE_BUFFER);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_TerrainVBO);
-    glDispatchCompute(2 * m_TerrainVertexData.size() / 1024, 1, 1);
-    
-    //Lod 1 
-    glBindVertexArray(m_TerrainVAO2);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
-                | GL_SHADER_STORAGE_BUFFER);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_TerrainVBO2);
-    glDispatchCompute(2 * m_TerrainVertexData2.size() / 1024, 1, 1);
-    
-    //Lod 2 
-    glBindVertexArray(m_TerrainVAO3);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
-                | GL_SHADER_STORAGE_BUFFER);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_TerrainVBO3);
-    glDispatchCompute(2 * m_TerrainVertexData3.size() / 1024, 1, 1);
-
-    //Lod 3
-    glBindVertexArray(m_TerrainVAO4);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
-                | GL_SHADER_STORAGE_BUFFER);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_TerrainVBO4);
-    glDispatchCompute(2 * m_TerrainVertexData4.size() / 1024, 1, 1);
+    m_Lod0.DispatchCompute();
+    m_Lod1.DispatchCompute();
+    m_Lod2.DispatchCompute();
+    m_Lod3.DispatchCompute();
 }
 
 void TerrainRenderer::BindAndDraw() {
-    glBindVertexArray(m_TerrainVAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO);
-    glDrawElements(GL_TRIANGLES, 6*4*m_Settings.N*4*m_Settings.N,
-            GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(m_TerrainVAO2);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO2);
-    glDrawElements(GL_TRIANGLES, 12*6*m_Settings.N*m_Settings.N,
-            GL_UNSIGNED_INT, 0);
-    
-    glBindVertexArray(m_TerrainVAO3);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO3);
-    glDrawElements(GL_TRIANGLES, 12*6*m_Settings.N*m_Settings.N,
-            GL_UNSIGNED_INT, 0);
-    
-    glBindVertexArray(m_TerrainVAO4);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_TerrainEBO4);
-    glDrawElements(GL_TRIANGLES, 12*6*m_Settings.N*m_Settings.N,
-            GL_UNSIGNED_INT, 0);
+   m_Lod0.Draw(); 
+   m_Lod1.Draw(); 
+   m_Lod2.Draw(); 
+   m_Lod3.Draw(); 
 }
