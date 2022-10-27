@@ -20,6 +20,7 @@ public:
     void OnMouseMoved(float x, float y);
     void RestartMouse();
 private:
+    //Shading settings:
     float m_Phi = 1.032f, m_Theta = 0.695f;
 
     float m_ClearColor[3] = {0.0f, 0.0f, 0.0f};
@@ -30,14 +31,18 @@ private:
     
     float m_Shininess = 32.0f;
 
-    unsigned int m_WindowWidth, m_WindowHeight;
-
-    bool m_ShowTerrainMenu = false, m_ShowBackgroundMenu = false,
-         m_ShowLightMenu = false, m_ShowShadowMenu = false,
-         m_ShowCamMenu = false, m_Shadows = true;
-     
+    bool m_Shadows = true;     
+    
     bool m_Wireframe = false;
 
+    //Show menu window flags
+    bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,
+         m_ShowLightMenu   = true, m_ShowShadowMenu     = true,
+         m_ShowCamMenu     = true; 
+    
+    //"Backend oriented" things
+    unsigned int m_WindowWidth, m_WindowHeight;
+    
     Shader m_ShadedShader, m_WireframeShader;
     FPCamera m_Camera;
     glm::vec3 m_LastPos = glm::vec3(0.0f);
