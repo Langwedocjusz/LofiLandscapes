@@ -28,7 +28,7 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     ImGuiStyles::OverShiftedDarkMode();
 
     //Set ImGui Font:
-    io.Fonts->AddFontFromFileTTF("res/fonts/CascadiaCode/CascadiaCode.ttf", 16);
+    io.Fonts->AddFontFromFileTTF("res/fonts/OpenSans/OpenSans-Medium.ttf", 16);
 
     //Redirect window callbacks to application's on event function
     m_Window.setEventCallback(std::bind(&Application::OnEvent, this, std::placeholders::_1));
