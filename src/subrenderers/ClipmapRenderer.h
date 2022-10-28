@@ -15,15 +15,14 @@ private:
     std::vector<float> m_VertexData;
     std::vector<unsigned int> m_IndexData;
     
-    void GenerateGrid(std::vector<float>& vert, std::vector<unsigned int>& idx, 
-        unsigned int N, unsigned int n, float L, float l, 
-        float global_offset_x, float global_offset_y, unsigned int LodLevel); 
+    void GenerateGrid(unsigned int N, float L, float global_offset_x, 
+            float global_offset_y, unsigned int LodLevel); 
 };
 
-class TerrainRenderer {
+class ClipmapRenderer {
 public:
-    TerrainRenderer();
-    ~TerrainRenderer();
+    ClipmapRenderer();
+    ~ClipmapRenderer();
 
     void DisplaceVertices(float scale_xz, float scale_y,
                           float offset_x, float offset_z);

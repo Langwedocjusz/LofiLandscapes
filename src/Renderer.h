@@ -1,9 +1,8 @@
 #pragma once
 
 #include "subrenderers/MapRenderer.h"
-#include "subrenderers/TerrainRenderer.h"
+#include "subrenderers/ClipmapRenderer.h"
 #include "Camera.h"
-
 
 class Renderer {
 public:
@@ -49,6 +48,6 @@ private:
 
     glm::mat4 m_MVP = glm::mat4(1.0f);
 
-    TerrainRenderer m_Terrain;
+    ClipmapRenderer m_Clipmap;
     MapRenderer m_Map;
 };

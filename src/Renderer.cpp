@@ -14,7 +14,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
                      "res/shaders/shaded.frag"),
       m_WireframeShader("res/shaders/wireframe.vert", 
                         "res/shaders/wireframe.frag"),
-      m_Terrain(),
+      m_Clipmap(),
       m_Map()
 {
     glEnable(GL_DEPTH_TEST);
@@ -45,7 +45,7 @@ void Renderer::OnRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     m_Map.BindHeightmap();
-    m_Terrain.DisplaceVertices(m_Map.getScaleSettings().ScaleXZ, 
+    m_Clipmap.DisplaceVertices(m_Map.getScaleSettings().ScaleXZ, 
                                m_Map.getScaleSettings().ScaleY,
                                m_Camera.getPos().x, m_Camera.getPos().z);
 
@@ -77,7 +77,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("shadowmap", 1);
     }
 
-    m_Terrain.BindAndDraw();
+    m_Clipmap.BindAndDraw();
 }
 
 void Renderer::OnImGuiRender() {
