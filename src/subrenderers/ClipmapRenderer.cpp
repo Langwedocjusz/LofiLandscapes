@@ -199,7 +199,8 @@ ClipmapRenderer::ClipmapRenderer()
       m_Lod0(m_N, m_L, 0),
       m_Lod1(m_N, m_L, 1),
       m_Lod2(m_N, m_L, 2),
-      m_Lod3(m_N, m_L, 3)
+      m_Lod3(m_N, m_L, 3),
+      m_Lod4(m_N, m_L, 4)
 {}
 
 ClipmapRenderer::~ClipmapRenderer() {}
@@ -215,6 +216,7 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
     m_Lod1.DispatchCompute();
     m_Lod2.DispatchCompute();
     m_Lod3.DispatchCompute();
+    m_Lod4.DispatchCompute();
 }
 
 void ClipmapRenderer::BindAndDraw() {
@@ -222,4 +224,5 @@ void ClipmapRenderer::BindAndDraw() {
    m_Lod1.Draw(); 
    m_Lod2.Draw(); 
    m_Lod3.Draw(); 
+   m_Lod4.Draw(); 
 }

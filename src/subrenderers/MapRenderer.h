@@ -15,10 +15,10 @@ struct ScaleSettings{
 
 struct ShadowmapSettings{
     int Resolution = 4096;
-    int Steps = 32;
+    int Steps = 64;
     float MinT = 0.01f;
-    float MaxT = 1.0f;
-    float Bias = 0.0f;
+    float MaxT = 0.8f;
+    float Bias = 6.0f;
 };
 
 enum class UpdateFlags {
