@@ -2,6 +2,21 @@
 
 #include "Shader.h"
 
+class Drawable{
+public:
+    Drawable();
+    ~Drawable();
+
+    void GenBuffers();
+    void DispatchCompute();
+    void Draw();
+
+    unsigned int VAO, VBO, EBO;
+    unsigned int ElementCount;
+    std::vector<float> VertexData;
+    std::vector<unsigned int> IndexData;
+};
+
 class ClipmapRing {
 public:
     ClipmapRing(int N, float L, unsigned int level);
@@ -10,13 +25,11 @@ public:
     void DispatchCompute();
     void Draw();
 private:
-    unsigned int m_VAO, m_VBO, m_EBO;
-    unsigned int m_ElementCount;
-    std::vector<float> m_VertexData;
-    std::vector<unsigned int> m_IndexData;
-    
+    Drawable m_Grid, m_FillX, m_FillY;
+
     void GenerateGrid(unsigned int N, float L, float global_offset_x, 
-            float global_offset_y, unsigned int LodLevel); 
+                      float global_offset_y, unsigned int LodLevel);
+    void GenerateFill(unsigned int N, float L, unsigned int LodLevel);
 };
 
 class ClipmapRenderer {
