@@ -11,131 +11,62 @@ MapRenderer::MapRenderer()
       m_NormalmapShader("res/shaders/quad.vert", "res/shaders/normal.frag"),
       m_ShadowmapShader("res/shaders/quad.vert", "res/shaders/shadow.frag")
 {
-    //Quad (GL Buffers only):
-    glGenVertexArrays(1, &m_QuadVAO);
-    glGenBuffers(1, &m_QuadVBO);
-    glGenBuffers(1, &m_QuadEBO);
-
-    glBindVertexArray(m_QuadVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_QuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_QuadVertexData), 
-            &m_QuadVertexData, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_QuadIndexData), 
-                    &m_QuadIndexData, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
     //-----Heightmap
-    //Framebuffer
     const int tex_res = m_HeightSettings.Resolution;
     
-    glGenFramebuffers(1, &m_HeightmapFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
+    TextureSpec heightmap_spec = TextureSpec{
+        tex_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE, 
+        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR, 
+        GL_CLAMP_TO_BORDER, 
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    };
 
-    //Texture
-    glGenTextures(1, &m_HeightmapTexture);
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, tex_res, tex_res, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    m_Heightmap.Initialize(heightmap_spec);
+    
+    //Generate mips for heightmap:
+    m_Heightmap.BindTex();
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    float height_border[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, height_border);
+    //-----Normal map: 
+    TextureSpec normal_spec = TextureSpec{
+        tex_res, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, 
+        GL_LINEAR, GL_LINEAR, 
+        GL_CLAMP_TO_BORDER, 
+        //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
+        {0.5f, 1.0f, 0.5f, 1.0f}
+    };
 
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, m_HeightmapTexture, 0);
+    m_Normalmap.Initialize(normal_spec);
+
+    //-----Shadow map
+    const int shadow_res = m_ShadowSettings.Resolution;
+
+    TextureSpec shadow_spec = TextureSpec{
+        shadow_res, GL_R8, GL_RED, GL_UNSIGNED_BYTE, 
+        GL_LINEAR, GL_LINEAR, 
+        GL_CLAMP_TO_BORDER, 
+        {1.0f, 1.0f, 1.0f, 1.0f}
+    };
+
+    m_Shadow.Initialize(shadow_spec);    
 
     //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     //    std::cerr << "FRAMEBUFFER NOT READY \n";
 
-    //-----Normal map:
-    //Framebuffer
-    glGenFramebuffers(1, &m_NormalmapFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_NormalmapFBO);
-
-    //Texture
-    glGenTextures(1, &m_NormalmapTexture);
-    glBindTexture(GL_TEXTURE_2D, m_NormalmapTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_res, tex_res, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5);
-    float normal_border[4] = {0.5f, 1.0f, 0.5f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, normal_border);
-    
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, m_NormalmapTexture, 0);
-
-    //-----Shadow map
-    //Framebuffer
-    glGenFramebuffers(1, &m_ShadowFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFBO);
-
-    //Texture
-    const int shadow_res = m_ShadowSettings.Resolution;
-
-    glGenTextures(1, &m_ShadowTexture);
-    glBindTexture(GL_TEXTURE_2D, m_ShadowTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, shadow_res, shadow_res, 0, 
-                 GL_RED, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    float shadow_border[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, shadow_border);
-    
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, m_ShadowTexture, 0);
-
-    //Update
+    //-----Set update flags
     m_UpdateFlags = m_UpdateFlags | UpdateFlags::Height;
     m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
     m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
 }
 
-MapRenderer::~MapRenderer() {
-    glDeleteFramebuffers(1, &m_HeightmapFBO);
-    glDeleteFramebuffers(1, &m_NormalmapFBO);
-    glDeleteFramebuffers(1, &m_ShadowFBO);
-}
-
-void MapRenderer::BindGeometry() {
-    glBindVertexArray(m_QuadVAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadEBO);
-}
-
-void MapRenderer::Draw() {
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-}
+MapRenderer::~MapRenderer() {}
 
 void MapRenderer::UpdateHeight() {
     glViewport(0, 0, m_HeightSettings.Resolution, 
                      m_HeightSettings.Resolution);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_HeightmapFBO);
+    m_Heightmap.BindFBO();
+    
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -143,10 +74,9 @@ void MapRenderer::UpdateHeight() {
     m_HeightmapShader.setUniform1i("uOctaves", m_HeightSettings.Octaves);
     m_HeightmapShader.setUniform2f("uOffset" , m_HeightSettings.Offset[0],
                                                m_HeightSettings.Offset[1]);
-    BindGeometry();
-    Draw();
+    m_Quad.Draw();
 
-    BindHeightmap();
+    m_Heightmap.BindTex();
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
@@ -154,25 +84,26 @@ void MapRenderer::UpdateNormal() {
     glViewport(0, 0, m_HeightSettings.Resolution, 
                      m_HeightSettings.Resolution);
     
-    BindHeightmap();
-    glBindFramebuffer(GL_FRAMEBUFFER, m_NormalmapFBO);
+    m_Heightmap.BindTex();
+    m_Normalmap.BindFBO();
+
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
     m_NormalmapShader.Bind();
     m_NormalmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_NormalmapShader.setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
-    
-    BindGeometry();
-    Draw();
+
+    m_Quad.Draw();
 }
 
 void MapRenderer::UpdateShadow(float theta, float phi) {
     glViewport(0, 0, m_ShadowSettings.Resolution, 
                      m_ShadowSettings.Resolution);
     
-    BindHeightmap();
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFBO);
+    m_Heightmap.BindTex();
+    m_Shadow.BindFBO();
+
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -185,9 +116,8 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
     m_ShadowmapShader.setUniform1f("uMaxT", m_ShadowSettings.MaxT);
     m_ShadowmapShader.setUniform1i("uSteps", m_ShadowSettings.Steps);
     m_ShadowmapShader.setUniform1f("uBias", m_ShadowSettings.Bias);
-    
-    BindGeometry();
-    Draw();
+
+    m_Quad.Draw();
 }
 
 void MapRenderer::Update(float theta, float phi) {
@@ -204,18 +134,15 @@ void MapRenderer::Update(float theta, float phi) {
 }
 
 void MapRenderer::BindHeightmap(int id) {
-    glActiveTexture(GL_TEXTURE0 + id);
-    glBindTexture(GL_TEXTURE_2D, m_HeightmapTexture);
+    m_Heightmap.BindTex(id);
 }
 
 void MapRenderer::BindNormalmap(int id) {
-    glActiveTexture(GL_TEXTURE0 + id);
-    glBindTexture(GL_TEXTURE_2D, m_NormalmapTexture);
+    m_Normalmap.BindTex(id);
 }
 
 void MapRenderer::BindShadowmap(int id) {
-    glActiveTexture(GL_TEXTURE0 + id);
-    glBindTexture(GL_TEXTURE_2D, m_ShadowTexture);
+    m_Shadow.BindTex(id);
 }
 
 void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {

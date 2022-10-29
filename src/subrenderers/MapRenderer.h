@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "GLUtils.h"
 
 struct HeightmapSettings{
     int Resolution = 4096;
@@ -48,10 +49,8 @@ public:
     ScaleSettings getScaleSettings() {return m_ScaleSettings;}
 
 private:
-    unsigned int m_QuadVAO, m_QuadVBO, m_QuadEBO;
-    unsigned int m_HeightmapFBO, m_NormalmapFBO, m_ShadowFBO;
-    unsigned int m_HeightmapTexture, m_NormalmapTexture, m_ShadowTexture;
-    
+    Quad m_Quad;
+    FramebufferTexture m_Heightmap, m_Normalmap, m_Shadowmap; 
     Shader m_HeightmapShader, m_NormalmapShader, m_ShadowmapShader;
     
     HeightmapSettings m_HeightSettings;
@@ -59,20 +58,10 @@ private:
     ShadowmapSettings m_ShadowSettings;
 
     UpdateFlags m_UpdateFlags = UpdateFlags::None;
-
-    float m_QuadVertexData[12] = {-1.0f, 1.0f, 1.0f,
-                                   1.0f, 1.0f, 1.0f,
-                                   1.0f,-1.0f, 1.0f,
-                                  -1.0f,-1.0f, 1.0f };
-    
-    unsigned int m_QuadIndexData[6] = {0,1,3, 1,2,3};
     
     void UpdateHeight();
     void UpdateNormal();
-    void UpdateShadow(float theta, float phi);
-    
-    void BindGeometry();
-    void Draw();
+    void UpdateShadow(float theta, float phi);    
 };
 
 bool operator==(const HeightmapSettings& lhs, const HeightmapSettings& rhs);
