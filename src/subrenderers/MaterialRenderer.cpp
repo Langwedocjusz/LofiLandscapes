@@ -9,13 +9,18 @@ MaterialRenderer::MaterialRenderer()
 {
     TextureSpec spec = TextureSpec{
         512, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     m_Albedo.Initialize(spec);
+    m_Albedo.BindTex();
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     m_Normal.Initialize(spec);
+    m_Normal.BindTex();
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 MaterialRenderer::~MaterialRenderer() {
@@ -34,8 +39,10 @@ void MaterialRenderer::Update() {
     m_NormalShader.Bind();
     m_Quad.Draw();
 
-    //Draw to albedo:
     m_Normal.BindTex();
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    //Draw to albedo:
     m_Albedo.BindFBO();
 
     glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
@@ -46,6 +53,9 @@ void MaterialRenderer::Update() {
     m_AlbedoShader.setUniform3f("uCol2", m_Settings.Col2);
 
     m_Quad.Draw();
+
+    m_Albedo.BindTex();
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void MaterialRenderer::OnImGui() {
