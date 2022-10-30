@@ -1,6 +1,7 @@
 #version 450 core
 
 in vec2 uv;
+in mat3 norm_rot;
 in vec3 frag_pos;
 
 out vec4 frag_col;
@@ -25,18 +26,6 @@ uniform vec3 ref_col;
 uniform float uTilingFactor;
 uniform float uNormalStrength;
 
-mat3 rotation(vec3 x, vec3 y) {
-    mat3 I = mat3(1.0);
-    vec3 v = cross(x,y);
-    mat3 V = mat3(0.0,-v.z, v.y,
-                  v.z, 0.0,-v.x,
-                 -v.y, v.x, 0.0);
-    float c = dot(x,y);
-    float C = 1.0/(1.0+c);
-    
-    return I + V + C*V*V;
-}
-
 void main() {
     //Assemble needed vectors
     vec4 res = texture(normalmap, uv);
@@ -51,9 +40,7 @@ void main() {
 
     if (uMaterial == 1) {
         vec3 mat_norm = 2.0*texture(normal, uTilingFactor*uv).rgb - 1.0;
-        mat3 rot = rotation(vec3(0.0, 1.0, 0.0), norm);
-
-        norm = mix(norm, rot*mat_norm, uNormalStrength);
+        norm = mix(norm, norm_rot*mat_norm, uNormalStrength);
     }
 
     vec3 view = normalize(frag_pos - uPos);
