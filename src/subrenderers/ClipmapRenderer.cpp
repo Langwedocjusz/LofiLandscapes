@@ -134,13 +134,13 @@ void ClipmapRing::GenerateFill(unsigned int N, float L, unsigned int LodLevel) {
         elements_x.push_back(i+1+n);
         elements_x.push_back(i+n);
         
+        elements_y.push_back(i+n);
+        elements_y.push_back(i+1);
         elements_y.push_back(i);
-        elements_y.push_back(i+1);
-        elements_y.push_back(i+n);
         
-        elements_y.push_back(i+1);
-        elements_y.push_back(i+1+n);
         elements_y.push_back(i+n);
+        elements_y.push_back(i+1+n);
+        elements_y.push_back(i+1);
     }
 }
 

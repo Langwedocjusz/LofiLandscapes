@@ -20,6 +20,11 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    //Backface culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
+
     //Update Maps
     m_Map.Update(m_Theta, m_Phi);
 
