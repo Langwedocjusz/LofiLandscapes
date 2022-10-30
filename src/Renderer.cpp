@@ -23,6 +23,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     //Update Maps
     m_Map.Update(m_Theta, m_Phi);
 
+    //Update Material
+    m_Material.Update();
+
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
@@ -66,15 +69,21 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
+        m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform3f("sun_col", m_SunCol);
         m_ShadedShader.setUniform3f("sky_col", m_SkyCol);
         m_ShadedShader.setUniform3f("ref_col", m_RefCol);
-        m_ShadedShader.setUniform1f("shininess", m_Shininess);
+        m_ShadedShader.setUniform1f("uTilingFactor", m_TilingFactor);
+        m_ShadedShader.setUniform1f("uNormalStrength", m_NormalStrength);
 
         m_Map.BindNormalmap(0);
         m_ShadedShader.setUniform1i("normalmap", 0);
         m_Map.BindShadowmap(1);
         m_ShadedShader.setUniform1i("shadowmap", 1);
+        m_Material.BindAlbedo(2);
+        m_ShadedShader.setUniform1i("albedo", 2);
+        m_Material.BindNormal(3);
+        m_ShadedShader.setUniform1i("normal", 3);
     }
 
     m_Clipmap.BindAndDraw();
@@ -111,6 +120,9 @@ void Renderer::OnImGuiRender() {
             if (ImGui::MenuItem("Camera"))
                 m_ShowCamMenu = !m_ShowCamMenu;
 
+            if (ImGui::MenuItem("Material"))
+                m_ShowMaterialMenu = !m_ShowMaterialMenu;
+
             ImGui::EndMenu();
         }
 
@@ -146,9 +158,12 @@ void Renderer::OnImGuiRender() {
     if(m_ShowShadowMenu)
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
 
+    if(m_ShowMaterialMenu)
+        m_Material.OnImGui();
+
     if (m_ShowLightMenu) {
         float phi = m_Phi, theta = m_Theta;
-        bool shadows = m_Shadows;
+        bool shadows = m_Shadows, materials = m_Materials;
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGui::Checkbox("Shadows", &shadows);
@@ -157,12 +172,15 @@ void Renderer::OnImGuiRender() {
         ImGui::ColorEdit3("SunColor" , glm::value_ptr(m_SunCol));
         ImGui::ColorEdit3("SkyColor" , glm::value_ptr(m_SkyCol));
         ImGui::ColorEdit3("ReflColor", glm::value_ptr(m_RefCol));
-        ImGui::SliderFloat("shininess", &m_Shininess, 0.0, 32.0);
+        ImGui::Checkbox("Materials", &materials);
+        ImGui::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);
+        ImGui::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
         ImGui::End();
         
-        if (phi != m_Phi || theta != m_Theta) {
+        if (phi != m_Phi || theta != m_Theta || materials != m_Materials) {
             m_Phi = phi;
             m_Theta = theta;
+            m_Materials = materials;
             if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 

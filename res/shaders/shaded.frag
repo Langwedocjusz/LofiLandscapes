@@ -8,16 +8,34 @@ out vec4 frag_col;
 uniform sampler2D normalmap;
 uniform sampler2D shadowmap;
 
+uniform sampler2D albedo;
+uniform sampler2D normal;
+
 uniform vec3 uPos;
 uniform float uTheta;
 uniform float uPhi;
+
 uniform int uShadow;
+uniform int uMaterial;
 
 uniform vec3 sun_col;
 uniform vec3 sky_col;
 uniform vec3 ref_col;
 
-uniform float shininess;
+uniform float uTilingFactor;
+uniform float uNormalStrength;
+
+mat3 rotation(vec3 x, vec3 y) {
+    mat3 I = mat3(1.0);
+    vec3 v = cross(x,y);
+    mat3 V = mat3(0.0,-v.z, v.y,
+                  v.z, 0.0,-v.x,
+                 -v.y, v.x, 0.0);
+    float c = dot(x,y);
+    float C = 1.0/(1.0+c);
+    
+    return I + V + C*V*V;
+}
 
 void main() {
     //Assemble needed vectors
@@ -30,6 +48,14 @@ void main() {
     const vec3 up = vec3(0.0, 1.0, 0.0);
 
     vec3 norm = 2.0*res.xyz - 1.0;
+
+    if (uMaterial == 1) {
+        vec3 mat_norm = 2.0*texture(normal, uTilingFactor*uv).rgb - 1.0;
+        mat3 rot = rotation(vec3(0.0, 1.0, 0.0), norm);
+
+        norm = mix(norm, rot*mat_norm, uNormalStrength);
+    }
+
     vec3 view = normalize(frag_pos - uPos);
     vec3 refl = reflect(-l_dir, norm);
 
@@ -42,11 +68,17 @@ void main() {
     float sky_diff = clamp(dot( up,    norm), 0.0, 1.0);
     float ref_diff = clamp(dot(-l_dir, norm), 0.0, 1.0);
 
+    float shininess = 32.0;
     float spec = pow(max(dot(view, refl), 0.0), shininess);
 
     vec3 color = shadow * (sun_diff+spec) * sun_col
                + amb * (sky_col*sky_diff + ref_col*ref_diff);
     
+    if (uMaterial == 1) {
+        vec3 alb = texture(albedo, uTilingFactor*uv).rgb;
+        color *= alb;
+    }
+
     //Color correction
     color = pow(color, vec3(1.0/2.2));
     //Output

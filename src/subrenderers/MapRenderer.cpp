@@ -48,7 +48,7 @@ MapRenderer::MapRenderer()
         {1.0f, 1.0f, 1.0f, 1.0f}
     };
 
-    m_Shadow.Initialize(shadow_spec);    
+    m_Shadowmap.Initialize(shadow_spec);    
 
     //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     //    std::cerr << "FRAMEBUFFER NOT READY \n";
@@ -102,7 +102,7 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
                      m_ShadowSettings.Resolution);
     
     m_Heightmap.BindTex();
-    m_Shadow.BindFBO();
+    m_Shadowmap.BindFBO();
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -142,7 +142,7 @@ void MapRenderer::BindNormalmap(int id) {
 }
 
 void MapRenderer::BindShadowmap(int id) {
-    m_Shadow.BindTex(id);
+    m_Shadowmap.BindTex(id);
 }
 
 void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {

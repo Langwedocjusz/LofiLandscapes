@@ -2,6 +2,7 @@
 
 #include "subrenderers/MapRenderer.h"
 #include "subrenderers/ClipmapRenderer.h"
+#include "subrenderers/MaterialRenderer.h"
 #include "Camera.h"
 
 class Renderer {
@@ -28,16 +29,16 @@ private:
     glm::vec3 m_SkyCol = glm::vec3(0.06f, 0.08f, 0.25f);
     glm::vec3 m_RefCol = glm::vec3(0.15f, 0.06f, 0.06f);
     
-    float m_Shininess = 32.0f;
+    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
 
-    bool m_Shadows = true;     
+    bool m_Shadows = true, m_Materials = true;     
     
     bool m_Wireframe = false;
 
     //Show menu window flags
     bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,
          m_ShowLightMenu   = true, m_ShowShadowMenu     = true,
-         m_ShowCamMenu     = true; 
+         m_ShowCamMenu     = true, m_ShowMaterialMenu = true; 
     
     //"Backend oriented" things
     unsigned int m_WindowWidth, m_WindowHeight;
@@ -50,4 +51,5 @@ private:
 
     ClipmapRenderer m_Clipmap;
     MapRenderer m_Map;
+    MaterialRenderer m_Material;
 };
