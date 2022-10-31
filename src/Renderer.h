@@ -31,14 +31,14 @@ private:
     
     float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
 
-    bool m_Shadows = true, m_Materials = true;     
+    bool m_Shadows = true, m_Materials = true, m_FixTiling = true;     
     
     bool m_Wireframe = false;
 
     //Show menu window flags
     bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,
          m_ShowLightMenu   = true, m_ShowShadowMenu     = true,
-         m_ShowCamMenu     = true, m_ShowMaterialMenu = true; 
+         m_ShowCamMenu     = true, m_ShowMaterialMenu   = true; 
     
     //"Backend oriented" things
     unsigned int m_WindowWidth, m_WindowHeight;

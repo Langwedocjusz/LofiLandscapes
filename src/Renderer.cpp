@@ -75,6 +75,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
+        m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
         m_ShadedShader.setUniform3f("sun_col", m_SunCol);
         m_ShadedShader.setUniform3f("sky_col", m_SkyCol);
         m_ShadedShader.setUniform3f("ref_col", m_RefCol);
@@ -168,7 +169,7 @@ void Renderer::OnImGuiRender() {
 
     if (m_ShowLightMenu) {
         float phi = m_Phi, theta = m_Theta;
-        bool shadows = m_Shadows, materials = m_Materials;
+        bool shadows = m_Shadows;
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGui::Checkbox("Shadows", &shadows);
@@ -177,15 +178,16 @@ void Renderer::OnImGuiRender() {
         ImGui::ColorEdit3("SunColor" , glm::value_ptr(m_SunCol));
         ImGui::ColorEdit3("SkyColor" , glm::value_ptr(m_SkyCol));
         ImGui::ColorEdit3("ReflColor", glm::value_ptr(m_RefCol));
-        ImGui::Checkbox("Materials", &materials);
+        ImGui::Checkbox("Materials", &m_Materials);
+        ImGui::Checkbox("Fix Tiling", &m_FixTiling);
         ImGui::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);
         ImGui::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
         ImGui::End();
         
-        if (phi != m_Phi || theta != m_Theta || materials != m_Materials) {
+        if (phi != m_Phi || theta != m_Theta) {
             m_Phi = phi;
             m_Theta = theta;
-            m_Materials = materials;
+            //m_Materials = materials;
             if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 
