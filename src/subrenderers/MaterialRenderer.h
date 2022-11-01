@@ -19,8 +19,7 @@ public:
     void BindNormal(int id=0);
 
 private:
-    Quad m_Quad;
-    FramebufferTexture m_Albedo, m_Normal;
+    Texture m_Albedo, m_Normal;
     Shader m_AlbedoShader, m_NormalShader;
 
     MaterialSettings m_Settings;

@@ -1,8 +1,10 @@
 #version 450 core
 
-in vec2 uv;
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-out vec4 frag_col;
+layout(rgba8, binding = 0) uniform image2D normalmap;
+
+uniform int uResolution;
 
 float hash(vec2 p, float scale) {
     p = mod(p, scale);
@@ -56,9 +58,12 @@ vec3 getNorm(vec2 p) {
 }
 
 void main() {
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+
+    vec2 uv = vec2(texelCoord)/float(uResolution);
+    
     float h = getHeight(uv);
-    vec3 norm = getNorm(uv);
+    vec3 norm = 0.5*getNorm(uv)+0.5;
 
-    frag_col = vec4(0.5*norm+0.5, h);
+    imageStore(normalmap, texelCoord, vec4(norm, h));
 }
-

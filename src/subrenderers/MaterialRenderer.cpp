@@ -4,22 +4,22 @@
 #include "imgui.h"
 
 MaterialRenderer::MaterialRenderer()
-    : m_AlbedoShader("res/shaders/quad.vert", "res/shaders/albedo.frag")
-    , m_NormalShader("res/shaders/quad.vert", "res/shaders/mnormal.frag")
+    : m_AlbedoShader("res/shaders/albedo.glsl")
+    , m_NormalShader("res/shaders/mnormal.glsl")
 {
     TextureSpec spec = TextureSpec{
-        512, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+        512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     m_Albedo.Initialize(spec);
-    m_Albedo.BindTex();
+    m_Albedo.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     m_Normal.Initialize(spec);
-    m_Normal.BindTex();
+    m_Normal.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
@@ -27,34 +27,33 @@ MaterialRenderer::~MaterialRenderer() {
 
 }
 
-void MaterialRenderer::Update() {
-    glViewport(0, 0, 512, 512);
+void MaterialRenderer::Update() { 
+    const int res = m_Normal.getSpec().Resolution;
     
     //Draw to normal:
-    m_Normal.BindFBO();
-
-    glClearColor(0.5f, 1.0f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    m_Normal.BindImage(0, 0);
 
     m_NormalShader.Bind();
-    m_Quad.Draw();
+    m_NormalShader.setUniform1i("uResolution", res);
 
-    m_Normal.BindTex();
+    glDispatchCompute(res/32, res/32, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    m_Normal.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //Draw to albedo:
-    m_Albedo.BindFBO();
-
-    glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    m_Albedo.BindImage(0, 0);
     
     m_AlbedoShader.Bind();
+    m_AlbedoShader.setUniform1i("uResolution", res);
     m_AlbedoShader.setUniform3f("uCol1", m_Settings.Col1);
     m_AlbedoShader.setUniform3f("uCol2", m_Settings.Col2);
 
-    m_Quad.Draw();
+    glDispatchCompute(res/32, res/32, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    m_Albedo.BindTex();
+    m_Albedo.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
@@ -73,11 +72,11 @@ void MaterialRenderer::OnImGui() {
 }
 
 void MaterialRenderer::BindAlbedo(int id) {
-    m_Albedo.BindTex(id);
+    m_Albedo.Bind(id);
 }
 
 void MaterialRenderer::BindNormal(int id) {
-    m_Normal.BindTex(id);
+    m_Normal.Bind(id);
 }
 
 bool operator==(const MaterialSettings& lhs, const MaterialSettings& rhs) {
