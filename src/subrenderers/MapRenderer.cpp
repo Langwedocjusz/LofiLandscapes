@@ -90,6 +90,9 @@ void MapRenderer::UpdateNormal() {
     m_NormalmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_NormalmapShader.setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
 
+    m_NormalmapShader.setUniform1i("uAOSamples", m_AOSettings.Samples);
+    m_NormalmapShader.setUniform1f("uAOR", m_AOSettings.R);
+
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
@@ -172,13 +175,21 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
 
 void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
+    AOSettings temp2 = m_AOSettings;
 
     ImGui::Begin("Shadowmap settings", &open);
     ImGui::SliderFloat("Min t", &temp.MinT, 0.0, 0.5);
     ImGui::SliderFloat("Max t", &temp.MaxT, 0.0, 1.0);
     ImGui::SliderFloat("Mip bias", &temp.Bias, 0.0, 20.0);
     ImGui::SliderInt("Steps", &temp.Steps, 1, 64);
+    ImGui::SliderInt("AO Samples", &temp2.Samples, 1, 64);
+    ImGui::SliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
     ImGui::End();
+
+    if (temp2 != m_AOSettings) {
+        m_AOSettings = temp2;
+        m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
+    }
 
     if (temp != m_ShadowSettings) {
         m_ShadowSettings = temp;
@@ -222,6 +233,14 @@ bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
 }
 
 bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
+    return !(lhs==rhs);
+}
+
+bool operator==(const AOSettings& lhs, const AOSettings& rhs) {
+    return (lhs.Samples == rhs.Samples) && (lhs.R == rhs.R);
+}
+
+bool operator!=(const AOSettings& lhs, const AOSettings& rhs) {
     return !(lhs==rhs);
 }
 

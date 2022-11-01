@@ -14,6 +14,11 @@ struct ScaleSettings{
     float ScaleY = 20.0f;
 };
 
+struct AOSettings{
+    int Samples = 16;
+    float R = 0.01;
+};
+
 struct ShadowmapSettings{
     int Resolution = 4096;
     int Steps = 64;
@@ -55,6 +60,7 @@ private:
     HeightmapSettings m_HeightSettings;
     ScaleSettings     m_ScaleSettings;
     ShadowmapSettings m_ShadowSettings;
+    AOSettings        m_AOSettings;
 
     UpdateFlags m_UpdateFlags = UpdateFlags::None;
     
@@ -71,6 +77,9 @@ bool operator!=(const ScaleSettings& lhs, const ScaleSettings& rhs);
 
 bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);
 bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);
+
+bool operator==(const AOSettings& lhs, const AOSettings& rhs);
+bool operator!=(const AOSettings& lhs, const AOSettings& rhs);
 
 UpdateFlags operator|(UpdateFlags x, UpdateFlags y);
 UpdateFlags operator&(UpdateFlags x, UpdateFlags y);
