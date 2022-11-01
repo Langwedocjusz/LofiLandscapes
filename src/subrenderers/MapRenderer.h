@@ -49,8 +49,7 @@ public:
     ScaleSettings getScaleSettings() {return m_ScaleSettings;}
 
 private:
-    Quad m_Quad;
-    FramebufferTexture m_Heightmap, m_Normalmap, m_Shadowmap; 
+    Texture m_Heightmap, m_Normalmap, m_Shadowmap; 
     Shader m_HeightmapShader, m_NormalmapShader, m_ShadowmapShader;
     
     HeightmapSettings m_HeightSettings;

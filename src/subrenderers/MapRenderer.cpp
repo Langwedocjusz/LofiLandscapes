@@ -7,9 +7,9 @@
 #include <iostream>
 
 MapRenderer::MapRenderer()
-    : m_HeightmapShader("res/shaders/quad.vert", "res/shaders/height.frag"),
-      m_NormalmapShader("res/shaders/quad.vert", "res/shaders/normal.frag"),
-      m_ShadowmapShader("res/shaders/quad.vert", "res/shaders/shadow.frag")
+    : m_HeightmapShader("res/shaders/height.glsl"),
+      m_NormalmapShader("res/shaders/normal.glsl"),
+      m_ShadowmapShader("res/shaders/shadow.glsl")
 {
     //-----Heightmap
     const int tex_res = m_HeightSettings.Resolution;
@@ -24,12 +24,12 @@ MapRenderer::MapRenderer()
     m_Heightmap.Initialize(heightmap_spec);
     
     //Generate mips for heightmap:
-    m_Heightmap.BindTex();
+    m_Heightmap.Bind/*Tex*/();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Normal map: 
     TextureSpec normal_spec = TextureSpec{
-        tex_res, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, 
+        tex_res, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
         GL_LINEAR, GL_LINEAR, 
         GL_CLAMP_TO_BORDER, 
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
@@ -61,53 +61,47 @@ MapRenderer::MapRenderer()
 
 MapRenderer::~MapRenderer() {}
 
-void MapRenderer::UpdateHeight() {
-    glViewport(0, 0, m_HeightSettings.Resolution, 
-                     m_HeightSettings.Resolution);
+void MapRenderer::UpdateHeight() { 
+    const int res = m_Heightmap.getSpec().Resolution;
 
-    m_Heightmap.BindFBO();
-    
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+    m_Heightmap.BindImage(0, 0);
+
     m_HeightmapShader.Bind();
+    m_HeightmapShader.setUniform1i("uResolution", res);
     m_HeightmapShader.setUniform1i("uOctaves", m_HeightSettings.Octaves);
     m_HeightmapShader.setUniform2f("uOffset" , m_HeightSettings.Offset[0],
                                                m_HeightSettings.Offset[1]);
-    m_Quad.Draw();
+    
+    glDispatchCompute(res/32, res/32, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    m_Heightmap.BindTex();
+    m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void MapRenderer::UpdateNormal() {
-    glViewport(0, 0, m_HeightSettings.Resolution, 
-                     m_HeightSettings.Resolution);
-    
-    m_Heightmap.BindTex();
-    m_Normalmap.BindFBO();
+    const int res = m_Normalmap.getSpec().Resolution;
 
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+    m_Heightmap.Bind();
+    m_Normalmap.BindImage(0, 0);
+ 
     m_NormalmapShader.Bind();
+    m_NormalmapShader.setUniform1i("uResolution", res);
     m_NormalmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_NormalmapShader.setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
 
-    m_Quad.Draw();
+    glDispatchCompute(res/32, res/32, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void MapRenderer::UpdateShadow(float theta, float phi) {
-    glViewport(0, 0, m_ShadowSettings.Resolution, 
-                     m_ShadowSettings.Resolution);
-    
-    m_Heightmap.BindTex();
-    m_Shadowmap.BindFBO();
+    const int res = m_Shadowmap.getSpec().Resolution;
 
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+    m_Heightmap.Bind();
+    m_Shadowmap.BindImage(0, 0);
+ 
     m_ShadowmapShader.Bind();
+    m_ShadowmapShader.setUniform1i("uResolution", res);
     m_ShadowmapShader.setUniform1f("uTheta", theta);
     m_ShadowmapShader.setUniform1f("uPhi", phi);
     m_ShadowmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
@@ -117,7 +111,8 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
     m_ShadowmapShader.setUniform1i("uSteps", m_ShadowSettings.Steps);
     m_ShadowmapShader.setUniform1f("uBias", m_ShadowSettings.Bias);
 
-    m_Quad.Draw();
+    glDispatchCompute(res/32, res/32, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void MapRenderer::Update(float theta, float phi) {
@@ -134,15 +129,15 @@ void MapRenderer::Update(float theta, float phi) {
 }
 
 void MapRenderer::BindHeightmap(int id) {
-    m_Heightmap.BindTex(id);
+    m_Heightmap.Bind(id);
 }
 
 void MapRenderer::BindNormalmap(int id) {
-    m_Normalmap.BindTex(id);
+    m_Normalmap.Bind(id);
 }
 
 void MapRenderer::BindShadowmap(int id) {
-    m_Shadowmap.BindTex(id);
+    m_Shadowmap.Bind(id);
 }
 
 void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {

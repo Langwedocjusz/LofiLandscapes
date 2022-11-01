@@ -35,6 +35,43 @@ void Quad::Draw() {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
+Texture::Texture() {}
+
+Texture::~Texture() {}
+
+void Init(unsigned int &id, TextureSpec spec) {
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, spec.InternalFormat, 
+                 spec.Resolution, spec.Resolution, 0, 
+                 spec.Format, spec.Type, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.MinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, spec.MagFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, spec.Wrap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, spec.Wrap);
+
+    if (spec.Wrap == GL_CLAMP_TO_BORDER)
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);  
+}
+
+void Texture::Initialize(TextureSpec spec) {
+    Init(m_Texture, spec);
+    m_Spec = spec;
+}
+
+void Texture::Bind(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
+}
+
+void Texture::BindImage(int id, int mip) {
+    int format = m_Spec.InternalFormat; 
+
+    glBindImageTexture(id, m_Texture, mip, GL_FALSE, 0, GL_READ_WRITE, format);
+}
+
 FramebufferTexture::FramebufferTexture() {}
 
 FramebufferTexture::~FramebufferTexture() {
@@ -47,24 +84,13 @@ void FramebufferTexture::Initialize(TextureSpec spec) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
     //Initialize texture:
-    glGenTextures(1, &m_Texture);
-    glBindTexture(GL_TEXTURE_2D, m_Texture);
+    Init(m_Texture, spec);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, spec.InternalFormat, 
-                 spec.Resolution, spec.Resolution, 0, 
-                 spec.Format, spec.Type, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.MinFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, spec.MagFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, spec.Wrap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, spec.Wrap);
-
-    if (spec.Wrap == GL_CLAMP_TO_BORDER)
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);
-    
     //Attach texture to framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, m_Texture, 0);
+
+    m_Spec = spec;
 }
 
 void FramebufferTexture::BindFBO() {

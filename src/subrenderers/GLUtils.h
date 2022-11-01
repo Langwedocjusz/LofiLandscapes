@@ -29,6 +29,21 @@ struct TextureSpec{
     float Border[4];
 };
 
+class Texture{
+public:
+    Texture();
+    ~Texture();
+
+    void Initialize(TextureSpec spec);
+    void Bind(int id=0);
+    void BindImage(int id, int mip);
+
+    const TextureSpec& getSpec() {return m_Spec;}
+private:
+    unsigned int m_Texture;
+    TextureSpec m_Spec;
+};
+
 class FramebufferTexture{
 public:
     FramebufferTexture();
@@ -37,6 +52,9 @@ public:
     void Initialize(TextureSpec spec);
     void BindFBO();
     void BindTex(int id=0);
+    
+    const TextureSpec& getSpec() {return m_Spec;}
 private:
     unsigned int m_FBO, m_Texture;
+    TextureSpec m_Spec;
 };
