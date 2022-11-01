@@ -25,11 +25,12 @@ private:
 
     float m_ClearColor[3] = {0.0f, 0.0f, 0.0f};
 
-    glm::vec3 m_SunCol = glm::vec3(0.90f, 0.85f, 0.70f);
-    glm::vec3 m_SkyCol = glm::vec3(0.06f, 0.08f, 0.25f);
-    glm::vec3 m_RefCol = glm::vec3(0.15f, 0.06f, 0.06f);
+    float m_SunCol[4] = {0.90f, 0.85f, 0.70f, 1.0f};
+    float m_SkyCol[4] = {0.06f, 0.08f, 0.25f, 1.0f};
+    float m_RefCol[4] = {0.15f, 0.06f, 0.06f, 1.0f};
     
-    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
+    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f, 
+          m_MinSkylight  =  0.0f;
 
     bool m_Shadows = true, m_Materials = true, m_FixTiling = true;     
     

@@ -34,7 +34,7 @@ float fbm(in vec2 p, int octaves) {
     float A = 1.0, a = 1.0;
 
     for (int i=0; i<octaves; i++) {
-        res += A*noise(a*p, a);
+        res += A*noise(a*p, 4.0*a);
 
         a *= 2.0;
         A *= 0.5;

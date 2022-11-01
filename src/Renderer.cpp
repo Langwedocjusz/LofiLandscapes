@@ -76,11 +76,12 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
-        m_ShadedShader.setUniform3f("sun_col", m_SunCol);
-        m_ShadedShader.setUniform3f("sky_col", m_SkyCol);
-        m_ShadedShader.setUniform3f("ref_col", m_RefCol);
+        m_ShadedShader.setUniform4f("uSunCol", m_SunCol);
+        m_ShadedShader.setUniform4f("uSkyCol", m_SkyCol);
+        m_ShadedShader.setUniform4f("uRefCol", m_RefCol);
         m_ShadedShader.setUniform1f("uTilingFactor", m_TilingFactor);
         m_ShadedShader.setUniform1f("uNormalStrength", m_NormalStrength);
+        m_ShadedShader.setUniform1f("uMinSkylight", m_MinSkylight);
 
         m_Map.BindNormalmap(0);
         m_ShadedShader.setUniform1i("normalmap", 0);
@@ -175,9 +176,13 @@ void Renderer::OnImGuiRender() {
         ImGui::Checkbox("Shadows", &shadows);
         ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
         ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
-        ImGui::ColorEdit3("SunColor" , glm::value_ptr(m_SunCol));
-        ImGui::ColorEdit3("SkyColor" , glm::value_ptr(m_SkyCol));
-        ImGui::ColorEdit3("ReflColor", glm::value_ptr(m_RefCol));
+        ImGui::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
+        ImGui::ColorEdit3("Sun Color" , m_SunCol);
+        ImGui::ColorEdit3("Sky Color" , m_SkyCol);
+        ImGui::ColorEdit3("Refl Color", m_RefCol);
+        ImGui::SliderFloat("Sun Strength" , &m_SunCol[3], 1.0, 5.0);
+        ImGui::SliderFloat("Sky Strength" , &m_SkyCol[3], 1.0, 5.0);
+        ImGui::SliderFloat("Refl Strength", &m_RefCol[3], 1.0, 5.0);
         ImGui::Checkbox("Materials", &m_Materials);
         ImGui::Checkbox("Fix Tiling", &m_FixTiling);
         ImGui::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);

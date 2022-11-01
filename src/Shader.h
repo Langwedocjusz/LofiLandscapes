@@ -19,6 +19,7 @@ public:
     void setUniform1f(const std::string& name, float x);
     void setUniform2f(const std::string& name, float x, float y);
     void setUniform3f(const std::string& name, glm::vec3 v);
+    void setUniform4f(const std::string& name, float x[4]);
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
 private:
     unsigned int m_ID = 0;

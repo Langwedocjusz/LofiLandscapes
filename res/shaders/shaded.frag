@@ -22,12 +22,14 @@ uniform int uShadow;
 uniform int uMaterial;
 uniform int uFixTiling;
 
-uniform vec3 sun_col;
-uniform vec3 sky_col;
-uniform vec3 ref_col;
+//rgb - color, a - additional strength parameter
+uniform vec4 uSunCol;
+uniform vec4 uSkyCol;
+uniform vec4 uRefCol;
 
 uniform float uTilingFactor;
 uniform float uNormalStrength;
+uniform float uMinSkylight;
 
 //======================================================================
 //Fixing texture tiling with 3 taps by Suslik: shadertoy.com/view/tsVGRd
@@ -144,16 +146,19 @@ void main() {
     float sky_diff = clamp(dot( up,    norm), 0.0, 1.0);
     float ref_diff = clamp(dot(-l_dir, norm), 0.0, 1.0);
 
+    vec3 sun_col = uSunCol.a * uSunCol.rgb;
+    vec3 sky_col = uSkyCol.a * uSkyCol.rgb;
+    vec3 ref_col = uRefCol.a * uRefCol.rgb;
+
     float shininess = 32.0;
     float spec = pow(max(dot(view, refl), 0.0), shininess);
 
-    vec3 color = shadow * (sun_diff+spec) * sun_col
-               + amb * (sky_col*sky_diff + ref_col*ref_diff);
-    
-    if (uMaterial == 1) {
-        vec3 alb = getMatAlbedo(uv); //texture(albedo, uTilingFactor*uv).rgb;
-        color *= alb;
-    }
+    vec3 albedo = (uMaterial==1) ? getMatAlbedo(uv) : vec3(1.0);
+
+    vec3 color = shadow * sun_diff * sun_col * albedo;
+    color += shadow * spec * sun_col * vec3(1.0);
+    color += amb * max(uMinSkylight, sky_diff) * sky_col * albedo;
+    color += amb * ref_diff * ref_col * albedo;
 
     //Color correction
     color = pow(color, vec3(1.0/2.2));
