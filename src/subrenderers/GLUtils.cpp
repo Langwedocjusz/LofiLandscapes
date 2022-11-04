@@ -72,6 +72,11 @@ void Texture::BindImage(int id, int mip) {
     glBindImageTexture(id, m_Texture, mip, GL_FALSE, 0, GL_READ_WRITE, format);
 }
 
+void Texture::AttachToFramebuffer() {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D, m_Texture, 0);
+}
+
 FramebufferTexture::FramebufferTexture() {}
 
 FramebufferTexture::~FramebufferTexture() {

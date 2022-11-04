@@ -27,7 +27,7 @@ struct ShadowmapSettings{
     float Bias = 6.0f;
 };
 
-enum class UpdateFlags {
+enum class MapUpdateFlags {
     None   =      0,
     Height = (1<<0),
     Normal = (1<<1),
@@ -62,7 +62,7 @@ private:
     ShadowmapSettings m_ShadowSettings;
     AOSettings        m_AOSettings;
 
-    UpdateFlags m_UpdateFlags = UpdateFlags::None;
+    MapUpdateFlags m_UpdateFlags = MapUpdateFlags::None;
     
     void UpdateHeight();
     void UpdateNormal();
@@ -81,5 +81,5 @@ bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);
 bool operator==(const AOSettings& lhs, const AOSettings& rhs);
 bool operator!=(const AOSettings& lhs, const AOSettings& rhs);
 
-UpdateFlags operator|(UpdateFlags x, UpdateFlags y);
-UpdateFlags operator&(UpdateFlags x, UpdateFlags y);
+MapUpdateFlags operator|(MapUpdateFlags x, MapUpdateFlags y);
+MapUpdateFlags operator&(MapUpdateFlags x, MapUpdateFlags y);

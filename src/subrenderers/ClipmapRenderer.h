@@ -41,7 +41,7 @@ public:
                           float offset_x, float offset_z);
     void BindAndDraw();
 private:
-    int m_N = 33;
+    int m_N = 65;
     float m_L = 4.0f;
 
     ClipmapRing m_Lod0, m_Lod1, m_Lod2, m_Lod3, m_Lod4;

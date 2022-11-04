@@ -165,7 +165,7 @@ void Renderer::OnImGuiRender() {
     if(m_ShowShadowMenu)
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
 
-    if(m_ShowMaterialMenu)
+    if (m_ShowMaterialMenu)
         m_Material.OnImGui();
 
     if (m_ShowLightMenu) {

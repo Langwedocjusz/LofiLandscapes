@@ -37,6 +37,7 @@ public:
     void Initialize(TextureSpec spec);
     void Bind(int id=0);
     void BindImage(int id, int mip);
+    void AttachToFramebuffer();
 
     const TextureSpec& getSpec() {return m_Spec;}
 private:

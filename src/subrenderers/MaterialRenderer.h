@@ -1,11 +1,14 @@
 #pragma once
 
-#include "Shader.h"
 #include "GLUtils.h"
+#include "MaterialEditor.h"
 
-struct MaterialSettings{
-    glm::vec3 Col1 = glm::vec3(0.5f);
-    glm::vec3 Col2 = glm::vec3(0.8f);
+
+enum class MaterialUpdateFlags {
+    None   = (   0),
+    Height = (1<<0),
+    Normal = (1<<1),
+    Albedo = (1<<2)
 };
 
 class MaterialRenderer{
@@ -15,15 +18,22 @@ public:
 
     void Update();
     void OnImGui();
+
     void BindAlbedo(int id=0);
     void BindNormal(int id=0);
 
 private:
-    Texture m_Albedo, m_Normal;
-    Shader m_AlbedoShader, m_NormalShader;
+    Texture m_Height, m_Normal, m_Albedo;
 
-    MaterialSettings m_Settings;
+    //Heightmap generation
+    MaterialEditor m_HeightEditor;
+    //Normalmap generation
+    Shader m_NormalShader;
+    //Albedo generation:
+    MaterialEditor m_AlbedoEditor;
+
+    MaterialUpdateFlags m_UpdateFlags = MaterialUpdateFlags::None;
 };
 
-bool operator==(const MaterialSettings& lhs, const MaterialSettings& rhs);
-bool operator!=(const MaterialSettings& lhs, const MaterialSettings& rhs);
+MaterialUpdateFlags operator|(MaterialUpdateFlags x, MaterialUpdateFlags y);
+MaterialUpdateFlags operator&(MaterialUpdateFlags x, MaterialUpdateFlags y);

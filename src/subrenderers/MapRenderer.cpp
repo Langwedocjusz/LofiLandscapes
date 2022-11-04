@@ -54,9 +54,9 @@ MapRenderer::MapRenderer()
     //    std::cerr << "FRAMEBUFFER NOT READY \n";
 
     //-----Set update flags
-    m_UpdateFlags = m_UpdateFlags | UpdateFlags::Height;
-    m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
-    m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
+    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
+    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
+    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
 }
 
 MapRenderer::~MapRenderer() {}
@@ -119,16 +119,16 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
 }
 
 void MapRenderer::Update(float theta, float phi) {
-    if ((m_UpdateFlags & UpdateFlags::Height) != UpdateFlags::None)
+    if ((m_UpdateFlags & MapUpdateFlags::Height) != MapUpdateFlags::None)
         UpdateHeight();
 
-    if ((m_UpdateFlags & UpdateFlags::Normal) != UpdateFlags::None)
+    if ((m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None)
         UpdateNormal();
 
-    if ((m_UpdateFlags & UpdateFlags::Shadow) != UpdateFlags::None)
+    if ((m_UpdateFlags & MapUpdateFlags::Shadow) != MapUpdateFlags::None)
         UpdateShadow(theta, phi);
 
-    m_UpdateFlags = UpdateFlags::None;
+    m_UpdateFlags = MapUpdateFlags::None;
 }
 
 void MapRenderer::BindHeightmap(int id) {
@@ -157,19 +157,19 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
 
     if (temp_h != m_HeightSettings) {
         m_HeightSettings = temp_h;
-        m_UpdateFlags = m_UpdateFlags | UpdateFlags::Height;
-        m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
+        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
         
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
 
     else if (temp_s != m_ScaleSettings) {
         m_ScaleSettings = temp_s;
-        m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
         
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
 }
 
@@ -188,23 +188,23 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
 
     if (temp2 != m_AOSettings) {
         m_AOSettings = temp2;
-        m_UpdateFlags = m_UpdateFlags | UpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
     }
 
     if (temp != m_ShadowSettings) {
         m_ShadowSettings = temp;
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
 }
 
 void MapRenderer::RequestShadowUpdate() {
-    m_UpdateFlags = m_UpdateFlags | UpdateFlags::Shadow;
+    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
 }
 
 bool MapRenderer::GeometryShouldUpdate() {
-    return (m_UpdateFlags & UpdateFlags::Height) != UpdateFlags::None ||
-           (m_UpdateFlags & UpdateFlags::Normal) != UpdateFlags::None;
+    return (m_UpdateFlags & MapUpdateFlags::Height) != MapUpdateFlags::None ||
+           (m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None;
 }
 
 //Settings structs operator overloads:
@@ -244,12 +244,12 @@ bool operator!=(const AOSettings& lhs, const AOSettings& rhs) {
     return !(lhs==rhs);
 }
 
-UpdateFlags operator|(UpdateFlags x, UpdateFlags y) {
-    return static_cast<UpdateFlags>(static_cast<int>(x) 
+MapUpdateFlags operator|(MapUpdateFlags x, MapUpdateFlags y) {
+    return static_cast<MapUpdateFlags>(static_cast<int>(x) 
                                      | static_cast<int>(y));
 }
 
-UpdateFlags operator&(UpdateFlags x, UpdateFlags y) {
-    return static_cast<UpdateFlags>(static_cast<int>(x) 
+MapUpdateFlags operator&(MapUpdateFlags x, MapUpdateFlags y) {
+    return static_cast<MapUpdateFlags>(static_cast<int>(x) 
                                      & static_cast<int>(y));
 }
