@@ -23,7 +23,7 @@ MaterialRenderer::MaterialRenderer()
 {
     //=====Initialize the textures:
     TextureSpec height_spec = TextureSpec{
-        512, GL_R16, GL_RGBA, GL_UNSIGNED_BYTE,
+        512, GL_R16F, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
@@ -52,6 +52,10 @@ MaterialRenderer::MaterialRenderer()
 
     //=====Initialize material editors:
     //Heightmap
+    m_HeightEditor.RegisterShader("Const Value", "res/shaders/const_val.glsl");
+    m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
+    m_HeightEditor.AddProcedureInstance("Const Value");
+
     m_HeightEditor.RegisterShader("FBM", "res/shaders/fbm.glsl");
     m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().Resolution);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
@@ -84,7 +88,6 @@ void MaterialRenderer::Update() {
     {
         const int res = m_Height.getSpec().Resolution;
         
-        ClearColorTexture(m_Height, 0.0f, 0.0f, 0.0f, 0.0f);
         m_Height.BindImage(0, 0);
         m_HeightEditor.OnDispatch(res);
     }

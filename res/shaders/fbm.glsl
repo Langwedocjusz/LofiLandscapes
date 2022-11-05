@@ -51,7 +51,7 @@ float fbm(in vec2 p, int octaves) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    float prev = imageLoad(heightmap, texelCoord).r;
+    float prev = float(imageLoad(heightmap, texelCoord));
 
     vec2 uv = vec2(texelCoord)/float(uResolution);
     
