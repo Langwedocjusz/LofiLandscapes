@@ -3,6 +3,8 @@
 #include "glad/glad.h"
 #include "imgui.h"
 
+#include <iostream>
+
 void ClearColorTexture(Texture& tex, float r, float g, float b, float a) {
     unsigned int fbo;
     glGenFramebuffers(1, &fbo);
@@ -61,6 +63,10 @@ MaterialRenderer::MaterialRenderer()
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.AttachSliderInt("FBM", "uScale", "Scale", 
                                      0, 100, 1);
+
+    std::vector<std::string> labels{ "Average", "Add", "Subtract" };
+    m_HeightEditor.AttachGLEnum("FBM", "uBlendMode", "Blend Mode", labels);
+
     m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     //Albedo
@@ -174,6 +180,27 @@ void MaterialRenderer::OnImGui() {
         m_AlbedoEditor.AddProcedureInstance("Color Ramp");
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
+
+    /*const char* items[] = {"AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO", "PPPP", "QQQQQQQQQQ", "RRR", "SSSS"};
+    static const char* current_item = NULL;
+
+    if (ImGui::BeginCombo("Trongi", current_item)) // The second parameter is the label previewed before opening the combo.
+    {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+            if (ImGui::Selectable(items[n], is_selected)) {
+                current_item = items[n];
+                std::cout << n << '\n';
+            }
+                
+            //if (is_selected) {
+            //    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+            //}
+                    
+        }
+        ImGui::EndCombo();
+    }*/
 
     ImGui::End();
 

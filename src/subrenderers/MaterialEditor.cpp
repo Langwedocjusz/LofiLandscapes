@@ -28,6 +28,12 @@ ColorEdit3Task::ColorEdit3Task(const std::string& uniform_name,
     : UniformName(uniform_name), UiName(ui_name), Def(def)
 {}
 
+GLEnumTask::GLEnumTask(const std::string& uniform_name,
+                       const std::string& ui_name,
+                       const std::vector<std::string>& labels)
+     : UniformName(uniform_name), UiName(ui_name), m_Labels(labels)
+{}
+
 //===========================================================================
 
 void Procedure::CompileShader(const std::string& filepath) {
@@ -70,6 +76,15 @@ void Procedure::AddColorEdit3(const std::string& uniform_name,
 {
     m_Tasks.push_back(std::unique_ptr<EditorTask>(
         new ColorEdit3Task(uniform_name, ui_name, def_val)
+    ));
+}
+
+void Procedure::AddGLEnum(const std::string& uniform_name,
+                          const std::string& ui_name,
+                          const std::vector<std::string>& labels)
+{
+    m_Tasks.push_back(std::unique_ptr<EditorTask>(
+        new GLEnumTask(uniform_name, ui_name, labels)
     ));
 }
 
@@ -125,6 +140,15 @@ void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
 
                 auto value = std::get<glm::vec3>(data[i]);
                 m_Shader -> setUniform3f(typed_task->UniformName, value);
+                break;
+            }
+            case TaskType::GLEnum:
+            {
+                GLEnumTask* typed_task =
+                    dynamic_cast<GLEnumTask*>(task.get());
+
+                auto value = std::get<GLEnumData>(data[i]).first;
+                m_Shader->setUniform1i(typed_task->UniformName, value);
                 break;
             }
             default:
@@ -204,6 +228,38 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
 
                 break;
             }
+            case TaskType::GLEnum:
+            {
+                GLEnumTask* typed_task =
+                    dynamic_cast<GLEnumTask*>(task.get());
+
+                char* current_item = std::get<GLEnumData>(data[i]).second;
+                int* ptr = &std::get<GLEnumData>(data[i]).first;
+                int value = *ptr;
+
+
+                if (ImGui::BeginCombo(typed_task->UiName.c_str(), current_item))
+                {
+                    for (int n = 0; n < typed_task->m_Labels.size(); n++)
+                    {
+                        bool is_selected = (current_item == typed_task->m_Labels[n].c_str());
+
+                        if (ImGui::Selectable(typed_task->m_Labels[n].c_str(), is_selected)) {
+                            current_item = &((typed_task->m_Labels[n])[0]);
+                            value = n;
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                if (value != *ptr) {
+                    *ptr = value;
+                    res = true;
+                    std::get<GLEnumData>(data[i]).second = current_item;
+                }
+
+                break;
+            }
             default:
             {
                 break;
@@ -276,6 +332,15 @@ void MaterialEditor::AttachColorEdit3(const std::string& name,
         m_Procedures[name].AddColorEdit3(uniform_name, ui_name, def_val);
 }
 
+void MaterialEditor::AttachGLEnum(const std::string& name,
+                                  const std::string& uniform_name,
+                                  const std::string& ui_name,
+                                  const std::vector <std::string>& labels)
+{
+    if (m_Procedures.count(name))
+        m_Procedures[name].AddGLEnum(uniform_name, ui_name, labels);
+}
+
 void MaterialEditor::AddProcedureInstance(const std::string& name) {
     if (m_Procedures.count(name)) {
         m_Instances.push_back(ProcedureInstance(name));
@@ -324,6 +389,14 @@ void MaterialEditor::AddProcedureInstance(const std::string& name) {
                         dynamic_cast<ColorEdit3Task*>(task.get());
 
                     m_Instances.back().Data.push_back(typed_task->Def);
+                    break;
+                }
+                case TaskType::GLEnum:
+                {
+                    GLEnumTask* typed_task =
+                        dynamic_cast<GLEnumTask*>(task.get());
+
+                    m_Instances.back().Data.push_back(std::pair<int, char*>(0, &((typed_task->m_Labels[0])[0])));
                     break;
                 }
                 default:

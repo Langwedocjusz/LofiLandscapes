@@ -6,10 +6,11 @@
 #include <memory>
 #include <unordered_map>
 
-typedef std::variant<int, float, glm::vec3> InstanceData;
+typedef std::pair<int, char*> GLEnumData;
+typedef std::variant<int, float, glm::vec3, GLEnumData> InstanceData;
 
 enum class TaskType{
-    None, ConstInt, ConstFloat, SliderInt, SliderFloat, ColorEdit3
+    None, ConstInt, ConstFloat, SliderInt, SliderFloat, ColorEdit3, GLEnum
 };
 
 class EditorTask{
@@ -80,6 +81,20 @@ public:
     glm::vec3 Def;
 };
 
+class GLEnumTask : public EditorTask {
+public:
+    GLEnumTask(const std::string& uniform_name,
+               const std::string& ui_name,
+               const std::vector<std::string>& labels);
+
+    ~GLEnumTask() = default;
+
+    TaskType getType() override { return TaskType::GLEnum; }
+
+    std::string UniformName, UiName;
+    std::vector<std::string> m_Labels;
+};
+
 class Procedure{
 public:
      Procedure() = default;
@@ -101,6 +116,10 @@ public:
     void AddColorEdit3(const std::string& uniform_name, 
                        const std::string& ui_name,
                        glm::vec3 def_val);
+
+    void AddGLEnum(const std::string& uniform_name,
+                   const std::string& ui_name,
+                   const std::vector<std::string>& labels);
 
     void OnDispatch(int res, const std::vector<InstanceData>& data);
     bool OnImGui(std::vector<InstanceData>& data);
@@ -149,6 +168,11 @@ public:
                           glm::vec3 def_val);
 
     void AddProcedureInstance(const std::string& name);
+
+    void AttachGLEnum(const std::string& name,
+                      const std::string& uniform_name,
+                      const std::string& ui_name,
+                      const std::vector<std::string>& labels);
 
     void OnDispatch(int res);
     bool OnImGui();

@@ -9,6 +9,12 @@ uniform int uResolution;
 uniform int uOctaves;
 uniform int uScale;
 
+uniform int uBlendMode;
+
+#define BLEND_AVERAGE  0
+#define BLEND_ADD      1
+#define BLEND_SUBTRACT 2
+
 uniform float uWeight;
 
 float hash(vec2 p, float scale) {
@@ -58,9 +64,25 @@ void main() {
     float h = fbm(float(uScale)*uv, uOctaves);
     h = clamp(h, 0.0, 1.0);
 
-    h = mix(prev, h, uWeight);
+    switch(uBlendMode) {
+        case BLEND_AVERAGE:
+        {
+            h = mix(prev, h, uWeight);
+            break;
+        }
+        case BLEND_ADD:
+        {
+            h = prev + uWeight*h;
+            break;
+        }
+        case BLEND_SUBTRACT:
+        {
+            h = prev - uWeight*h;
+            break;
+        }
+    }
 
-    vec4 res = vec4(h, vec4(0.0));
+    vec4 res = vec4(h, vec3(0.0));
 
     imageStore(heightmap, texelCoord, res);
 }
