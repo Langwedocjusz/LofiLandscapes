@@ -59,6 +59,14 @@ namespace ImGuiStyles{
         style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         style.Colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-        style.GrabRounding                           = style.FrameRounding = 0.0f;//2.3f;
+        
+        style.GrabRounding      = 0.0f;
+        style.FrameRounding     = 0.0f;
+        style.WindowRounding    = 0.0f;
+        style.ChildRounding     = 0.0f;
+        style.FrameRounding     = 0.0f;
+        style.PopupRounding     = 0.0f;
+        style.ScrollbarRounding = 0.0f;
+        style.TabRounding       = 0.0f;
     }
 }

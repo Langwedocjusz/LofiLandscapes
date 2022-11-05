@@ -90,7 +90,7 @@ vec4 TextureFixedTiling(sampler2D sampler, vec2 p, float freq) {
     vec4 res = vec4(0.0);
     
     for (int i=0; i<3; i++) {
-        vec3 node = getInterpNode(p, 3.0*freq, i);
+        vec3 node = getInterpNode(p, freq, i);
         res += node.z * getTextureSample(sampler, p, freq, node.xy);
     }
 
@@ -99,22 +99,22 @@ vec4 TextureFixedTiling(sampler2D sampler, vec2 p, float freq) {
 
 //======================================================================
 
-vec3 getMatAlbedo(vec2 uv) {
+vec4 getMatAlbedo(vec2 uv) {
     if (uFixTiling == 1) {
-        return TextureFixedTiling(albedo, uv, uTilingFactor).rgb;
+        return TextureFixedTiling(albedo, uv, uTilingFactor);
     }
 
     else
-        return texture(albedo, uTilingFactor*uv).rgb;
+        return texture(albedo, uTilingFactor*uv);
 }
 
-vec3 getMatNormal(vec2 uv) {
+vec4 getMatNormal(vec2 uv) {
     if (uFixTiling == 1) {
-        return 2.0 * TextureFixedTiling(normal, uv, uTilingFactor).rgb - 1.0;
+        return TextureFixedTiling(normal, uv, uTilingFactor);
     }
 
     else
-        return 2.0 * texture(normal, uTilingFactor*uv).rgb - 1.0;
+        return texture(normal, uTilingFactor*uv);
 }
 
 void main() {
@@ -128,17 +128,20 @@ void main() {
     const vec3 up = vec3(0.0, 1.0, 0.0);
 
     vec3 norm = 2.0*res.xyz - 1.0;
+    float amb = res.w;
+    float mat_amb = 1.0;
 
     if (uMaterial == 1) {
-        vec3 mat_norm = getMatNormal(uv); //2.0*texture(normal, uTilingFactor*uv).rgb - 1.0;
+        vec4 mat_res = getMatNormal(uv);
+        vec3 mat_norm = 2.0*mat_res.rgb-1.0;
         norm = mix(norm, norm_rot*mat_norm, uNormalStrength);
+        mat_amb = mat_res.a;
     }
 
     vec3 view = normalize(frag_pos - uPos);
     vec3 refl = reflect(-l_dir, norm);
 
     //Do basic phong lighting
-    float amb = res.w;
     float shadow = 1.0;
     if(uShadow == 1) shadow = texture(shadowmap, uv).r;
     
@@ -153,12 +156,13 @@ void main() {
     float shininess = 32.0;
     float spec = pow(max(dot(view, refl), 0.0), shininess);
 
-    vec3 albedo = (uMaterial==1) ? getMatAlbedo(uv) : vec3(1.0);
+    vec3 albedo = (uMaterial==1) ? getMatAlbedo(uv).rgb : vec3(1.0);
 
     vec3 color = shadow * sun_diff * sun_col * albedo;
     color += shadow * spec * sun_col * vec3(1.0);
     color += amb * max(uMinSkylight, sky_diff) * sky_col * albedo;
     color += amb * ref_diff * ref_col * albedo;
+    color *= mat_amb;
 
     //Color correction
     color = pow(color, vec3(1.0/2.2));

@@ -192,7 +192,6 @@ void Renderer::OnImGuiRender() {
         if (phi != m_Phi || theta != m_Theta) {
             m_Phi = phi;
             m_Theta = theta;
-            //m_Materials = materials;
             if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 

@@ -55,8 +55,9 @@ MaterialRenderer::MaterialRenderer()
     m_HeightEditor.RegisterShader("FBM", "res/shaders/fbm.glsl");
     m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().Resolution);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
-    m_HeightEditor.AttachSliderFloat("FBM", "uScale", "Scale", 
-                                     0.0f, 100.0f, 1.0f);
+    m_HeightEditor.AttachSliderInt("FBM", "uScale", "Scale", 
+                                     0, 100, 1);
+    m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     //Albedo
     m_AlbedoEditor.RegisterShader("Color Ramp", "res/shaders/color_ramp.glsl");
@@ -83,6 +84,7 @@ void MaterialRenderer::Update() {
     {
         const int res = m_Height.getSpec().Resolution;
         
+        ClearColorTexture(m_Height, 0.0f, 0.0f, 0.0f, 0.0f);
         m_Height.BindImage(0, 0);
         m_HeightEditor.OnDispatch(res);
     }
@@ -98,6 +100,9 @@ void MaterialRenderer::Update() {
 
         m_NormalShader.Bind();
         m_NormalShader.setUniform1i("uResolution", res);
+        m_NormalShader.setUniform1f("uAOStrength", 1.0f/m_AOStrength);
+        m_NormalShader.setUniform1f("uAOSpread", m_AOSpread);
+        m_NormalShader.setUniform1f("uAOContrast", m_AOContrast);
 
         //Magic number "32" needs to be the same as local size
         //declared in the compute shader files
@@ -136,6 +141,24 @@ void MaterialRenderer::OnImGui() {
 
     if (ImGui::Button("Add heightmap procedure")) {
         m_HeightEditor.AddProcedureInstance("FBM");
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Height;
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+    }
+
+    ImGui::Separator();
+
+    float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;
+
+    ImGui::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
+    ImGui::SliderFloat("AO Spread", &tmp_spr, 1.0, 10.0);
+    ImGui::SliderFloat("AO Contrast", &tmp_c, 0.1, 5.0);
+
+    if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {
+        m_AOStrength = tmp_str;
+        m_AOSpread = tmp_spr;
+        m_AOContrast = tmp_c;
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
     }
 
     ImGui::Separator();
@@ -146,6 +169,7 @@ void MaterialRenderer::OnImGui() {
 
     if (ImGui::Button("Add albedo procedure")) {
         m_AlbedoEditor.AddProcedureInstance("Color Ramp");
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
 
     ImGui::End();

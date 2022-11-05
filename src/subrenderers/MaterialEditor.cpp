@@ -353,7 +353,7 @@ bool MaterialEditor::OnImGui() {
 
         ImGui::Text(instance.Name.c_str());
         ImGui::PushID(id);
-        res = m_Procedures[instance.Name].OnImGui(data);
+        res = res || m_Procedures[instance.Name].OnImGui(data);
         ImGui::PopID();
         ImGui::Separator();
 

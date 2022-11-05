@@ -29,6 +29,7 @@ private:
     MaterialEditor m_HeightEditor;
     //Normalmap generation
     Shader m_NormalShader;
+    float m_AOStrength = 1.0f, m_AOSpread = 1.0f, m_AOContrast = 1.0f;
     //Albedo generation:
     MaterialEditor m_AlbedoEditor;
 

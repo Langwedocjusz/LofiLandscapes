@@ -7,11 +7,12 @@ layout(r16f, binding = 0) uniform image2D heightmap;
 uniform int uResolution;
 
 uniform int uOctaves;
-uniform float uScale;
+uniform int uScale;
 
+uniform float uWeight;
 
 float hash(vec2 p, float scale) {
-    p = mod(p, scale);
+    p = (scale == 0.0) ? vec2(0.0) : mod(p, scale);
     if (p == vec2(0.0)) return 0.5;
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
 }
@@ -38,7 +39,7 @@ float fbm(in vec2 p, int octaves) {
     float A = 1.0, a = 1.0;
 
     for (int i=0; i<octaves; i++) {
-        res += A*noise(a*p, uScale*a);
+        res += A*noise(a*p, float(uScale)*a);
 
         a *= 2.0;
         A *= 0.5;
@@ -50,9 +51,16 @@ float fbm(in vec2 p, int octaves) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
+    float prev = imageLoad(heightmap, texelCoord).r;
+
     vec2 uv = vec2(texelCoord)/float(uResolution);
     
-    float h = fbm(uScale*uv, uOctaves);
+    float h = fbm(float(uScale)*uv, uOctaves);
+    h = clamp(h, 0.0, 1.0);
 
-    imageStore(heightmap, texelCoord, vec4(h, vec3(0.0)));
+    h = mix(prev, h, uWeight);
+
+    vec4 res = vec4(h, vec4(0.0));
+
+    imageStore(heightmap, texelCoord, res);
 }

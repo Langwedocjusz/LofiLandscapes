@@ -46,7 +46,7 @@ protected:
     float m_Pitch, m_Yaw;
 
     CameraSettings m_Settings; 
-    CameraMovement m_Movement;
+    CameraMovement m_Movement = CameraMovement::None;
 
     void updateVectors();
 };

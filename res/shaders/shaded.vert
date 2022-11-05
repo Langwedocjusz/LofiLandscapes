@@ -12,16 +12,11 @@ uniform mat4 uMVP;
 
 uniform sampler2D normalmap;
 
-mat3 rotation(vec3 x, vec3 y) {
-    mat3 I = mat3(1.0);
-    vec3 v = cross(x,y);
-    mat3 V = mat3(0.0,-v.z, v.y,
-                  v.z, 0.0,-v.x,
-                 -v.y, v.x, 0.0);
-    float c = dot(x,y);
-    float C = 1.0/(1.0+c);
-    
-    return I + V + C*V*V;
+mat3 rotation(vec3 N){
+    vec3 T = vec3(1.0, 0.0, 0.0);
+    T = normalize(T - dot(N,T)*N);
+    vec3 B = cross(T, N);
+    return mat3(T, N, B);
 }
 
 void main() {
@@ -31,7 +26,7 @@ void main() {
     uv = 0.5*uv + 0.5;
 
     vec3 norm = 2.0*texture(normalmap, uv).rgb - 1.0;
-    norm_rot = rotation(vec3(0.0, 1.0, 0.0), norm);
+    norm_rot = rotation(normalize(norm));
 
     frag_pos = aPos.xyz;
 
