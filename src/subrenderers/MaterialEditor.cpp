@@ -163,7 +163,7 @@ void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
     //Magic number "32" needs to be the same as local size
     //declared in the compute shader files
     glDispatchCompute(res / 32, res / 32, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 bool Procedure::OnImGui(std::vector<InstanceData>& data) {

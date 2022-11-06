@@ -73,7 +73,7 @@ void MapRenderer::UpdateHeight() {
                                                m_HeightSettings.Offset[1]);
     
     glDispatchCompute(res/32, res/32, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -94,7 +94,7 @@ void MapRenderer::UpdateNormal() {
     m_NormalmapShader.setUniform1f("uAOR", m_AOSettings.R);
 
     glDispatchCompute(res/32, res/32, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 void MapRenderer::UpdateShadow(float theta, float phi) {
@@ -115,7 +115,7 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
     m_ShadowmapShader.setUniform1f("uBias", m_ShadowSettings.Bias);
 
     glDispatchCompute(res/32, res/32, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 void MapRenderer::Update(float theta, float phi) {

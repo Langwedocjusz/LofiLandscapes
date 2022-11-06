@@ -116,7 +116,7 @@ void MaterialRenderer::Update() {
         //Magic number "32" needs to be the same as local size
         //declared in the compute shader files
         glDispatchCompute(res/32, res/32, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     
         m_Normal.Bind();
         glGenerateMipmap(GL_TEXTURE_2D);
