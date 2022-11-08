@@ -175,8 +175,8 @@ void Renderer::OnImGuiRender() {
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGuiUtils::Checkbox("Shadows", &shadows);
-        ImGuiUtils::SliderFloat("phi", &phi, 0.0, 6.28);
-        ImGuiUtils::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
+        ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
+        ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5*3.14);
         ImGuiUtils::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
         ImGuiUtils::ColorEdit3("Sun Color" , m_SunCol);
         ImGuiUtils::ColorEdit3("Sky Color" , m_SkyCol);
