@@ -41,12 +41,16 @@ float getAO(vec2 p) {
 
     for (float t=0.0; t<1.0; t+=dt) {
         float radius = uAOR*sqrt(t);
+        if (radius <= 0.0f) continue;
+
         vec2 q = p + radius*vec2(sin(A*t), cos(A*t));
 
         float h = getHeight(q);
         float rel_h = max(h-h_0, 0.0);
         float theta = 0.5*PI - atan(C*rel_h/radius);
-        res += 1.0 - cos(theta);
+        float dres = 1.0 - cos(theta);
+        
+        res += dres;
     }
 
     res = res/float(uAOSamples);

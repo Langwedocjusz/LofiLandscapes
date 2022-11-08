@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 
 #include "imgui.h"
+#include "ImGuiUtils.h"
 
 #include <iostream>
 
@@ -143,7 +144,7 @@ void Renderer::OnImGuiRender() {
     //-----Windows
     if (m_ShowBackgroundMenu) {
         ImGui::Begin("Background", &m_ShowBackgroundMenu);
-        ImGui::ColorEdit3("ClearColor", m_ClearColor);
+        ImGuiUtils::ColorEdit3("ClearColor", m_ClearColor);
         ImGui::End();
     }
     
@@ -151,9 +152,9 @@ void Renderer::OnImGuiRender() {
         CameraSettings temp = m_Camera.getSettings();
 
         ImGui::Begin("Camera", &m_ShowCamMenu);
-        ImGui::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
-        ImGui::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
-        ImGui::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
+        ImGuiUtils::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
+        ImGuiUtils::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
+        ImGuiUtils::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
         ImGui::End();
 
         m_Camera.setSettings(temp);
@@ -173,20 +174,20 @@ void Renderer::OnImGuiRender() {
         bool shadows = m_Shadows;
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
-        ImGui::Checkbox("Shadows", &shadows);
-        ImGui::SliderFloat("phi", &phi, 0.0, 6.28);
-        ImGui::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
-        ImGui::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
-        ImGui::ColorEdit3("Sun Color" , m_SunCol);
-        ImGui::ColorEdit3("Sky Color" , m_SkyCol);
-        ImGui::ColorEdit3("Refl Color", m_RefCol);
-        ImGui::SliderFloat("Sun Strength" , &m_SunCol[3], 1.0, 5.0);
-        ImGui::SliderFloat("Sky Strength" , &m_SkyCol[3], 1.0, 5.0);
-        ImGui::SliderFloat("Refl Strength", &m_RefCol[3], 1.0, 5.0);
-        ImGui::Checkbox("Materials", &m_Materials);
-        ImGui::Checkbox("Fix Tiling", &m_FixTiling);
-        ImGui::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);
-        ImGui::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
+        ImGuiUtils::Checkbox("Shadows", &shadows);
+        ImGuiUtils::SliderFloat("phi", &phi, 0.0, 6.28);
+        ImGuiUtils::SliderFloat("theta", &theta, 0.0, 0.5*3.14);
+        ImGuiUtils::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
+        ImGuiUtils::ColorEdit3("Sun Color" , m_SunCol);
+        ImGuiUtils::ColorEdit3("Sky Color" , m_SkyCol);
+        ImGuiUtils::ColorEdit3("Refl Color", m_RefCol);
+        ImGuiUtils::SliderFloat("Sun Strength" , &m_SunCol[3], 1.0, 5.0);
+        ImGuiUtils::SliderFloat("Sky Strength" , &m_SkyCol[3], 1.0, 5.0);
+        ImGuiUtils::SliderFloat("Refl Strength", &m_RefCol[3], 1.0, 5.0);
+        ImGuiUtils::Checkbox("Materials", &m_Materials);
+        ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
+        ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);
+        ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
         ImGui::End();
         
         if (phi != m_Phi || theta != m_Theta) {

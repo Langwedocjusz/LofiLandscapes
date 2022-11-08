@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 
 #include "imgui.h"
+#include "ImGuiUtils.h"
 
 #include <iostream>
 
@@ -148,11 +149,11 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
     ScaleSettings temp_s = m_ScaleSettings;
 
     ImGui::Begin("Terrain settings", &open);
-    ImGui::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
-    ImGui::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
-    ImGui::SliderInt("Octaves", &temp_h.Octaves, 1, 16);
-    ImGui::SliderFloat("Offset x", &temp_h.Offset[0], 0.0f, 20.0f);
-    ImGui::SliderFloat("Offset y", &temp_h.Offset[1], 0.0f, 20.0f);
+    ImGuiUtils::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
+    ImGuiUtils::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
+    ImGuiUtils::SliderInt("Octaves", &temp_h.Octaves, 1, 16);
+    ImGuiUtils::SliderFloat("Offset x", &temp_h.Offset[0], 0.0f, 20.0f);
+    ImGuiUtils::SliderFloat("Offset y", &temp_h.Offset[1], 0.0f, 20.0f);
     ImGui::End();
 
     if (temp_h != m_HeightSettings) {
@@ -177,13 +178,23 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
-    ImGui::Begin("Shadowmap settings", &open);
-    ImGui::SliderFloat("Min t", &temp.MinT, 0.0, 0.5);
-    ImGui::SliderFloat("Max t", &temp.MaxT, 0.0, 1.0);
-    ImGui::SliderFloat("Mip bias", &temp.Bias, 0.0, 20.0);
-    ImGui::SliderInt("Steps", &temp.Steps, 1, 64);
-    ImGui::SliderInt("AO Samples", &temp2.Samples, 1, 64);
-    ImGui::SliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
+    ImGui::Begin("Shadow/AO settings", &open);
+
+    ImGui::Text("Shdowmap Settings:");
+    ImGui::Spacing();
+
+    ImGuiUtils::SliderFloat("Min t", &temp.MinT, 0.0, 0.5);
+    ImGuiUtils::SliderFloat("Max t", &temp.MaxT, 0.0, 1.0);
+    ImGuiUtils::SliderFloat("Mip bias", &temp.Bias, 0.0, 20.0);
+    ImGuiUtils::SliderInt("Steps", &temp.Steps, 1, 64);
+
+    ImGui::Separator();
+    ImGui::Text("AO Settings:");
+    ImGui::Spacing();
+
+    ImGuiUtils::SliderInt("AO Samples", &temp2.Samples, 1, 64);
+    ImGuiUtils::SliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
+
     ImGui::End();
 
     if (temp2 != m_AOSettings) {

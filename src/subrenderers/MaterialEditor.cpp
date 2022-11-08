@@ -1,7 +1,9 @@
 #include "MaterialEditor.h"
 
 #include "glad/glad.h"
+
 #include "imgui.h"
+#include "ImGuiUtils.h"
 
 ConstIntTask::ConstIntTask(const std::string& uniform_name, int val) 
     : UniformName(uniform_name), Value(val) {}
@@ -182,8 +184,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 int* ptr = &std::get<int>(data[i]);
                 int value = *ptr;
 
-                ImGui::SliderInt(typed_task->UiName.c_str(), &value, 
-                                 typed_task->Min, typed_task->Max);
+                ImGuiUtils::SliderInt(typed_task->UiName, &value, 
+                    typed_task->Min, typed_task->Max);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -200,8 +202,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 float* ptr = &std::get<float>(data[i]);
                 float value = *ptr;
 
-                ImGui::SliderFloat(typed_task->UiName.c_str(), &value, 
-                                   typed_task->Min, typed_task->Max);
+                ImGuiUtils::SliderFloat(typed_task->UiName, &value,
+                    typed_task->Min, typed_task->Max);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -218,8 +220,7 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 glm::vec3* ptr = &std::get<glm::vec3>(data[i]);
                 glm::vec3 value = *ptr;
 
-                ImGui::ColorEdit3(typed_task->UiName.c_str(), 
-                                  glm::value_ptr(value));
+                ImGuiUtils::ColorEdit3(typed_task->UiName, &value);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -237,8 +238,13 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 int* ptr = &std::get<GLEnumData>(data[i]).first;
                 int value = *ptr;
 
+                std::string& name = typed_task->UiName;
 
-                if (ImGui::BeginCombo(typed_task->UiName.c_str(), current_item))
+                ImGui::Text(name.c_str());
+                ImGui::SameLine(ImGui::GetWindowWidth() / 3);
+                ImGui::PushItemWidth(-ImGui::GetStyle().FramePadding.x);
+
+                if (ImGui::BeginCombo(("##"+name).c_str(), current_item))
                 {
                     for (int n = 0; n < typed_task->m_Labels.size(); n++)
                     {
@@ -251,6 +257,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                     }
                     ImGui::EndCombo();
                 }
+
+                ImGui::PopItemWidth();
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -419,23 +427,22 @@ void MaterialEditor::OnDispatch(int res) {
 bool MaterialEditor::OnImGui() {
     bool res = false;
 
-    int id = 0;
-
     for (int i = 0; i < m_Instances.size(); i++) {
         auto& instance = m_Instances[i];
         auto& data = instance.Data;
 
-        ImGui::Text(instance.Name.c_str());
-        ImGui::PushID(i);
-        res = res || m_Procedures[instance.Name].OnImGui(data);
+        if (ImGui::CollapsingHeader(instance.Name.c_str()))
+        {
+            ImGui::PushID(i);
+            res = res || m_Procedures[instance.Name].OnImGui(data);
 
-        if (ImGui::Button("DELETE!")) {
-            m_Instances.erase(m_Instances.begin() + i);
-            res = true;
+            if (ImGui::Button("DELETE!")) {
+                m_Instances.erase(m_Instances.begin() + i);
+                res = true;
+            }
+
+            ImGui::PopID();
         }
-
-        ImGui::PopID();
-        ImGui::Separator();
     }
 
     return res;

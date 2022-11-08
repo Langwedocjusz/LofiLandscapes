@@ -1,7 +1,9 @@
 #include "MaterialRenderer.h"
 
 #include "glad/glad.h"
+
 #include "imgui.h"
+#include "ImGuiUtils.h"
 
 #include <iostream>
 
@@ -148,6 +150,8 @@ void MaterialRenderer::OnImGui() {
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
 
+    ImGui::Separator();
+
     if (ImGui::Button("Add heightmap procedure")) {
         m_HeightEditor.AddProcedureInstance("FBM");
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Height;
@@ -157,11 +161,11 @@ void MaterialRenderer::OnImGui() {
 
     ImGui::Separator();
 
-    float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;
+    float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
-    ImGui::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
-    ImGui::SliderFloat("AO Spread", &tmp_spr, 1.0, 10.0);
-    ImGui::SliderFloat("AO Contrast", &tmp_c, 0.1, 5.0);
+    ImGuiUtils::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
+    ImGuiUtils::SliderFloat("AO Spread", &tmp_spr, 1.0, 10.0);
+    ImGuiUtils::SliderFloat("AO Contrast", &tmp_c, 0.1, 5.0);
 
     if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {
         m_AOStrength = tmp_str;
@@ -176,31 +180,12 @@ void MaterialRenderer::OnImGui() {
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
 
+    ImGui::Separator();
+
     if (ImGui::Button("Add albedo procedure")) {
         m_AlbedoEditor.AddProcedureInstance("Color Ramp");
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
-
-    /*const char* items[] = {"AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO", "PPPP", "QQQQQQQQQQ", "RRR", "SSSS"};
-    static const char* current_item = NULL;
-
-    if (ImGui::BeginCombo("Trongi", current_item)) // The second parameter is the label previewed before opening the combo.
-    {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-        {
-            bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
-            if (ImGui::Selectable(items[n], is_selected)) {
-                current_item = items[n];
-                std::cout << n << '\n';
-            }
-                
-            //if (is_selected) {
-            //    ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-            //}
-                    
-        }
-        ImGui::EndCombo();
-    }*/
 
     ImGui::End();
 
