@@ -7,6 +7,13 @@ layout(r16f, binding = 0) uniform image2D heightmap;
 uniform int uResolution;
 
 uniform int uScale;
+uniform float uRandomness;
+
+uniform int uVoronoiType;
+
+#define VORONOI_F1    0
+#define VORONOI_F2    1
+#define VORONOI_F2_F1 2
 
 uniform int uBlendMode;
 
@@ -34,18 +41,27 @@ vec2 hash22(vec2 src) {
     return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
 }
 
-float voronoi(vec2 x){
+vec2 voronoi(vec2 x){
     vec2 p = floor(x);
     vec2 q = fract(x);
 
-    float res = 2.25;
+    vec2 res = vec2(2.25);
 
     for (int i=-1; i<=1; i++) {
         for (int j=-1; j<=1; j++) {
             vec2 v = p + vec2(i,j);
-            vec2 r = v + hash22(v);
+            vec2 r = v + uRandomness*hash22(v);
 
-            res = min(res, dot(x-r, x-r));
+            float d2 = dot(x-r, x-r);
+
+            if (d2 < res.x) {
+                res.y = res.x;
+                res.x = d2;
+            }
+
+            else if (d2 < res.y) {
+                res.t = d2;
+            }
         }
     }
 
@@ -58,8 +74,27 @@ void main() {
     float prev = float(imageLoad(heightmap, texelCoord));
 
     vec2 uv = vec2(texelCoord)/float(uResolution);
-    
-    float h = voronoi(float(uScale)*uv);
+
+    vec2 voro = voronoi(float(uScale)*uv);
+    float h = 0.0;
+
+    switch(uVoronoiType) {
+        case VORONOI_F1:
+        {
+            h = voro.x;
+            break;
+        }
+        case VORONOI_F2:
+        {
+            h = voro.y;
+            break;
+        }
+        case VORONOI_F2_F1:
+        {
+            h = voro.y - voro.x;
+            break;
+        }
+    }
 
     switch(uBlendMode) {
         case BLEND_AVERAGE:
