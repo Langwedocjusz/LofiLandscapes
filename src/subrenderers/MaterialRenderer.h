@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GLUtils.h"
-#include "MaterialEditor.h"
+#include "TextureEditor.h"
 
 
 enum class MaterialUpdateFlags {
@@ -26,12 +26,12 @@ private:
     Texture m_Height, m_Normal, m_Albedo;
 
     //Heightmap generation
-    MaterialEditor m_HeightEditor;
+    TextureEditor m_HeightEditor;
     //Normalmap generation
     Shader m_NormalShader;
     float m_AOStrength = 1.0f, m_AOSpread = 1.0f, m_AOContrast = 1.0f;
     //Albedo generation:
-    MaterialEditor m_AlbedoEditor;
+    TextureEditor m_AlbedoEditor;
 
     MaterialUpdateFlags m_UpdateFlags = MaterialUpdateFlags::None;
 };

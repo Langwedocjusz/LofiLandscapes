@@ -139,10 +139,10 @@ public:
     bool KeepAlive = true;
 };
 
-class MaterialEditor{
+class TextureEditor{
 public:
-     MaterialEditor() = default;
-    ~MaterialEditor() = default;
+     TextureEditor() = default;
+    ~TextureEditor() = default;
 
     void RegisterShader(const std::string& name, const std::string& filepath);
  

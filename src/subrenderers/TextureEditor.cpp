@@ -1,4 +1,4 @@
-#include "MaterialEditor.h"
+#include "TextureEditor.h"
 
 #include "glad/glad.h"
 
@@ -286,7 +286,7 @@ ProcedureInstance::ProcedureInstance(const std::string& name) : Name(name) {}
 
 //===========================================================================
 
-void MaterialEditor::RegisterShader(const std::string& name, 
+void TextureEditor::RegisterShader(const std::string& name, 
                                     const std::string& filepath)
 {
     if (m_Procedures.count(name)) return;
@@ -294,7 +294,7 @@ void MaterialEditor::RegisterShader(const std::string& name,
     m_Procedures[name].CompileShader(filepath);
 }
 
-void MaterialEditor::AttachConstInt(const std::string& name, 
+void TextureEditor::AttachConstInt(const std::string& name, 
                                     const std::string& uniform_name,
                                     int def_val)
 {
@@ -302,7 +302,7 @@ void MaterialEditor::AttachConstInt(const std::string& name,
         m_Procedures[name].AddConstInt(uniform_name, def_val);
 }
     
-void MaterialEditor::AttachConstFloat(const std::string& name, 
+void TextureEditor::AttachConstFloat(const std::string& name, 
                                       const std::string& uniform_name,
                                       float def_val)
 {
@@ -310,7 +310,7 @@ void MaterialEditor::AttachConstFloat(const std::string& name,
         m_Procedures[name].AddConstFloat(uniform_name, def_val);
 }
 
-void MaterialEditor::AttachSliderInt(const std::string& name, 
+void TextureEditor::AttachSliderInt(const std::string& name, 
                                      const std::string& uniform_name, 
                                      const std::string& ui_name,
                                      int min_val, int max_val, int def_val)
@@ -320,7 +320,7 @@ void MaterialEditor::AttachSliderInt(const std::string& name,
                                         min_val, max_val, def_val);
 }
 
-void MaterialEditor::AttachSliderFloat(const std::string& name, 
+void TextureEditor::AttachSliderFloat(const std::string& name, 
                                        const std::string& uniform_name, 
                                        const std::string& ui_name,
                                        float min_val, float max_val, 
@@ -331,7 +331,7 @@ void MaterialEditor::AttachSliderFloat(const std::string& name,
                                           min_val, max_val, def_val);
 }
 
-void MaterialEditor::AttachColorEdit3(const std::string& name, 
+void TextureEditor::AttachColorEdit3(const std::string& name, 
                                       const std::string& uniform_name, 
                                       const std::string& ui_name,
                                       glm::vec3 def_val) 
@@ -340,7 +340,7 @@ void MaterialEditor::AttachColorEdit3(const std::string& name,
         m_Procedures[name].AddColorEdit3(uniform_name, ui_name, def_val);
 }
 
-void MaterialEditor::AttachGLEnum(const std::string& name,
+void TextureEditor::AttachGLEnum(const std::string& name,
                                   const std::string& uniform_name,
                                   const std::string& ui_name,
                                   const std::vector <std::string>& labels)
@@ -349,7 +349,7 @@ void MaterialEditor::AttachGLEnum(const std::string& name,
         m_Procedures[name].AddGLEnum(uniform_name, ui_name, labels);
 }
 
-void MaterialEditor::AddProcedureInstance(const std::string& name) {
+void TextureEditor::AddProcedureInstance(const std::string& name) {
     if (m_Procedures.count(name)) {
         m_Instances.push_back(ProcedureInstance(name));
 
@@ -416,7 +416,7 @@ void MaterialEditor::AddProcedureInstance(const std::string& name) {
     }
 }
 
-void MaterialEditor::OnDispatch(int res) {
+void TextureEditor::OnDispatch(int res) {
     for (auto& instance : m_Instances) {
         auto& data = instance.Data;
         
@@ -424,7 +424,7 @@ void MaterialEditor::OnDispatch(int res) {
     }
 }
 
-bool MaterialEditor::OnImGui() {
+bool TextureEditor::OnImGui() {
     bool res = false;
 
     for (int i = 0; i < m_Instances.size(); i++) {
