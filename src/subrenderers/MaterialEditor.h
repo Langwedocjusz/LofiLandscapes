@@ -135,6 +135,8 @@ public:
     
     std::string Name;
     std::vector<InstanceData> Data;
+
+    bool KeepAlive = true;
 };
 
 class MaterialEditor{

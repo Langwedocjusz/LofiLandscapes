@@ -156,15 +156,15 @@ void MaterialRenderer::Update() {
 void MaterialRenderer::OnImGui() {
     ImGui::Begin("Material editor");
     
+    ImGui::Text("Heightmap procedures:");
+
     if (m_HeightEditor.OnImGui()) {
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Height;
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
 
-    ImGui::Separator();
-
-    if (ImGui::Button("Add heightmap procedure")) {        
+    if (ImGuiUtils::Button("Add heightmap procedure")) {        
         ImGui::OpenPopup("Choose procedure (height)");
     }
 
@@ -194,6 +194,8 @@ void MaterialRenderer::OnImGui() {
 
     ImGui::Separator();
 
+    ImGui::Text("Normal/AO map settings:");
+
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
     ImGuiUtils::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
@@ -208,14 +210,14 @@ void MaterialRenderer::OnImGui() {
     }
 
     ImGui::Separator();
+
+    ImGui::Text("Albedo procedures:");
     
     if (m_AlbedoEditor.OnImGui()) {
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
     }
 
-    ImGui::Separator();
-
-    if (ImGui::Button("Add albedo procedure")) {
+    if (ImGuiUtils::Button("Add albedo procedure")) {
         ImGui::OpenPopup("Choose procedure (albedo)");
     }
 

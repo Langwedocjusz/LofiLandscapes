@@ -63,3 +63,17 @@ void ImGuiUtils::ColorEdit3(const std::string& label, glm::vec3* value) {
 	ImGui::ColorEdit3(("##" + label).c_str(), glm::value_ptr(*value));
 	ImGui::PopItemWidth();
 }
+
+bool ImGuiUtils::Button(const std::string& label) {
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	float size = ImGui::CalcTextSize(label.c_str()).x + 2.0f * style.FramePadding.x;
+	float available = ImGui::GetContentRegionAvail().x;
+
+	float offset = 0.5f * (available - size);
+
+	if (offset > 0.0f)
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
+
+	return ImGui::Button(label.c_str());
+}

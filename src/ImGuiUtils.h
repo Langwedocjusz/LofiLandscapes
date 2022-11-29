@@ -10,4 +10,5 @@ namespace ImGuiUtils {
 	void SliderFloat(const std::string& label, float* value, float min, float max);
 	void ColorEdit3(const std::string& label, float* value);
 	void ColorEdit3(const std::string& label, glm::vec3* value);
+	bool Button(const std::string& label);
 }

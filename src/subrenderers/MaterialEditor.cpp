@@ -431,17 +431,18 @@ bool MaterialEditor::OnImGui() {
         auto& instance = m_Instances[i];
         auto& data = instance.Data;
 
-        if (ImGui::CollapsingHeader(instance.Name.c_str()))
+        ImGui::PushID(i);
+
+        if (ImGui::CollapsingHeader(instance.Name.c_str(), &instance.KeepAlive))
         {
-            ImGui::PushID(i);
-            res = res || m_Procedures[instance.Name].OnImGui(data);
+            res = res || m_Procedures[instance.Name].OnImGui(data);            
+        }
 
-            if (ImGui::Button("DELETE!")) {
-                m_Instances.erase(m_Instances.begin() + i);
-                res = true;
-            }
+        ImGui::PopID();
 
-            ImGui::PopID();
+        if (!instance.KeepAlive) {
+            m_Instances.erase(m_Instances.begin() + i);
+            res = true;
         }
     }
 
