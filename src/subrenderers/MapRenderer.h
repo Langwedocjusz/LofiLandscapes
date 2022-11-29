@@ -2,12 +2,7 @@
 
 #include "Shader.h"
 #include "GLUtils.h"
-
-struct HeightmapSettings{
-    int Resolution = 4096;
-    int Octaves = 10;
-    float Offset[2] = {0.0f, 0.0f};
-};
+#include "TextureEditor.h"
 
 struct ScaleSettings{
     float ScaleXZ = 100.0f;
@@ -55,9 +50,9 @@ public:
 
 private:
     Texture m_Heightmap, m_Normalmap, m_Shadowmap; 
-    Shader m_HeightmapShader, m_NormalmapShader, m_ShadowmapShader;
+    TextureEditor m_HeightEditor;
+    Shader m_NormalmapShader, m_ShadowmapShader;
     
-    HeightmapSettings m_HeightSettings;
     ScaleSettings     m_ScaleSettings;
     ShadowmapSettings m_ShadowSettings;
     AOSettings        m_AOSettings;
@@ -68,9 +63,6 @@ private:
     void UpdateNormal();
     void UpdateShadow(float theta, float phi);    
 };
-
-bool operator==(const HeightmapSettings& lhs, const HeightmapSettings& rhs);
-bool operator!=(const HeightmapSettings& lhs, const HeightmapSettings& rhs);
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs);
 bool operator!=(const ScaleSettings& lhs, const ScaleSettings& rhs);

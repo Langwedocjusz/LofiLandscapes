@@ -8,12 +8,12 @@
 #include <iostream>
 
 MapRenderer::MapRenderer()
-    : m_HeightmapShader("res/shaders/height.glsl"),
-      m_NormalmapShader("res/shaders/normal.glsl"),
+    : m_NormalmapShader("res/shaders/normal.glsl"),
       m_ShadowmapShader("res/shaders/shadow.glsl")
 {
+    //-----Initialize Textures
     //-----Heightmap
-    const int tex_res = m_HeightSettings.Resolution;
+    const int tex_res = 4096; //To-do: maybe add as constructor argument
     
     TextureSpec heightmap_spec = TextureSpec{
         tex_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE, 
@@ -51,8 +51,13 @@ MapRenderer::MapRenderer()
 
     m_Shadowmap.Initialize(shadow_spec);    
 
-    //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    //    std::cerr << "FRAMEBUFFER NOT READY \n";
+    //-----Setup heightmap editor:
+
+    m_HeightEditor.RegisterShader("FBM", "res/shaders/height.glsl");
+    m_HeightEditor.AttachConstInt("FBM", "uResolution", 4096);
+    m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.AttachSliderFloat("FBM", "uOffsetX", "Offset x", -10.0, 10.0, 0.0);
+    m_HeightEditor.AttachSliderFloat("FBM", "uOffsetY", "Offset y", -10.0, 10.0, 0.0);
 
     //-----Set update flags
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
@@ -66,15 +71,7 @@ void MapRenderer::UpdateHeight() {
     const int res = m_Heightmap.getSpec().Resolution;
 
     m_Heightmap.BindImage(0, 0);
-
-    m_HeightmapShader.Bind();
-    m_HeightmapShader.setUniform1i("uResolution", res);
-    m_HeightmapShader.setUniform1i("uOctaves", m_HeightSettings.Octaves);
-    m_HeightmapShader.setUniform2f("uOffset" , m_HeightSettings.Offset[0],
-                                               m_HeightSettings.Offset[1]);
-    
-    glDispatchCompute(res/32, res/32, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    m_HeightEditor.OnDispatch(res);
 
     m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -145,33 +142,55 @@ void MapRenderer::BindShadowmap(int id) {
 }
 
 void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
-    HeightmapSettings temp_h = m_HeightSettings;
     ScaleSettings temp_s = m_ScaleSettings;
 
-    ImGui::Begin("Terrain settings", &open);
+    ImGui::Begin("Terrain editor", &open);
+
+    ImGui::Text("Scale:");
     ImGuiUtils::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
     ImGuiUtils::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
-    ImGuiUtils::SliderInt("Octaves", &temp_h.Octaves, 1, 16);
-    ImGuiUtils::SliderFloat("Offset x", &temp_h.Offset[0], 0.0f, 20.0f);
-    ImGuiUtils::SliderFloat("Offset y", &temp_h.Offset[1], 0.0f, 20.0f);
+    ImGui::Separator();
+
+    bool scale_changed = (temp_s != m_ScaleSettings);
+
+    ImGui::Text("Heightmap procedures:");
+
+    bool height_changed = m_HeightEditor.OnImGui();
+
+    if (ImGuiUtils::Button("Add heightmap procedure")) {
+        ImGui::OpenPopup("Choose procedure (heightmap)");
+    }
+
+    if (ImGui::BeginPopupModal("Choose procedure (heightmap)")) {
+
+        if (ImGui::Button("FBM")) {
+            ImGui::CloseCurrentPopup();
+            m_HeightEditor.AddProcedureInstance("FBM");
+
+            height_changed = true;
+        }
+
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 
-    if (temp_h != m_HeightSettings) {
-        m_HeightSettings = temp_h;
+    if (height_changed) {
         m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
         m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
-        
+
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
 
-    else if (temp_s != m_ScaleSettings) {
+    else if (scale_changed) {
         m_ScaleSettings = temp_s;
         m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
-        
+
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
+
 }
 
 void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
@@ -219,16 +238,6 @@ bool MapRenderer::GeometryShouldUpdate() {
 }
 
 //Settings structs operator overloads:
-
-bool operator==(const HeightmapSettings& lhs, const HeightmapSettings& rhs) {
-    return (lhs.Octaves == rhs.Octaves)
-        && (lhs.Offset[0] == rhs.Offset[0]) 
-        && (lhs.Offset[1] == rhs.Offset[1]);
-}
-
-bool operator!=(const HeightmapSettings& lhs, const HeightmapSettings& rhs) {
-    return !(lhs==rhs);
-}
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs) {
     return (lhs.ScaleXZ == rhs.ScaleXZ) && (lhs.ScaleY == rhs.ScaleY);
