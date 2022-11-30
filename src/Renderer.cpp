@@ -167,7 +167,7 @@ void Renderer::OnImGuiRender() {
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
 
     if (m_ShowMaterialMenu)
-        m_Material.OnImGui();
+        m_Material.OnImGui(m_ShowMaterialMenu);
 
     if (m_ShowLightMenu) {
         float phi = m_Phi, theta = m_Theta;

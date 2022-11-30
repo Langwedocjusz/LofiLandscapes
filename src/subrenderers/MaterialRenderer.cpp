@@ -153,8 +153,8 @@ void MaterialRenderer::Update() {
     m_UpdateFlags = MaterialUpdateFlags::None;
 }
 
-void MaterialRenderer::OnImGui() {
-    ImGui::Begin("Material editor");
+void MaterialRenderer::OnImGui(bool& open) {
+    ImGui::Begin("Material editor", &open);
     
     ImGui::Text("Heightmap procedures:");
 

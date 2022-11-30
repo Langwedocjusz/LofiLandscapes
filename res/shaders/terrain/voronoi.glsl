@@ -6,7 +6,7 @@ layout(r32f, binding = 0) uniform image2D heightmap;
 
 uniform int uResolution;
 
-uniform int uScale;
+uniform float uScale;
 uniform float uRandomness;
 
 uniform int uVoronoiType;
@@ -35,8 +35,6 @@ uvec2 murmurHash22(uvec2 src) {
 }
 
 vec2 hash22(vec2 src) {
-    src = mod(src, vec2(uScale));
-
     uvec2 h = murmurHash22(floatBitsToUint(src));
     return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
 }
@@ -75,7 +73,7 @@ void main() {
 
     vec2 uv = vec2(texelCoord)/float(uResolution);
 
-    vec2 voro = voronoi(float(uScale)*uv);
+    vec2 voro = voronoi(uScale*uv);
     float h = 0.0;
 
     switch(uVoronoiType) {

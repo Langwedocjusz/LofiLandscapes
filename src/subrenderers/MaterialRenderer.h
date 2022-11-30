@@ -17,7 +17,7 @@ public:
     ~MaterialRenderer();
 
     void Update();
-    void OnImGui();
+    void OnImGui(bool& open);
 
     void BindAlbedo(int id=0);
     void BindNormal(int id=0);

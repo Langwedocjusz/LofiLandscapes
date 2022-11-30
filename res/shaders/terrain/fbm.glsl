@@ -9,8 +9,7 @@ uniform int uResolution;
 uniform int uOctaves;
 uniform float uScale;
 
-uniform float uOffsetX;
-uniform float uOffsetY;
+uniform float uRoughness;
 
 uniform int uBlendMode;
 
@@ -71,7 +70,7 @@ float fbm(in vec2 p, int octaves) {
         res += A*noise(a*M*p);
 
         a *= 2.0;
-        A *= 0.5;
+        A *= uRoughness;
         M *= rot;
     }
 
@@ -84,7 +83,7 @@ void main() {
     float prev = float(imageLoad(heightmap, texelCoord));
 
     vec2 uv = vec2(texelCoord)/float(uResolution);
-    vec2 ts = uScale*uv - vec2(uOffsetX, uOffsetY);
+    vec2 ts = uScale*uv;
 
     float h = fbm(ts, uOctaves);
 
