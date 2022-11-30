@@ -23,7 +23,7 @@ void ClearColorTexture(Texture& tex, float r, float g, float b, float a) {
 }
 
 MaterialRenderer::MaterialRenderer()
-    : m_NormalShader("res/shaders/mnormal.glsl")
+    : m_NormalShader("res/shaders/materials/normal.glsl")
 {
     //=====Initialize the textures:
     TextureSpec height_spec = TextureSpec{
@@ -58,11 +58,11 @@ MaterialRenderer::MaterialRenderer()
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
     
     //Heightmap
-    m_HeightEditor.RegisterShader("Const Value", "res/shaders/const_val.glsl");
+    m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
     m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
     m_HeightEditor.AddProcedureInstance("Const Value");
 
-    m_HeightEditor.RegisterShader("FBM", "res/shaders/fbm.glsl");
+    m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
     m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().Resolution);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.AttachSliderInt("FBM", "uScale", "Scale", 
@@ -72,7 +72,7 @@ MaterialRenderer::MaterialRenderer()
     m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
 
-    m_HeightEditor.RegisterShader("Voronoi", "res/shaders/voronoi.glsl");
+    m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
     m_HeightEditor.AttachConstInt("Voronoi", "uResolution", m_Height.getSpec().Resolution);
     m_HeightEditor.AttachSliderInt("Voronoi", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
@@ -84,7 +84,7 @@ MaterialRenderer::MaterialRenderer()
     m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     //Albedo
-    m_AlbedoEditor.RegisterShader("Color Ramp", "res/shaders/color_ramp.glsl");
+    m_AlbedoEditor.RegisterShader("Color Ramp", "res/shaders/materials/color_ramp.glsl");
     m_AlbedoEditor.AttachConstInt("Color Ramp", "uResolution", m_Albedo.getSpec().Resolution);
     m_AlbedoEditor.AttachSliderFloat("Color Ramp", "uEdge1", "Edge 1",
                                      0.0f, 1.0f, 0.0f);

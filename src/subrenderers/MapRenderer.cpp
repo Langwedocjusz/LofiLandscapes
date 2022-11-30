@@ -8,8 +8,8 @@
 #include <iostream>
 
 MapRenderer::MapRenderer()
-    : m_NormalmapShader("res/shaders/normal.glsl"),
-      m_ShadowmapShader("res/shaders/shadow.glsl")
+    : m_NormalmapShader("res/shaders/terrain/normal.glsl"),
+      m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
 {
     //-----Initialize Textures
     //-----Heightmap
@@ -25,7 +25,7 @@ MapRenderer::MapRenderer()
     m_Heightmap.Initialize(heightmap_spec);
     
     //Generate mips for heightmap:
-    m_Heightmap.Bind/*Tex*/();
+    m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Normal map: 
@@ -52,12 +52,36 @@ MapRenderer::MapRenderer()
     m_Shadowmap.Initialize(shadow_spec);    
 
     //-----Setup heightmap editor:
+    std::vector<std::string> labels{ "Average", "Add", "Subtract" };
 
-    m_HeightEditor.RegisterShader("FBM", "res/shaders/height.glsl");
+    m_HeightEditor.RegisterShader("Const Value", "res/shaders/terrain/const_val.glsl");
+    m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
+    m_HeightEditor.AddProcedureInstance("Const Value");
+
+    m_HeightEditor.RegisterShader("FBM", "res/shaders/terrain/fbm.glsl");
     m_HeightEditor.AttachConstInt("FBM", "uResolution", 4096);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.AttachSliderFloat("FBM", "uScale", "Scale", 1.0, 64.0, 32.0);
     m_HeightEditor.AttachSliderFloat("FBM", "uOffsetX", "Offset x", -10.0, 10.0, 0.0);
     m_HeightEditor.AttachSliderFloat("FBM", "uOffsetY", "Offset y", -10.0, 10.0, 0.0);
+    m_HeightEditor.AttachGLEnum("FBM", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
+
+    m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
+    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", 4096);
+    m_HeightEditor.AttachSliderInt("Voronoi", "uScale", "Scale", 0, 100, 1);
+    m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
+
+    std::vector<std::string> voro_types{ "F1", "F2", "F2_F1" };
+    m_HeightEditor.AttachGLEnum("Voronoi", "uVoronoiType", "Type", voro_types);
+
+    m_HeightEditor.AttachGLEnum("Voronoi", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
+
+    m_HeightEditor.RegisterShader("RCUTOFF", "res/shaders/terrain/radial_cutoff.glsl");
+    m_HeightEditor.AttachConstInt("RCUTOFF", "uResolution", 4096);
+    m_HeightEditor.AttachSliderFloat("RCUTOFF", "uBias", "Bias", 0.0, 1.0, 0.5);
+    m_HeightEditor.AttachSliderFloat("RCUTOFF", "uSlope", "Slope", 0.0, 10.0, 4.0);
 
     //-----Set update flags
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
@@ -163,9 +187,28 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
 
     if (ImGui::BeginPopupModal("Choose procedure (heightmap)")) {
 
+        if (ImGui::Button("Const Value")) {
+            ImGui::CloseCurrentPopup();
+            m_HeightEditor.AddProcedureInstance("Const Value");
+        }
+
         if (ImGui::Button("FBM")) {
             ImGui::CloseCurrentPopup();
             m_HeightEditor.AddProcedureInstance("FBM");
+
+            height_changed = true;
+        }
+
+        if (ImGui::Button("Voronoi")) {
+            ImGui::CloseCurrentPopup();
+            m_HeightEditor.AddProcedureInstance("Voronoi");
+
+            height_changed = true;
+        }
+
+        if (ImGui::Button("Radial Cutoff")) {
+            ImGui::CloseCurrentPopup();
+            m_HeightEditor.AddProcedureInstance("RCUTOFF");
 
             height_changed = true;
         }

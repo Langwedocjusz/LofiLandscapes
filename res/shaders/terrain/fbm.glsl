@@ -7,7 +7,18 @@ layout(r32f, binding = 0) uniform image2D heightmap;
 uniform int uResolution;
 
 uniform int uOctaves;
-uniform vec2 uOffset;
+uniform float uScale;
+
+uniform float uOffsetX;
+uniform float uOffsetY;
+
+uniform int uBlendMode;
+
+#define BLEND_AVERAGE  0
+#define BLEND_ADD      1
+#define BLEND_SUBTRACT 2
+
+uniform float uWeight;
 
 //High-quality hash function by nojima:
 //https://www.shadertoy.com/view/ttc3zr
@@ -70,11 +81,30 @@ float fbm(in vec2 p, int octaves) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
+    float prev = float(imageLoad(heightmap, texelCoord));
+
     vec2 uv = vec2(texelCoord)/float(uResolution);
-    vec2 ts = 32.0*uv - uOffset;
+    vec2 ts = uScale*uv - vec2(uOffsetX, uOffsetY);
 
-    float hoffset = 0.5 + 4.0 * dot(uv-0.5, uv-0.5);
-    float height = max(fbm(ts, uOctaves) - hoffset, 0.0);
+    float h = fbm(ts, uOctaves);
 
-    imageStore(heightmap, texelCoord, vec4(height));
+    switch(uBlendMode) {
+        case BLEND_AVERAGE:
+        {
+            h = mix(prev, h, uWeight);
+            break;
+        }
+        case BLEND_ADD:
+        {
+            h = prev + uWeight*h;
+            break;
+        }
+        case BLEND_SUBTRACT:
+        {
+            h = prev - uWeight*h;
+            break;
+        }
+    }
+
+    imageStore(heightmap, texelCoord, vec4(h));
 }
