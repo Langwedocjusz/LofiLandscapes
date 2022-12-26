@@ -34,6 +34,7 @@ public:
     glm::mat4 getViewMatrix();
 
     glm::vec3 getPos() {return m_Pos;}
+    glm::vec3 getFront() {return m_Front;}
 
     CameraSettings getSettings() {return m_Settings;}
     void setSettings(CameraSettings x) {m_Settings = x;}

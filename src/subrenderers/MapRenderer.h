@@ -34,7 +34,7 @@ public:
     MapRenderer();
     ~MapRenderer();
 
-    void Update(float theta, float phi);
+    void Update(const glm::vec3& sun_dir);
 
     void BindHeightmap(int id=0);
     void BindNormalmap(int id=0);
@@ -61,7 +61,7 @@ private:
     
     void UpdateHeight();
     void UpdateNormal();
-    void UpdateShadow(float theta, float phi);    
+    void UpdateShadow(const glm::vec3& sun_dir);
 };
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs);

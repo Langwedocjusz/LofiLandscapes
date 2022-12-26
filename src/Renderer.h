@@ -3,6 +3,8 @@
 #include "subrenderers/MapRenderer.h"
 #include "subrenderers/ClipmapRenderer.h"
 #include "subrenderers/MaterialRenderer.h"
+#include "subrenderers/SkyRenderer.h"
+
 #include "Camera.h"
 
 class Renderer {
@@ -39,7 +41,8 @@ private:
     //Show menu window flags
     bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,
          m_ShowLightMenu   = true, m_ShowShadowMenu     = true,
-         m_ShowCamMenu     = true, m_ShowMaterialMenu   = true; 
+         m_ShowCamMenu     = true, m_ShowMaterialMenu   = true,
+         m_ShowSkyMenu     = true;
     
     //"Backend oriented" things
     unsigned int m_WindowWidth, m_WindowHeight;
@@ -53,4 +56,5 @@ private:
     ClipmapRenderer m_Clipmap;
     MapRenderer m_Map;
     MaterialRenderer m_Material;
+    SkyRenderer m_Sky;
 };

@@ -14,8 +14,9 @@ uniform sampler2D heightmap;
 
 uniform float uScaleXZ;
 uniform float uScaleY;
-uniform float uTheta;
-uniform float uPhi;
+//uniform float uTheta;
+//uniform float uPhi;
+uniform vec3 uSunDir;
 
 uniform int uSteps;
 uniform float uMinT;
@@ -37,10 +38,14 @@ void main() {
 
     vec3 org = vec3(uv.x, getHeight(uv, 0.0) + voffset, uv.y);
 
-    vec3 dir = normalize(vec3(uScaleY *cos(uPhi)*sin(uTheta),
-                              uScaleXZ*cos(uTheta),
-                              uScaleY *sin(uPhi)*sin(uTheta)));
-    dir *= vec3(-1.0, 1.0, -1.0);
+    //vec3 dir = normalize(vec3(uScaleY *cos(uPhi)*sin(uTheta),
+    //                          uScaleXZ*cos(uTheta),
+    //                          uScaleY *sin(uPhi)*sin(uTheta)));
+    //dir *= vec3(-1.0, 1.0, -1.0);
+
+    vec3 dir = normalize(vec3(uScaleY * uSunDir.x,
+                              uScaleXZ* uSunDir.y,
+                              uScaleY * uSunDir.z));
 
     vec2 perp = mat2(0.0, 1.0, -1.0, 0.0) * normalize(dir.xz);
 

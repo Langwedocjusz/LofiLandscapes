@@ -8,15 +8,15 @@
 
 #include <iostream>
 
-
 Renderer::Renderer(unsigned int width, unsigned int height) 
-    : m_WindowWidth(width), m_WindowHeight(height),
-      m_ShadedShader("res/shaders/shaded.vert", 
-                     "res/shaders/shaded.frag"),
-      m_WireframeShader("res/shaders/wireframe.vert", 
-                        "res/shaders/wireframe.frag"),
-      m_Clipmap(),
-      m_Map()
+    : m_WindowWidth(width), m_WindowHeight(height)
+    , m_ShadedShader("res/shaders/shaded.vert", 
+                     "res/shaders/shaded.frag")
+    , m_WireframeShader("res/shaders/wireframe.vert", 
+                        "res/shaders/wireframe.frag")
+    , m_Clipmap()
+    , m_Map()
+    , m_Sky()
 {
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -27,7 +27,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     glFrontFace(GL_CW);
 
     //Update Maps
-    m_Map.Update(m_Theta, m_Phi);
+    m_Map.Update(m_Sky.getSunDir());
 
     //Update Material
     m_Material.Update();
@@ -40,6 +40,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 Renderer::~Renderer() {}
 
 void Renderer::OnUpdate(float deltatime) {
+    //Update camera
     m_Camera.Update(deltatime);
 
     glm::mat4 proj = m_Camera.getProjMatrix(m_WindowWidth, m_WindowHeight);
@@ -47,16 +48,23 @@ void Renderer::OnUpdate(float deltatime) {
     glm::mat4 model = glm::mat4(1.0f);
 
     m_MVP = proj * view * model;
+
+    //Update sky
+    m_Sky.Update();
+
+    //Update clipmap geometry
+    m_Map.BindHeightmap();
+
+    m_Clipmap.DisplaceVertices(
+        m_Map.getScaleSettings().ScaleXZ,
+        m_Map.getScaleSettings().ScaleY,
+        m_Camera.getPos().x, m_Camera.getPos().z
+    );
 }
 
 void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    m_Map.BindHeightmap();
-    m_Clipmap.DisplaceVertices(m_Map.getScaleSettings().ScaleXZ, 
-                               m_Map.getScaleSettings().ScaleY,
-                               m_Camera.getPos().x, m_Camera.getPos().z);
 
     if (m_Wireframe) {
         m_WireframeShader.Bind();
@@ -64,14 +72,19 @@ void Renderer::OnRender() {
         m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, 
                                                m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
-
     }
 
     else {
+        //Render Sky
+        float aspect = float(m_WindowHeight) / float(m_WindowWidth);
+        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, aspect);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
         m_ShadedShader.Bind();
         m_ShadedShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
-        m_ShadedShader.setUniform1f("uTheta", m_Theta);
-        m_ShadedShader.setUniform1f("uPhi", m_Phi);
+        //m_ShadedShader.setUniform1f("uTheta", m_Theta);
+        //m_ShadedShader.setUniform1f("uPhi", m_Phi);
+        m_ShadedShader.setUniform3f("uLightDir", m_Sky.getSunDir());
         m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
@@ -131,6 +144,9 @@ void Renderer::OnImGuiRender() {
             if (ImGui::MenuItem("Material"))
                 m_ShowMaterialMenu = !m_ShowMaterialMenu;
 
+            if (ImGui::MenuItem("Sky"))
+                m_ShowSkyMenu = !m_ShowSkyMenu;
+
             ImGui::EndMenu();
         }
 
@@ -170,13 +186,13 @@ void Renderer::OnImGuiRender() {
         m_Material.OnImGui(m_ShowMaterialMenu);
 
     if (m_ShowLightMenu) {
-        float phi = m_Phi, theta = m_Theta;
+        //float phi = m_Phi, theta = m_Theta;
         bool shadows = m_Shadows;
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGuiUtils::Checkbox("Shadows", &shadows);
-        ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
-        ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5*3.14);
+        //ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
+        ///ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5*3.14);
         ImGuiUtils::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
         ImGuiUtils::ColorEdit3("Sun Color" , m_SunCol);
         ImGuiUtils::ColorEdit3("Sky Color" , m_SkyCol);
@@ -190,11 +206,11 @@ void Renderer::OnImGuiRender() {
         ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
         ImGui::End();
         
-        if (phi != m_Phi || theta != m_Theta) {
+        /*if (phi != m_Phi || theta != m_Theta) {
             m_Phi = phi;
             m_Theta = theta;
             if (m_Shadows) m_Map.RequestShadowUpdate();
-        }
+        }*/
 
         if (shadows != m_Shadows) {
             m_Shadows = shadows;
@@ -203,18 +219,27 @@ void Renderer::OnImGuiRender() {
 
     }
 
+    if (m_ShowSkyMenu) {
+        glm::vec3 sun_dir = m_Sky.getSunDir();
+
+        m_Sky.OnImGui(m_ShowSkyMenu);
+
+        if (sun_dir != m_Sky.getSunDir() && m_Shadows)
+            m_Map.RequestShadowUpdate();
+    }
+
     //-----Process updates:
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     //Update Maps
-    m_Map.Update(m_Theta, m_Phi);
+    m_Map.Update(m_Sky.getSunDir());
 
     //Return to normal rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glViewport(0, 0, m_WindowWidth, m_WindowHeight);
     
-    if (m_Wireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //if (m_Wireframe)
+    //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {

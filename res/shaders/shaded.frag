@@ -15,8 +15,9 @@ uniform sampler2D albedo;
 uniform sampler2D normal;
 
 uniform vec3 uPos;
-uniform float uTheta;
-uniform float uPhi;
+//uniform float uTheta;
+//uniform float uPhi;
+uniform vec3 uLightDir;
 
 uniform int uShadow;
 uniform int uMaterial;
@@ -121,10 +122,11 @@ void main() {
     //Assemble needed vectors
     vec4 res = texture(normalmap, uv);
 
-    float sT = sin(uTheta), cT = cos(uTheta);
-    float sP = sin(uPhi), cP = cos(uPhi);
-
-    const vec3 l_dir = vec3(cP*sT, cT, sP*sT);
+    //float sT = sin(uTheta), cT = cos(uTheta);
+    //float sP = sin(uPhi), cP = cos(uPhi);
+    //const vec3 l_dir = vec3(cP*sT, cT, sP*sT);
+    const vec3 l_dir = vec3(-1.0, 1.0, -1.0) * uLightDir;
+    
     const vec3 up = vec3(0.0, 1.0, 0.0);
 
     vec3 norm = 2.0*res.xyz - 1.0;

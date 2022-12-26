@@ -122,7 +122,7 @@ void MapRenderer::UpdateNormal() {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void MapRenderer::UpdateShadow(float theta, float phi) {
+void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
     const int res = m_Shadowmap.getSpec().Resolution;
 
     m_Heightmap.Bind();
@@ -130,8 +130,9 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
  
     m_ShadowmapShader.Bind();
     m_ShadowmapShader.setUniform1i("uResolution", res);
-    m_ShadowmapShader.setUniform1f("uTheta", theta);
-    m_ShadowmapShader.setUniform1f("uPhi", phi);
+    //m_ShadowmapShader.setUniform1f("uTheta", theta);
+    //m_ShadowmapShader.setUniform1f("uPhi", phi);
+    m_ShadowmapShader.setUniform3f("uSunDir", sun_dir);
     m_ShadowmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_ShadowmapShader.setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
     m_ShadowmapShader.setUniform1f("uMinT", m_ShadowSettings.MinT);
@@ -143,7 +144,7 @@ void MapRenderer::UpdateShadow(float theta, float phi) {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void MapRenderer::Update(float theta, float phi) {
+void MapRenderer::Update(const glm::vec3& sun_dir) {
     if ((m_UpdateFlags & MapUpdateFlags::Height) != MapUpdateFlags::None)
         UpdateHeight();
 
@@ -151,7 +152,7 @@ void MapRenderer::Update(float theta, float phi) {
         UpdateNormal();
 
     if ((m_UpdateFlags & MapUpdateFlags::Shadow) != MapUpdateFlags::None)
-        UpdateShadow(theta, phi);
+        UpdateShadow(sun_dir);
 
     m_UpdateFlags = MapUpdateFlags::None;
 }
