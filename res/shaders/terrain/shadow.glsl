@@ -1,5 +1,7 @@
 #version 450 core
 
+//#define FANCY
+
 #define PI 3.1415926535
 
 #define saturate(x) clamp(x, 0.0, 1.0)
@@ -14,8 +16,6 @@ uniform sampler2D heightmap;
 
 uniform float uScaleXZ;
 uniform float uScaleY;
-//uniform float uTheta;
-//uniform float uPhi;
 uniform vec3 uSunDir;
 
 uniform int uSteps;
@@ -30,24 +30,68 @@ float getHeight(vec2 p, float lvl) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    float texel_size = 1.0/float(uResolution);
     
-    //Generate ray:
-    float dt = uMaxT/float(uSteps);
-    float voffset = dt;
-
-    vec3 org = vec3(uv.x, getHeight(uv, 0.0) + voffset, uv.y);
-
-    //vec3 dir = normalize(vec3(uScaleY *cos(uPhi)*sin(uTheta),
-    //                          uScaleXZ*cos(uTheta),
-    //                          uScaleY *sin(uPhi)*sin(uTheta)));
-    //dir *= vec3(-1.0, 1.0, -1.0);
+    vec2 uv = texel_size * vec2(texelCoord);
+    
+    //Get sun ray origin and direction:
+    vec3 org = vec3(uv.x, getHeight(uv, 0.0), uv.y);
 
     vec3 dir = normalize(vec3(uScaleY * uSunDir.x,
                               uScaleXZ* uSunDir.y,
                               uScaleY * uSunDir.z));
 
-    vec2 perp = mat2(0.0, 1.0, -1.0, 0.0) * normalize(dir.xz);
+
+    #ifdef FANCY
+    //Fancy version
+
+    float proj_fac = abs(dot(dir, vec3(1.0, 0.0, 1.0) * dir));
+
+    vec3 dR = (texel_size/proj_fac) * dir;
+
+    float J = 1.0, t = 1.0;
+    int m = uMips - 1;
+
+    for (int k=0; k<uMips-1; k++) {
+        float min_t = -1.0, min_dh = 1.0;
+        vec3 R = t * dR; //should be texel size for minimal mip, so multiplied by 2^(number of mips)
+
+        float H = org.y + R.y;
+        float h = getHeight(org.xz + R.xz, m);
+        float dh = H - h;
+
+        if (dh < min_dh) {
+            min_dh = dh;
+            min_t = t;
+        }
+
+        for (int j=1; j<=2; j++) {
+            R = R - pow(2.0, -float(k)-1.0) * dR;
+            t = t - pow(2.0, -float(k));
+
+            H = org.y + R.y;
+            h = getHeight(org.xz + R.xz, m);
+            dh = H - h;
+
+            if (dh < min_dh) {
+                min_dh = dh;
+                min_t = t;
+            }
+        }
+
+        m--;
+        
+        if (min_t > -1.0) {
+            t = min_t + pow(2.0, -float(k));
+        }
+    }
+
+    #else
+    //Naive Raymarch
+
+    float dt = uMaxT/float(uSteps);
+    float voffset = dt;
+    org += vec3(0.0, voffset, 0.0);
 
     //Raymarch 
     float t = 0.0;
@@ -60,6 +104,8 @@ void main() {
         shadow = min(shadow, 1.0 - saturate(-blur*h));
         t += dt;
     }
+
+    #endif
 
     imageStore(shadowmap, texelCoord, vec4(shadow, 0.0, 0.0, 1.0));
 }

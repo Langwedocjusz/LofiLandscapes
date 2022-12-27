@@ -189,6 +189,10 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGui::End();
 }
 
+void SkyRenderer::BindSkyLUT(int id) {
+    m_SkyLUT.Bind(id);
+}
+
 //Operator overloads
 
 SkyUpdateFlags operator|(SkyUpdateFlags x, SkyUpdateFlags y) {

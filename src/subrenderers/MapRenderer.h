@@ -52,16 +52,22 @@ private:
     Texture m_Heightmap, m_Normalmap, m_Shadowmap; 
     TextureEditor m_HeightEditor;
     Shader m_NormalmapShader, m_ShadowmapShader;
+
+    Shader m_MipShader;
     
     ScaleSettings     m_ScaleSettings;
     ShadowmapSettings m_ShadowSettings;
     AOSettings        m_AOSettings;
 
     MapUpdateFlags m_UpdateFlags = MapUpdateFlags::None;
+
+    int m_MipLevels = 0;
     
     void UpdateHeight();
     void UpdateNormal();
     void UpdateShadow(const glm::vec3& sun_dir);
+
+    void GenMaxMips();
 };
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs);

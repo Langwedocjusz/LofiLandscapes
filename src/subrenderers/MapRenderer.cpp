@@ -8,8 +8,9 @@
 #include <iostream>
 
 MapRenderer::MapRenderer()
-    : m_NormalmapShader("res/shaders/terrain/normal.glsl"),
-      m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
+    : m_NormalmapShader("res/shaders/terrain/normal.glsl")
+    , m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
+    , m_MipShader("res/shaders/terrain/maximal_mip.glsl")
 {
     //-----Initialize Textures
     //-----Heightmap
@@ -90,6 +91,18 @@ MapRenderer::MapRenderer()
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+
+    //Heightmap mip levels data
+    //Check if heightmap resolution is a power of 2
+    int res = m_Heightmap.getSpec().Resolution;
+
+    if (res & (res - 1) != 0) {
+        std::cerr << "Maximal mips require power of 2 resolution" << '\n';
+        return;
+    }
+
+    //Assume num of mips = log_2(res)
+    while (res >>= 1) ++m_MipLevels;
 }
 
 MapRenderer::~MapRenderer() {}
@@ -102,6 +115,8 @@ void MapRenderer::UpdateHeight() {
 
     m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    GenMaxMips();
 }
 
 void MapRenderer::UpdateNormal() {
@@ -142,6 +157,29 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+}
+
+void MapRenderer::GenMaxMips() {
+    if (m_MipLevels == 0) return;
+
+    const int res = m_Heightmap.getSpec().Resolution;
+
+    for (int i = 0; i < m_MipLevels; i++) {
+        m_MipShader.Bind();
+
+        //Higher res - read from this
+        m_Heightmap.BindImage(1, i);
+        //Lower res - modify this
+        m_Heightmap.BindImage(0, i+1);
+
+        //We don't set uniforms for binding ids since they are set in shader code
+
+        //Number of work groups for compute shader
+        const int size = std::max((res / int(pow(2, i + 1))) / 32, 1);
+
+        glDispatchCompute(size, size, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    }
 }
 
 void MapRenderer::Update(const glm::vec3& sun_dir) {

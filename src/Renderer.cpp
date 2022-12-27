@@ -105,6 +105,8 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("albedo", 2);
         m_Material.BindNormal(3);
         m_ShadedShader.setUniform1i("normal", 3);
+        m_Sky.BindSkyLUT(4);
+        m_ShadedShader.setUniform1i("skyLUT", 4);
     }
 
     m_Clipmap.BindAndDraw();

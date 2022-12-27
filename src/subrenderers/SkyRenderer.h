@@ -19,6 +19,8 @@ public:
 	void Update();
 	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
 
+	void BindSkyLUT(int id=0);
+
 	glm::vec3 getSunDir() { return m_SunDir; }
 private:
 	void UpdateTrans();

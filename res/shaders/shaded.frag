@@ -14,6 +14,8 @@ uniform sampler2D shadowmap;
 uniform sampler2D albedo;
 uniform sampler2D normal;
 
+uniform sampler2D skyLUT;
+
 uniform vec3 uPos;
 //uniform float uTheta;
 //uniform float uPhi;
@@ -101,19 +103,15 @@ vec4 TextureFixedTiling(sampler2D sampler, vec2 p, float freq) {
 //======================================================================
 
 vec4 getMatAlbedo(vec2 uv) {
-    if (uFixTiling == 1) {
+    if (uFixTiling == 1)
         return TextureFixedTiling(albedo, uv, uTilingFactor);
-    }
-
     else
         return texture(albedo, uTilingFactor*uv);
 }
 
 vec4 getMatNormal(vec2 uv) {
-    if (uFixTiling == 1) {
+    if (uFixTiling == 1)
         return TextureFixedTiling(normal, uv, uTilingFactor);
-    }
-
     else
         return texture(normal, uTilingFactor*uv);
 }
@@ -153,6 +151,7 @@ void main() {
 
     vec3 sun_col = uSunCol.a * uSunCol.rgb;
     vec3 sky_col = uSkyCol.a * uSkyCol.rgb;
+    //vec3 sky_col = uSkyCol.a * getValFromSkyLUT(norm);
     vec3 ref_col = uRefCol.a * uRefCol.rgb;
 
     float shininess = 32.0;
@@ -163,6 +162,7 @@ void main() {
     vec3 color = shadow * sun_diff * sun_col * albedo;
     color += shadow * spec * sun_col * vec3(1.0);
     color += amb * max(uMinSkylight, sky_diff) * sky_col * albedo;
+    //color += amb * sky_col * albedo;
     color += amb * ref_diff * ref_col * albedo;
     color *= mat_amb;
 
