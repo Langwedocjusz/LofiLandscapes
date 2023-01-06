@@ -114,7 +114,6 @@ void MapRenderer::UpdateHeight() {
     m_HeightEditor.OnDispatch(res);
 
     m_Heightmap.Bind();
-    glGenerateMipmap(GL_TEXTURE_2D);
 
     GenMaxMips();
 }
@@ -145,15 +144,16 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
  
     m_ShadowmapShader.Bind();
     m_ShadowmapShader.setUniform1i("uResolution", res);
-    //m_ShadowmapShader.setUniform1f("uTheta", theta);
-    //m_ShadowmapShader.setUniform1f("uPhi", phi);
     m_ShadowmapShader.setUniform3f("uSunDir", sun_dir);
     m_ShadowmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_ShadowmapShader.setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
-    m_ShadowmapShader.setUniform1f("uMinT", m_ShadowSettings.MinT);
-    m_ShadowmapShader.setUniform1f("uMaxT", m_ShadowSettings.MaxT);
-    m_ShadowmapShader.setUniform1i("uSteps", m_ShadowSettings.Steps);
-    m_ShadowmapShader.setUniform1f("uBias", m_ShadowSettings.Bias);
+    
+    m_ShadowmapShader.setUniform1i("uMips", m_MipLevels);
+    m_ShadowmapShader.setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
+    m_ShadowmapShader.setUniform1i("uStartCell", m_ShadowSettings.StartCell);
+    m_ShadowmapShader.setUniform1f("uNudgeFactor", m_ShadowSettings.NudgeFac);
+    m_ShadowmapShader.setUniform1i("uSoftShadows", m_ShadowSettings.Soft);
+    m_ShadowmapShader.setUniform1f("uSharpness", m_ShadowSettings.Sharpness);
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -286,13 +286,13 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
 
     ImGui::Begin("Shadow/AO settings", &open);
 
-    ImGui::Text("Shdowmap Settings:");
+    ImGui::Text("Shadowmap Settings:");
     ImGui::Spacing();
 
-    ImGuiUtils::SliderFloat("Min t", &temp.MinT, 0.0, 0.5);
-    ImGuiUtils::SliderFloat("Max t", &temp.MaxT, 0.0, 1.0);
-    ImGuiUtils::SliderFloat("Mip bias", &temp.Bias, 0.0, 20.0);
-    ImGuiUtils::SliderInt("Steps", &temp.Steps, 1, 64);
+    ImGuiUtils::SliderInt("Min level", &temp.MinLevel, 0, 12);
+    ImGuiUtils::SliderFloat("Nudge fac", &temp.NudgeFac, 1.005, 1.1);
+    ImGuiUtils::Checkbox("Soft Shadows", &temp.Soft);
+    ImGuiUtils::SliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
 
     ImGui::Separator();
     ImGui::Text("AO Settings:");
@@ -309,7 +309,10 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
     }
 
     if (temp != m_ShadowSettings) {
+        temp.StartCell = pow(2, temp.MinLevel);
+
         m_ShadowSettings = temp;
+
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
     }
@@ -335,8 +338,9 @@ bool operator!=(const ScaleSettings& lhs, const ScaleSettings& rhs) {
 }
 
 bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
-    return (lhs.Steps == rhs.Steps) && (lhs.MinT == rhs.MinT)
-        && (lhs.MaxT == rhs.MaxT) && (lhs.Bias == rhs.Bias);
+    return (lhs.MinLevel == rhs.MinLevel) && (lhs.StartCell == rhs.StartCell)
+        && (lhs.NudgeFac == rhs.NudgeFac) && (lhs.Soft == rhs.Soft)
+        && (lhs.Sharpness == rhs.Sharpness);
 }
 
 bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {

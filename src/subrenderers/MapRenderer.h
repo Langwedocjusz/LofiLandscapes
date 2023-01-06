@@ -16,10 +16,13 @@ struct AOSettings{
 
 struct ShadowmapSettings{
     int Resolution = 4096;
-    int Steps = 64;
-    float MinT = 0.01f;
-    float MaxT = 0.8f;
-    float Bias = 6.0f;
+    int MinLevel = 5;
+    int StartCell = 32;
+
+    float NudgeFac = 1.02f;
+
+    bool Soft = true;
+    float Sharpness = 1.0f;
 };
 
 enum class MapUpdateFlags {

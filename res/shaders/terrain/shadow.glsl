@@ -1,6 +1,6 @@
 #version 450 core
 
-//#define FANCY
+#define SOFT_SHADOWS
 
 #define PI 3.1415926535
 
@@ -18,94 +18,164 @@ uniform float uScaleXZ;
 uniform float uScaleY;
 uniform vec3 uSunDir;
 
-uniform int uSteps;
-uniform float uMinT;
-uniform float uMaxT;
-uniform float uBias;
+uniform int uMips;
+uniform int uMinLvl;
+uniform int uStartCell;
+uniform float uNudgeFactor;
 
-float getHeight(vec2 p, float lvl) {
-    return textureLod(heightmap, p, lvl).r;
+uniform bool uSoftShadows;
+uniform float uSharpness;
+
+const float epsilon = 1e-6;
+const float texel_size = 1.0/uResolution;
+
+float DistToNextIntersection(vec2 pos, vec2 dir2, vec2 delta, float cell_size)
+{
+    float tx = dir2.x < 0.0
+             ? (pos.x/cell_size - floor(pos.x/cell_size))*cell_size * delta.x
+             : (ceil(pos.x/cell_size) - pos.x/cell_size) *cell_size * delta.x;
+
+    float ty = dir2.y < 0.0
+             ? (pos.y/cell_size - floor(pos.y/cell_size))*cell_size * delta.y
+             : (ceil(pos.y/cell_size) - pos.y/cell_size) *cell_size * delta.y;
+                  
+    return min(tx, ty);
+}
+
+bool WithinTexture(vec2 pos)
+{
+    return (pos.x > uResolution*epsilon && pos.x < uResolution*(1.0-epsilon) 
+         && pos.y > uResolution*epsilon && pos.y < uResolution*(1.0-epsilon));
+}
+
+bool IntersectTerrain(vec2 org2, vec2 dir2, vec3 org3, vec3 dir3, 
+                      float t_start, float t_delta, float proj_fac,
+                      inout float mindh, inout float mint)
+{
+    const int samples = 5;
+    const float ve = 1.0/float(samples-1);
+
+    for (int i=0; i<5; i++) {
+        float t = t_start + ve*float(i)*t_delta;
+
+        vec2 p2 = org2 + t*dir2;
+        vec3 p3 = org3 + proj_fac*t*dir3;
+
+        float h = texture(heightmap, texel_size*p2).r;
+        float H = texel_size*p3.y;
+
+        float dh = H-h;
+
+        if (uSoftShadows && dh < mindh) {
+            mindh = dh;
+            mint = t;
+        }
+
+        if (!uSoftShadows && dh < 0.0)
+            return true; 
+    }
+
+    return false;
 }
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
-
-    float texel_size = 1.0/float(uResolution);
     
-    vec2 uv = texel_size * vec2(texelCoord);
+    //Not normalized (from 0 to uResolution)
+    vec2 uv = vec2(texelCoord);
     
     //Get sun ray origin and direction:
-    vec3 org = vec3(uv.x, getHeight(uv, 0.0), uv.y);
+    float height = texture(heightmap, texel_size*uv).r;
 
-    vec3 dir = normalize(vec3(uScaleY * uSunDir.x,
-                              uScaleXZ* uSunDir.y,
-                              uScaleY * uSunDir.z));
+    vec3 org3 = vec3(uv.x, uResolution*height, uv.y);
 
+    vec3 dir3 = normalize(vec3(uScaleY  * uSunDir.x,
+                               uScaleXZ * uSunDir.y,
+                               uScaleY  * uSunDir.z));
 
-    #ifdef FANCY
-    //Fancy version
+    //This will be useful to project back to 3d
+    float proj_fac = 1.0/(dot(dir3, vec3(1.0, 0.0, 1.0)*dir3));
 
-    float proj_fac = abs(dot(dir, vec3(1.0, 0.0, 1.0) * dir));
+    //2d values
+    vec2 org2 = org3.xz;
+    vec2 dir2 = normalize(dir3.xz);
 
-    vec3 dR = (texel_size/proj_fac) * dir;
+    vec2 pos = org2 + 0.01*dir2;
 
-    float J = 1.0, t = 1.0;
-    int m = uMips - 1;
+    //Constants derived from ray direction
+    vec2 delta;
+         delta.x  = abs(dir2.x) < texel_size ? 1e30 : abs(1.0/dir2.x);
+         delta.y  = abs(dir2.y) < texel_size ? 1e30 : abs(1.0/dir2.y);
 
-    for (int k=0; k<uMips-1; k++) {
-        float min_t = -1.0, min_dh = 1.0;
-        vec3 R = t * dR; //should be texel size for minimal mip, so multiplied by 2^(number of mips)
+    int cell_size = uStartCell;
+    int mip = uMinLvl;
 
-        float H = org.y + R.y;
-        float h = getHeight(org.xz + R.xz, m);
-        float dh = H - h;
+    float min_dh = 1.0, min_t = 1.0;
 
-        if (dh < min_dh) {
-            min_dh = dh;
-            min_t = t;
-        }
+    float t = DistToNextIntersection(pos, dir2, delta, float(cell_size));
 
-        for (int j=1; j<=2; j++) {
-            R = R - pow(2.0, -float(k)-1.0) * dR;
-            t = t - pow(2.0, -float(k));
+    bool ray_above_terrain = !IntersectTerrain(org2, dir2, org3, dir3, 0.0, t, proj_fac, min_dh, min_t);
 
-            H = org.y + R.y;
-            h = getHeight(org.xz + R.xz, m);
-            dh = H - h;
+    for (int i=0; i<36; i++)
+    {
+        if (!ray_above_terrain) break;
 
-            if (dh < min_dh) {
-                min_dh = dh;
-                min_t = t;
+        pos = org2 + uNudgeFactor*t*dir2;
+        
+        if (!WithinTexture(pos)) break;
+
+        ivec2 current_texel = ivec2(pos);
+        current_texel = current_texel / cell_size;
+
+        //Calculate next grid intersection
+        float tmp_t = DistToNextIntersection(pos, dir2, delta, float(cell_size));
+
+        //Check for terrain intersection
+        if (mip == uMinLvl)
+        {
+            if (IntersectTerrain(org2, dir2, org3, dir3, t, tmp_t, proj_fac, min_dh, min_t))
+            {
+                ray_above_terrain = false;
+                continue;
             }
         }
 
-        m--;
-        
-        if (min_t > -1.0) {
-            t = min_t + pow(2.0, -float(k));
+        else
+        {
+            float h = texelFetch(heightmap, current_texel, mip).r;
+            
+            vec3 tmp = texel_size*(org3 + proj_fac*t*dir3);
+            float H = tmp.y;
+
+            float dh = H-h;
+
+            if (dh < epsilon)
+            {
+                cell_size /= 2;
+                mip--;
+
+                continue;
+            }
+        }
+
+        //Move to next intersection
+        t += tmp_t;
+
+        //If we are passing through a border of a larger scale grid cell try to increase mip
+        if ( int(pos.x) % 2*int(cell_size + 1e-5) == 0
+          || int(pos.y) % 2*int(cell_size + 1e-5) == 0);
+        {
+            cell_size *= 2;
+            mip++;
         }
     }
 
-    #else
-    //Naive Raymarch
-
-    float dt = uMaxT/float(uSteps);
-    float voffset = dt;
-    org += vec3(0.0, voffset, 0.0);
-
-    //Raymarch 
-    float t = 0.0;
     float shadow = 1.0;
 
-    for (int i=0; i<uSteps; i++) {
-        vec3 p = org + t*dir;
-        float h = p.y - getHeight(p.xz, uBias*t);
-        float blur = 1.0/t;
-        shadow = min(shadow, 1.0 - saturate(-blur*h));
-        t += dt;
-    }
-
-    #endif
+    if (uSoftShadows)
+        shadow = 1.0 - saturate(-uSharpness*min_dh/max(texel_size*min_t, 0.01));
+    else
+        shadow = float(ray_above_terrain);
 
     imageStore(shadowmap, texelCoord, vec4(shadow, 0.0, 0.0, 1.0));
 }
