@@ -136,7 +136,7 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_FinalShader.setUniform1f("uGroundRad", m_GroundRad);
     m_FinalShader.setUniform3f("uSunDir", m_SunDir);
     m_FinalShader.setUniform3f("uCamDir", cam_dir);
-    m_FinalShader.setUniform1f("uCamFov", cam_fov);
+    m_FinalShader.setUniform1f("uCamFov", glm::radians(cam_fov));
     m_FinalShader.setUniform1f("uAspectRatio", aspect);
     m_FinalShader.setUniform1f("uSkyBrightness", m_Brightness);
 
