@@ -19,6 +19,7 @@ uniform float uScaleY;
 uniform vec3 uSunDir;
 
 uniform int uMips;
+uniform int uMipOffset;
 uniform int uMinLvl;
 uniform int uStartCell;
 uniform float uNudgeFactor;
@@ -26,7 +27,7 @@ uniform float uNudgeFactor;
 uniform bool uSoftShadows;
 uniform float uSharpness;
 
-const float epsilon = 1e-6;
+const float epsilon = 2*1e-6;
 const float texel_size = 1.0/uResolution;
 
 float DistToNextIntersection(vec2 pos, vec2 dir2, vec2 delta, float cell_size)
@@ -142,7 +143,7 @@ void main() {
 
         else
         {
-            float h = texelFetch(heightmap, current_texel, mip).r;
+            float h = texelFetch(heightmap, current_texel, mip + uMipOffset).r;
             
             vec3 tmp = texel_size*(org3 + proj_fac*t*dir3);
             float H = tmp.y;

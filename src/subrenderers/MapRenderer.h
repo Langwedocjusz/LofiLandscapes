@@ -18,6 +18,7 @@ struct ShadowmapSettings{
     int Resolution = 4096;
     int MinLevel = 5;
     int StartCell = 32;
+    int MipOffset = 0;
 
     float NudgeFac = 1.02f;
 

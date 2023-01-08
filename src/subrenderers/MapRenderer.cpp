@@ -95,17 +95,32 @@ MapRenderer::MapRenderer()
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
     m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
 
-    //Heightmap mip levels data
+    //-----Mipmap related things
     //Check if heightmap resolution is a power of 2
     int res = m_Heightmap.getSpec().Resolution;
 
     if (res & (res - 1) != 0) {
-        std::cerr << "Maximal mips require power of 2 resolution" << '\n';
+        std::cerr << "Heightmap res is not a power of 2!" << '\n';
         return;
     }
 
-    //Assume num of mips = log_2(res)
-    while (res >>= 1) ++m_MipLevels;
+    //Do the same for shadowmap
+    int res_s = m_Shadowmap.getSpec().Resolution;
+
+    if (res_s & (res_s - 1) != 0) {
+        std::cerr << "Shadowmap res is not a power of 2!" << '\n';
+        return;
+    }
+
+    auto log2 = [](int value) {
+        int copy = value, result = 0;
+        while (copy >>= 1) ++result;
+        return result;
+    };
+
+    m_MipLevels = log2(res);
+
+    m_ShadowSettings.MipOffset = log2(res / res_s);
 }
 
 MapRenderer::~MapRenderer() {}
@@ -152,6 +167,7 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
     m_ShadowmapShader.setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
     
     m_ShadowmapShader.setUniform1i("uMips", m_MipLevels);
+    m_ShadowmapShader.setUniform1i("uMipOffset", m_ShadowSettings.MipOffset);
     m_ShadowmapShader.setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
     m_ShadowmapShader.setUniform1i("uStartCell", m_ShadowSettings.StartCell);
     m_ShadowmapShader.setUniform1f("uNudgeFactor", m_ShadowSettings.NudgeFac);
