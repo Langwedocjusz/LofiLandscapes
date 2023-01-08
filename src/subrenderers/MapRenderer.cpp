@@ -77,6 +77,9 @@ MapRenderer::MapRenderer()
     m_HeightEditor.AttachGLEnum("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
+    m_HeightEditor.RegisterShader("Curves", "res/shaders/terrain/curves.glsl");
+    m_HeightEditor.AttachSliderFloat("Curves", "uExponent", "Exponent", 0.1, 2.0, 1.0);
+
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
     m_HeightEditor.AttachConstInt("Radial cutoff", "uResolution", 4096);
     m_HeightEditor.AttachSliderFloat("Radial cutoff", "uBias", "Bias", 0.0, 1.0, 0.5);
@@ -246,6 +249,13 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
         if (ImGui::Button("Voronoi")) {
             ImGui::CloseCurrentPopup();
             m_HeightEditor.AddProcedureInstance("Voronoi");
+
+            height_changed = true;
+        }
+
+        if (ImGui::Button("Curves")) {
+            ImGui::CloseCurrentPopup();
+            m_HeightEditor.AddProcedureInstance("Curves");
 
             height_changed = true;
         }

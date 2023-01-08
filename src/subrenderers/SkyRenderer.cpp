@@ -18,21 +18,21 @@ SkyRenderer::SkyRenderer()
     TextureSpec trans_spec = TextureSpec{
         trans_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     TextureSpec multi_spec = TextureSpec{
         multi_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     TextureSpec sky_spec = TextureSpec{
         sky_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
