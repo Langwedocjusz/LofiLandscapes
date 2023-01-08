@@ -15,7 +15,6 @@ struct AOSettings{
 };
 
 struct ShadowmapSettings{
-    int Resolution = 4096;
     int MinLevel = 5;
     int StartCell = 32;
     int MipOffset = 0;
@@ -38,6 +37,7 @@ public:
     MapRenderer();
     ~MapRenderer();
 
+    void Init(int height_res, int shadow_res);
     void Update(const glm::vec3& sun_dir);
 
     void BindHeightmap(int id=0);

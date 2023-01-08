@@ -195,13 +195,15 @@ void ClipmapRing::Draw() {
 
 
 ClipmapRenderer::ClipmapRenderer() 
-    : m_DisplaceShader("res/shaders/displace.glsl"),
-      m_Lod0(m_N, m_L, 0),
-      m_Lod1(m_N, m_L, 1),
-      m_Lod2(m_N, m_L, 2),
-      m_Lod3(m_N, m_L, 3),
-      m_Lod4(m_N, m_L, 4)
+    : m_DisplaceShader("res/shaders/displace.glsl")
 {}
+
+void ClipmapRenderer::Init(int subdivisions, int levels) {
+    m_LodLevels.reserve(levels);
+
+    for (int i = 0; i < levels; i++)
+        m_LodLevels.emplace_back(subdivisions + 1, m_L, i);
+}
 
 ClipmapRenderer::~ClipmapRenderer() {}
 
@@ -212,17 +214,11 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
     m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
     m_DisplaceShader.setUniform1f("uScaleY", scale_y);
 
-    m_Lod0.DispatchCompute();
-    m_Lod1.DispatchCompute();
-    m_Lod2.DispatchCompute();
-    m_Lod3.DispatchCompute();
-    m_Lod4.DispatchCompute();
+    for (int i = 0; i < m_LodLevels.size(); i++)
+        m_LodLevels[i].DispatchCompute();
 }
 
 void ClipmapRenderer::BindAndDraw() {
-   m_Lod0.Draw(); 
-   m_Lod1.Draw(); 
-   m_Lod2.Draw(); 
-   m_Lod3.Draw(); 
-   m_Lod4.Draw(); 
+    for (int i = 0; i < m_LodLevels.size(); i++)
+        m_LodLevels[i].Draw();
 }

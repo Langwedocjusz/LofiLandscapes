@@ -14,10 +14,14 @@ Renderer::Renderer(unsigned int width, unsigned int height)
                      "res/shaders/shaded.frag")
     , m_WireframeShader("res/shaders/wireframe.vert", 
                         "res/shaders/wireframe.frag")
-    , m_Clipmap()
-    , m_Map()
-    , m_Sky()
-{
+{}
+
+Renderer::~Renderer() {}
+
+void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res) {
+    m_Clipmap.Init(subdivisions, levels);
+    m_Map.Init(height_res, shadow_res);
+
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -36,8 +40,6 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
 }
-
-Renderer::~Renderer() {}
 
 void Renderer::OnUpdate(float deltatime) {
     //Update camera

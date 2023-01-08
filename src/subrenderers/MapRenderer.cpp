@@ -11,29 +11,32 @@ MapRenderer::MapRenderer()
     : m_NormalmapShader("res/shaders/terrain/normal.glsl")
     , m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
     , m_MipShader("res/shaders/terrain/maximal_mip.glsl")
-{
+{}
+
+MapRenderer::~MapRenderer() {}
+
+void MapRenderer::Init(int height_res, int shadow_res) {
     //-----Initialize Textures
     //-----Heightmap
-    const int tex_res = 4096; //To-do: maybe add as constructor argument
-    
+
     TextureSpec heightmap_spec = TextureSpec{
-        tex_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE, 
-        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR, 
-        GL_CLAMP_TO_BORDER, 
+        height_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE,
+        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        GL_CLAMP_TO_BORDER,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     m_Heightmap.Initialize(heightmap_spec);
-    
+
     //Generate mips for heightmap:
     m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Normal map: 
     TextureSpec normal_spec = TextureSpec{
-        tex_res, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 
-        GL_LINEAR, GL_LINEAR, 
-        GL_CLAMP_TO_BORDER, 
+        height_res, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+        GL_LINEAR, GL_LINEAR,
+        GL_CLAMP_TO_BORDER,
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
         {0.5f, 1.0f, 0.5f, 1.0f}
     };
@@ -41,16 +44,14 @@ MapRenderer::MapRenderer()
     m_Normalmap.Initialize(normal_spec);
 
     //-----Shadow map
-    const int shadow_res = m_ShadowSettings.Resolution;
-
     TextureSpec shadow_spec = TextureSpec{
-        shadow_res, GL_R8, GL_RED, GL_UNSIGNED_BYTE, 
-        GL_LINEAR, GL_LINEAR, 
-        GL_CLAMP_TO_BORDER, 
+        shadow_res, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        GL_LINEAR, GL_LINEAR,
+        GL_CLAMP_TO_BORDER,
         {1.0f, 1.0f, 1.0f, 1.0f}
     };
 
-    m_Shadowmap.Initialize(shadow_spec);    
+    m_Shadowmap.Initialize(shadow_spec);
 
     //-----Setup heightmap editor:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
@@ -99,7 +100,7 @@ MapRenderer::MapRenderer()
     //Check if heightmap resolution is a power of 2
     int res = m_Heightmap.getSpec().Resolution;
 
-    if (res & (res - 1) != 0) {
+    if ((res & (res - 1)) != 0) {
         std::cerr << "Heightmap res is not a power of 2!" << '\n';
         return;
     }
@@ -107,7 +108,7 @@ MapRenderer::MapRenderer()
     //Do the same for shadowmap
     int res_s = m_Shadowmap.getSpec().Resolution;
 
-    if (res_s & (res_s - 1) != 0) {
+    if ((res_s & (res_s - 1)) != 0) {
         std::cerr << "Shadowmap res is not a power of 2!" << '\n';
         return;
     }
@@ -122,8 +123,6 @@ MapRenderer::MapRenderer()
 
     m_ShadowSettings.MipOffset = log2(res / res_s);
 }
-
-MapRenderer::~MapRenderer() {}
 
 void MapRenderer::UpdateHeight() { 
     const int res = m_Heightmap.getSpec().Resolution;

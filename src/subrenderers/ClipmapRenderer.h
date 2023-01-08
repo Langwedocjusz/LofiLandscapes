@@ -11,8 +11,8 @@ public:
     void DispatchCompute();
     void Draw();
 
-    unsigned int VAO, VBO, EBO;
-    unsigned int ElementCount;
+    unsigned int VAO = 0, VBO = 0, EBO = 0;
+    unsigned int ElementCount = 0;
     std::vector<float> VertexData;
     std::vector<unsigned int> IndexData;
 };
@@ -37,13 +37,13 @@ public:
     ClipmapRenderer();
     ~ClipmapRenderer();
 
+    void Init(int subdivisions, int levels);
     void DisplaceVertices(float scale_xz, float scale_y,
                           float offset_x, float offset_z);
     void BindAndDraw();
 private:
-    int m_N = 65;
     float m_L = 4.0f;
 
-    ClipmapRing m_Lod0, m_Lod1, m_Lod2, m_Lod3, m_Lod4;
+    std::vector<ClipmapRing> m_LodLevels;
     Shader m_DisplaceShader;
 };

@@ -5,6 +5,9 @@
 int main() {
     try {
         Application app("LofiLandscapes", 800, 600);
+
+        app.StartMenu();
+        app.InitRenderer();
         app.Run();
     }
 

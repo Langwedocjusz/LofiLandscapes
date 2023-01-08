@@ -4,15 +4,28 @@
 #include "Renderer.h"
 #include "Timer.h"
 
+struct StartSettings {
+    int Subdivisions = 64;
+    int LodLevels = 5;
+    int HeightRes = 4096;
+    int ShadowRes = 4096;
+};
+
 class Application{
 public:
     Application(const std::string& title, unsigned int width, unsigned int height);
     ~Application();
 
+    void StartMenu();
+    void InitRenderer();
     void Run();
+
     void OnEvent(Event& e);
 private:
     bool m_ShowMenu = true;
+
+    bool m_ShowStartMenu = true;
+    StartSettings m_StartSettings;
 
     Window m_Window;
     Renderer m_Renderer;
