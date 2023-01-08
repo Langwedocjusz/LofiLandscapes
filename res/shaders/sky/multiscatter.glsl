@@ -17,9 +17,10 @@ uniform sampler2D transLUT;
 
 uniform int uResolution;
 
+//Planet parameters
 //In mega-meters by assumption
-uniform float uGroundRad;
-uniform float uAtmosphereRad;
+const float ground_rad = 6.360;
+const float atmosphere_rad = 6.460;
 
 uniform vec3 uGroundAlbedo;
 
@@ -48,7 +49,7 @@ vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
     //This is from [0,1]
     vec2 uv;
     uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
-    uv.y = clamp((height - uGroundRad)/(uAtmosphereRad - uGroundRad), 0.0, 1.0);
+    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
     
     return texture(tex, uv).rgb;
 }
@@ -92,8 +93,8 @@ vec3 MultiScatter(vec3 pos, vec3 sun_dir) {
         
             vec3 ray_dir = SphericalDir(theta, phi);
 
-            float atm_dist = IntersectSphere(pos, ray_dir, uAtmosphereRad);
-            float gnd_dist = IntersectSphere(pos, ray_dir, uGroundRad);
+            float atm_dist = IntersectSphere(pos, ray_dir, atmosphere_rad);
+            float gnd_dist = IntersectSphere(pos, ray_dir, ground_rad);
         
             float t_max = atm_dist;
             if (gnd_dist > 0.0) {
@@ -145,7 +146,7 @@ vec3 MultiScatter(vec3 pos, vec3 sun_dir) {
             if (gnd_dist > 1.0) {
                 vec3 hit_point = pos + gnd_dist*ray_dir;
                 if (dot(pos, sun_dir) > 0.0) {
-                    hit_point = normalize(hit_point)*uGroundRad;
+                    hit_point = normalize(hit_point)*ground_rad;
                     lum += trans*uGroundAlbedo*getValueFromLUT(transLUT, hit_point, sun_dir);
                 }
             }
@@ -170,7 +171,7 @@ void main() {
     float sunAngleCos = 2.0 * uv.x - 1.0;
     float sunAngle = safeacos(sunAngleCos);
 
-    float height = mix(uGroundRad, uAtmosphereRad, uv.y);
+    float height = mix(ground_rad, atmosphere_rad, uv.y);
 
     //Recover 3d position and sun direction
     vec3 pos = vec3(0.0, height, 0.0);
@@ -204,7 +205,7 @@ float IntersectSphere(vec3 ro, vec3 rd, float rad) {
 
 void getScatteringValues(vec3 pos, inout vec3 rayleigh_s, inout float mie_s, inout vec3 extinction) {
     //Height in km
-    float altitude = (length(pos)-uGroundRad)*1000.0;
+    float altitude = (length(pos)-ground_rad)*1000.0;
     
     //Density(height) distributions
     // Note: Paper gets these switched up.

@@ -36,7 +36,6 @@ private:
 	Shader m_FinalShader;
 
 	//Atmosphere parameters
-	float m_GroundRad = 6.360f, m_AtmosphereRad = 6.460f;
 	glm::vec3 m_GroundAlbedo = glm::vec3(0.3f, 0.3f, 0.3f);
 
 	float m_Phi = 1.032f, m_Theta = 1.050f;

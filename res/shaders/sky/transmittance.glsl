@@ -13,9 +13,10 @@ layout(rgba16, binding = 0) uniform image2D transLUT;
 
 uniform int uResolution;
 
+//Planet parameters
 //In mega-meters by assumption
-uniform float uGroundRad;
-uniform float uAtmosphereRad;
+const float ground_rad = 6.360;
+const float atmosphere_rad = 6.460;
 
 //Atmosphere parameters
 //These are per megameter
@@ -37,11 +38,11 @@ vec3 Transmittance(vec3 pos, vec3 dir) {
     const int steps = 40;
 
     //Ray is hitting the Earth - no transmittance
-    if (IntersectSphere(pos, dir, uGroundRad) > 0.0)
+    if (IntersectSphere(pos, dir, ground_rad) > 0.0)
         return vec3(0.0);
 
     //Distance to edge of the atmosphere
-    float atm_dist = IntersectSphere(pos, dir, uAtmosphereRad);
+    float atm_dist = IntersectSphere(pos, dir, atmosphere_rad);
 
     vec3 res = vec3(1.0);
     
@@ -76,7 +77,7 @@ void main() {
     float sunAngleCos = 2.0 * uv.x - 1.0;
     float sunAngle = safeacos(sunAngleCos);
 
-    float height = mix(uGroundRad, uAtmosphereRad, uv.y);
+    float height = mix(ground_rad, atmosphere_rad, uv.y);
 
     //Recover 3d position and sun direction
     vec3 pos = vec3(0.0, height, 0.0);
@@ -111,7 +112,7 @@ float IntersectSphere(vec3 ro, vec3 rd, float rad) {
 
 void getScatteringValues(vec3 pos, inout vec3 rayleigh_s, inout float mie_s, inout vec3 extinction) {
     //Height in km
-    float altitude = (length(pos)-uGroundRad)*1000.0;
+    float altitude = (length(pos)-ground_rad)*1000.0;
     
     //Density(height) distributions
     // Note: Paper gets these switched up.

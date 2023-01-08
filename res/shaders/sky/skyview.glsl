@@ -20,9 +20,10 @@ uniform int uResolution;
 
 uniform vec3 uSunDir;
 
+//Planet parameters
 //In mega-meters by assumption
-uniform float uGroundRad;
-uniform float uAtmosphereRad;
+const float ground_rad = 6.360;
+const float atmosphere_rad = 6.460;
 
 //Atmosphere parameters
 //These are per megameter
@@ -35,7 +36,7 @@ const float base_mie_a = 4.4;
 const vec3 base_ozone_a = vec3(0.650, 1.881, .085);
 
 // 200M above the ground.
-const vec3 view_pos = vec3(0.0, uGroundRad + 0.0002, 0.0);
+const vec3 view_pos = vec3(0.0, ground_rad + 0.0002, 0.0);
 
 //Common code between sky shaders
 //To-do: add #include support to shader class
@@ -52,7 +53,7 @@ vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
     //This is from [0,1]
     vec2 uv;
     uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
-    uv.y = clamp((height - uGroundRad)/(uAtmosphereRad - uGroundRad), 0.0, 1.0);
+    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
     
     return texture(tex, uv).rgb;
 }
@@ -141,7 +142,7 @@ void main() {
     float height = length(view_pos);
     vec3 up = view_pos/height;
 
-    float horizonAngle = safeacos(sqrt(height*height - uGroundRad*uGroundRad)/height) - 0.5*PI;
+    float horizonAngle = safeacos(sqrt(height*height - ground_rad*ground_rad)/height) - 0.5*PI;
     float altitudeAngle = 0.5*PI*adjV - horizonAngle; 
 
     float cosAlt = cos(altitudeAngle), sinAlt = sin(altitudeAngle);
@@ -152,8 +153,8 @@ void main() {
     float sunAlt = 0.5*PI - acos(dot(uSunDir, up));
     vec3 sun_dir = vec3(0.0, sin(sunAlt), -cos(sunAlt));
 
-    float atm_dist = IntersectSphere(view_pos, ray_dir, uAtmosphereRad);
-    float gnd_dist = IntersectSphere(view_pos, ray_dir, uGroundRad);
+    float atm_dist = IntersectSphere(view_pos, ray_dir, atmosphere_rad);
+    float gnd_dist = IntersectSphere(view_pos, ray_dir, ground_rad);
 
     float t_max = (gnd_dist < 0.0) ? atm_dist : gnd_dist;
 
@@ -184,7 +185,7 @@ float IntersectSphere(vec3 ro, vec3 rd, float rad) {
 
 void getScatteringValues(vec3 pos, inout vec3 rayleigh_s, inout float mie_s, inout vec3 extinction) {
     //Height in km
-    float altitude = (length(pos)-uGroundRad)*1000.0;
+    float altitude = (length(pos)-ground_rad)*1000.0;
     
     //Density(height) distributions
     // Note: Paper gets these switched up.

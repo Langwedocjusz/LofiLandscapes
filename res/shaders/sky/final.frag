@@ -1,3 +1,10 @@
+//Physically based sky rendering following the paper 
+//"Production Ready Atmosphere Rendering" by Sebastien Hillaire.
+//Also heavilly based on Shadertoy implementation by AndrewHelmer:
+//https://www.shadertoy.com/view/slSXRW
+
+//This shader implements final sky rendering
+
 #version 450 core
 
 #define PI 3.1415926535
@@ -11,9 +18,6 @@ uniform sampler2D transLUT;
 uniform sampler2D skyLUT;
 uniform sampler2D multiLUT;
 
-//In mega-meters by assumption
-uniform float uGroundRad;
-
 uniform vec3 uSunDir;
 
 uniform vec3 uCamDir;
@@ -22,8 +26,13 @@ uniform float uAspectRatio; //assumed y/x
 
 uniform float uSkyBrightness;
 
+//Planet parameters
+//In mega-meters by assumption
+const float ground_rad = 6.360;
+const float atmosphere_rad = 6.460;
+
 // 200M above the ground.
-const vec3 view_pos = vec3(0.0, uGroundRad + 0.0002, 0.0);
+const vec3 view_pos = vec3(0.0, ground_rad + 0.0002, 0.0);
 
 //Utility
 float safeacos(const float x) {
@@ -34,7 +43,7 @@ vec3 getValFromSkyLUT(vec3 rayDir) {
     float height = length(view_pos);
     vec3 up = view_pos/height;
     
-    float horizonAngle = safeacos(sqrt(height*height - uGroundRad*uGroundRad) / height);
+    float horizonAngle = safeacos(sqrt(height*height - ground_rad*ground_rad) / height);
     float altitudeAngle = horizonAngle - acos(dot(rayDir, up)); // Between -PI/2 and PI/2
     float azimuthAngle; // Between 0 and 2*PI
     
@@ -62,6 +71,37 @@ vec3 getValFromSkyLUT(vec3 rayDir) {
     return texture(skyLUT, ts).rgb;
 }
 
+//Read Transmittance/Multiscatter LUT
+vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
+    float atmosphere_rad = 6.460;
+
+    float height = length(pos);
+    vec3 up = pos / height;
+	float sunCosZenithAngle = dot(sunDir, up);
+
+    //This is from [0,1]
+    vec2 uv;
+    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
+    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
+    
+    return texture(tex, uv).rgb;
+}
+
+vec3 getSunColor(vec3 dir)
+{
+    const float sunSolidAngle = 0.53*PI/180.0;
+    const float minSunCosTheta = cos(sunSolidAngle);
+
+    float cosTheta = dot(dir, uSunDir);
+
+    //Antialiasing
+    float res = smoothstep(minSunCosTheta, 1.0, cosTheta);
+
+    //Multiplying by transmittance to get correct color
+    vec3 transmittance = getValueFromLUT(transLUT, view_pos, dir);
+    return res * transmittance;
+}
+
 void main() {
     float camWidthScale = 2.0*tan(uCamFov/2.0);
     float camHeightScale = camWidthScale*uAspectRatio;
@@ -73,6 +113,8 @@ void main() {
     vec3 rayDir = normalize(uCamDir + camRight*xy.x*camWidthScale + camUp*xy.y*camHeightScale);
     
     vec3 color = getValFromSkyLUT(rayDir);
+
+    color += getSunColor(rayDir);
 
     color *= uSkyBrightness;
 

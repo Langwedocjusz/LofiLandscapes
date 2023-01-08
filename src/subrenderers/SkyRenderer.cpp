@@ -80,8 +80,6 @@ void SkyRenderer::UpdateTrans() {
 
     m_TransShader.Bind();
     m_TransShader.setUniform1i("uResolution", res);
-    m_TransShader.setUniform1f("uGroundRad", m_GroundRad);
-    m_TransShader.setUniform1f("uAtmosphereRad", m_AtmosphereRad);
 
     glDispatchCompute(res / 32, res / 32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -96,8 +94,6 @@ void SkyRenderer::UpdateMulti() {
     m_MultiShader.Bind();
     m_MultiShader.setUniform1i("transLUT", 0);
     m_MultiShader.setUniform1i("uResolution", res);
-    m_MultiShader.setUniform1f("uGroundRad", m_GroundRad);
-    m_MultiShader.setUniform1f("uAtmosphereRad", m_AtmosphereRad);
     m_MultiShader.setUniform3f("uGroundAlbedo", m_GroundAlbedo);
 
     glDispatchCompute(res / 32, res / 32, 1);
@@ -116,8 +112,6 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader.setUniform1i("multiLUT", 1);
     m_SkyShader.setUniform1i("uResolution", res);
     m_SkyShader.setUniform3f("uSunDir", m_SunDir);
-    m_SkyShader.setUniform1f("uGroundRad", m_GroundRad);
-    m_SkyShader.setUniform1f("uAtmosphereRad", m_AtmosphereRad);
 
     glDispatchCompute(res / 32, res / 32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -133,7 +127,6 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_FinalShader.setUniform1i("transLUT", 0);
     m_FinalShader.setUniform1i("skyLUT", 1);
     m_FinalShader.setUniform1i("multiLUT", 2);
-    m_FinalShader.setUniform1f("uGroundRad", m_GroundRad);
     m_FinalShader.setUniform3f("uSunDir", m_SunDir);
     m_FinalShader.setUniform3f("uCamDir", cam_dir);
     m_FinalShader.setUniform1f("uCamFov", glm::radians(cam_fov));
@@ -171,17 +164,6 @@ void SkyRenderer::OnImGui(bool& open) {
     if (albedo != m_GroundAlbedo) {
         m_GroundAlbedo = albedo;
         m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::MultiScatter;
-    }
-
-    float ground = m_GroundRad, atmo = m_AtmosphereRad;
-
-    ImGuiUtils::SliderFloat("Ground Rad [MM]", &ground, 1.0f, 12.0f);
-    ImGuiUtils::SliderFloat("Atmosphere Rad [MM]", &atmo, 1.0f, 12.0f);
-
-    if (ground != m_GroundRad || atmo != m_AtmosphereRad) {
-        m_GroundRad = ground;
-        m_AtmosphereRad = atmo;
-        m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::Transmittance;
     }
 
     ImGuiUtils::SliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
