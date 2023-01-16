@@ -89,7 +89,7 @@ vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
 
 vec3 getSunColor(vec3 dir)
 {
-    const float sunSolidAngle = 0.53*PI/180.0;
+    const float sunSolidAngle = 2.0*0.53*PI/180.0;
     const float minSunCosTheta = cos(sunSolidAngle);
 
     float cosTheta = dot(dir, uSunDir);

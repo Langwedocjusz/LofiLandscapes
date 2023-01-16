@@ -5,10 +5,10 @@
 
 
 enum class MaterialUpdateFlags {
-    None   = (   0),
-    Height = (1<<0),
-    Normal = (1<<1),
-    Albedo = (1<<2)
+    None      = (   0),
+    Height    = (1<<0),
+    Normal    = (1<<1),
+    Albedo    = (1<<2)
 };
 
 class MaterialRenderer{
@@ -32,6 +32,8 @@ private:
     float m_AOStrength = 1.0f, m_AOSpread = 1.0f, m_AOContrast = 1.0f;
     //Albedo generation:
     TextureEditor m_AlbedoEditor;
+    //Roughness generation:
+    TextureEditor m_RoughnessEditor;
 
     MaterialUpdateFlags m_UpdateFlags = MaterialUpdateFlags::None;
 };

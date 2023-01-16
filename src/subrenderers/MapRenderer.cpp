@@ -79,7 +79,7 @@ void MapRenderer::Init(int height_res, int shadow_res) {
     m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     m_HeightEditor.RegisterShader("Curves", "res/shaders/terrain/curves.glsl");
-    m_HeightEditor.AttachSliderFloat("Curves", "uExponent", "Exponent", 0.1, 2.0, 1.0);
+    m_HeightEditor.AttachSliderFloat("Curves", "uExponent", "Exponent", 0.1, 4.0, 1.0);
 
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
     m_HeightEditor.AttachConstInt("Radial cutoff", "uResolution", 4096);

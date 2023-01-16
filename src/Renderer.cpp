@@ -92,6 +92,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
+        m_ShadedShader.setUniform1i("uFlipView", int(m_FlipView));
         m_ShadedShader.setUniform4f("uSunCol", m_SunCol);
         m_ShadedShader.setUniform4f("uSkyCol", m_SkyCol);
         m_ShadedShader.setUniform4f("uRefCol", m_RefCol);
@@ -206,8 +207,9 @@ void Renderer::OnImGuiRender() {
         ImGuiUtils::SliderFloat("Refl Strength", &m_RefCol[3], 1.0, 5.0);
         ImGuiUtils::Checkbox("Materials", &m_Materials);
         ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
-        ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 64.0);
+        ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
         ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
+        ImGuiUtils::Checkbox("Flip View", &m_FlipView);
         ImGui::End();
         
         /*if (phi != m_Phi || theta != m_Theta) {

@@ -2,6 +2,8 @@
 
 #define PI 3.1415926535
 
+#define sat(x) clamp(x, 0.0, 1.0)
+
 in vec2 uv;
 in mat3 norm_rot;
 in vec3 frag_pos;
@@ -24,6 +26,7 @@ uniform vec3 uLightDir;
 uniform int uShadow;
 uniform int uMaterial;
 uniform int uFixTiling;
+uniform int uFlipView;
 
 //rgb - color, a - additional strength parameter
 uniform vec4 uSunCol;
@@ -116,54 +119,119 @@ vec4 getMatNormal(vec2 uv) {
         return texture(normal, uTilingFactor*uv);
 }
 
-void main() {
-    //Assemble needed vectors
-    vec4 res = texture(normalmap, uv);
+//======================================================================
+//PBR - work in progress, based on https://learnopengl.com/PBR/Lighting
 
-    //float sT = sin(uTheta), cT = cos(uTheta);
-    //float sP = sin(uPhi), cP = cos(uPhi);
-    //const vec3 l_dir = vec3(cP*sT, cT, sP*sT);
-    const vec3 l_dir = vec3(-1.0, 1.0, -1.0) * uLightDir;
+float D_GGX(vec3 n, vec3 h, float a) {
+    float a2     = a*a;
+    float NdotH  = max(dot(n, h), 0.0);
+    float NdotH2 = NdotH*NdotH;
+	
+    float nom    = a2;
+    float denom  = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom        = PI * denom * denom;
+	
+    return nom / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float k)
+{
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return nom / denom;
+}
+  
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float k)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx1 = GeometrySchlickGGX(NdotV, k);
+    float ggx2 = GeometrySchlickGGX(NdotL, k);
+	
+    return ggx1 * ggx2;
+}
+
+vec3 F_Schlick(vec3 v, vec3 h, vec3 f0) {
+    float f = pow(1.0 - sat(dot(v,h)), 5.0);
+    return f0 + (1.0-f0)*f;
+}
+
+vec3 ShadePBR(vec3 view, vec3 norm, vec3 ldir,
+                vec3 albedo, float roughness)
+{
+    const vec3 reflectance = vec3(0.04);
+
+    vec3 h = normalize(ldir + norm);
     
-    const vec3 up = vec3(0.0, 1.0, 0.0);
+    float D = D_GGX(norm, h, roughness);
+    float G = GeometrySmith(norm, view, ldir, roughness);
+    vec3  F = F_Schlick(view, h, reflectance); 
+    
+    vec3 numerator    = D * G * F;
+    float denominator = 4.0 * sat(dot(norm, view)) * sat(dot(norm, ldir)) + 0.0001;
+    vec3 specular     = numerator / denominator;  
+    
+    //Assumed metalic = 0
+    vec3 kD = vec3(1.0) - F;
+    
+    float NoL = sat(dot(norm, ldir));
 
+    //Albedo should be multiplied by kD to produce physical result
+    //but for some reason it's really unstable
+    //to-do: fix it xD
+    return (albedo/PI + specular) * NoL;
+}
+
+//Atm used to simulate skylighting (will try to switch to actual ibl) and reflected light
+vec3 diffuseOnly(vec3 norm, vec3 ldir, vec3 albedo)
+{
+    float NoL = sat(dot(norm, ldir));
+    return (albedo/PI) * NoL;
+}
+
+//======================================================================
+
+void main() {
+    const vec3 up = vec3(0.0, 1.0, 0.0);
+    const vec3 l_dir = normalize(vec3(-1.0, 1.0, -1.0) * uLightDir);    
+
+    vec4 res = texture(normalmap, uv);
     vec3 norm = 2.0*res.xyz - 1.0;
     float amb = res.w;
+
     float mat_amb = 1.0;
+    float roughness = 0.7;
+    vec3 albedo = vec3(1.0);
 
     if (uMaterial == 1) {
         vec4 mat_res = getMatNormal(uv);
         vec3 mat_norm = 2.0*mat_res.rgb-1.0;
         norm = mix(norm, norm_rot*mat_norm, uNormalStrength);
+        norm = normalize(norm);
         mat_amb = mat_res.a;
+
+        vec4 mat_alb = getMatAlbedo(uv);
+        albedo = mat_alb.rgb;
+        roughness = mat_alb.a;
     }
 
-    vec3 view = normalize(frag_pos - uPos);
-    vec3 refl = reflect(-l_dir, norm);
-
-    //Do basic phong lighting
+    //vec3 view = normalize(frag_pos - uPos);
+    vec3 view = normalize(uPos - frag_pos);
+    //For debug purposes only:
+    if (uFlipView == 1) view = -view;
+    
+    //Do pbr lighting
     float shadow = 1.0;
     if(uShadow == 1) shadow = texture(shadowmap, uv).r;
-    
-    float sun_diff = clamp(dot( l_dir, norm), 0.0, 1.0);
-    float sky_diff = clamp(dot( up,    norm), 0.0, 1.0);
-    float ref_diff = clamp(dot(-l_dir, norm), 0.0, 1.0);
 
     vec3 sun_col = uSunCol.a * uSunCol.rgb;
     vec3 sky_col = uSkyCol.a * uSkyCol.rgb;
-    //vec3 sky_col = uSkyCol.a * getValFromSkyLUT(norm);
     vec3 ref_col = uRefCol.a * uRefCol.rgb;
 
-    float shininess = 32.0;
-    float spec = pow(max(dot(view, refl), 0.0), shininess);
-
-    vec3 albedo = (uMaterial==1) ? getMatAlbedo(uv).rgb : vec3(1.0);
-
-    vec3 color = shadow * sun_diff * sun_col * albedo;
-    color += shadow * spec * sun_col * vec3(1.0);
-    color += amb * max(uMinSkylight, sky_diff) * sky_col * albedo;
-    //color += amb * sky_col * albedo;
-    color += amb * ref_diff * ref_col * albedo;
+    vec3 color = shadow * sun_col * ShadePBR(view, norm, l_dir, albedo, roughness);
+    color += amb * sky_col * diffuseOnly(norm, up, albedo);
+    color += amb * ref_col * diffuseOnly(norm, -l_dir, albedo);
     color *= mat_amb;
 
     //Color correction

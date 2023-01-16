@@ -94,6 +94,11 @@ MaterialRenderer::MaterialRenderer()
                                     glm::vec3(0.0f));
     m_AlbedoEditor.AttachColorEdit3("Color Ramp", "uCol2", "Color 2",
                                     glm::vec3(1.0f));
+
+    //Roughness
+    m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
+    m_RoughnessEditor.AttachSliderFloat("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
+    m_RoughnessEditor.AddProcedureInstance("Const Roughness");
 }
 
 MaterialRenderer::~MaterialRenderer() {
@@ -136,7 +141,7 @@ void MaterialRenderer::Update() {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    //Draw to albedo:
+    //Draw to albedo/roughness:
     if ((m_UpdateFlags & MaterialUpdateFlags::Albedo) 
                       != MaterialUpdateFlags::None)
     {
@@ -145,6 +150,7 @@ void MaterialRenderer::Update() {
 
         m_Albedo.BindImage(0, 0);
         m_AlbedoEditor.OnDispatch(res);
+        m_RoughnessEditor.OnDispatch(res);
     
         m_Albedo.Bind();
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -226,6 +232,29 @@ void MaterialRenderer::OnImGui(bool& open) {
         if (ImGui::Button("Color Ramp")) {
             ImGui::CloseCurrentPopup();
             m_AlbedoEditor.AddProcedureInstance("Color Ramp");
+        }
+
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Roughness procedures:");
+
+    if (m_RoughnessEditor.OnImGui()) {
+        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+    }
+
+    if (ImGuiUtils::Button("Add roughness procedure")) {
+        ImGui::OpenPopup("Choose procedure (roughness)");
+    }
+
+    if (ImGui::BeginPopupModal("Choose procedure (roughness)")) {
+        if (ImGui::Button("Const Roughness")) {
+            ImGui::CloseCurrentPopup();
+            m_RoughnessEditor.AddProcedureInstance("Const Roughness");
         }
 
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
