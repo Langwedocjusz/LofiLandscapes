@@ -19,14 +19,11 @@ uniform sampler2D normal;
 uniform sampler2D skyLUT;
 
 uniform vec3 uPos;
-//uniform float uTheta;
-//uniform float uPhi;
 uniform vec3 uLightDir;
 
 uniform int uShadow;
 uniform int uMaterial;
 uniform int uFixTiling;
-uniform int uFlipView;
 
 //rgb - color, a - additional strength parameter
 uniform vec4 uSunCol;
@@ -162,7 +159,10 @@ vec3 ShadePBR(vec3 view, vec3 norm, vec3 ldir,
 {
     const vec3 reflectance = vec3(0.04);
 
-    vec3 h = normalize(ldir + norm);
+    //Easier to tweak parametrization
+    roughness *= roughness;
+
+    vec3 h = normalize(ldir + view);
     
     float D = D_GGX(norm, h, roughness);
     float G = GeometrySmith(norm, view, ldir, roughness);
@@ -177,10 +177,7 @@ vec3 ShadePBR(vec3 view, vec3 norm, vec3 ldir,
     
     float NoL = sat(dot(norm, ldir));
 
-    //Albedo should be multiplied by kD to produce physical result
-    //but for some reason it's really unstable
-    //to-do: fix it xD
-    return (albedo/PI + specular) * NoL;
+    return (kD*albedo/PI + specular) * NoL;
 }
 
 //Atm used to simulate skylighting (will try to switch to actual ibl) and reflected light
@@ -193,8 +190,7 @@ vec3 diffuseOnly(vec3 norm, vec3 ldir, vec3 albedo)
 //======================================================================
 
 void main() {
-    const vec3 up = vec3(0.0, 1.0, 0.0);
-    const vec3 l_dir = normalize(vec3(-1.0, 1.0, -1.0) * uLightDir);    
+    const vec3 up = vec3(0.0, 1.0, 0.0);  
 
     vec4 res = texture(normalmap, uv);
     vec3 norm = 2.0*res.xyz - 1.0;
@@ -216,10 +212,11 @@ void main() {
         roughness = mat_alb.a;
     }
 
+    //Band-aid solution, will have to fix normal generation
+    norm = vec3(-1.0, 1.0, -1.0)*norm;
+
     //vec3 view = normalize(frag_pos - uPos);
     vec3 view = normalize(uPos - frag_pos);
-    //For debug purposes only:
-    if (uFlipView == 1) view = -view;
     
     //Do pbr lighting
     float shadow = 1.0;
@@ -229,9 +226,9 @@ void main() {
     vec3 sky_col = uSkyCol.a * uSkyCol.rgb;
     vec3 ref_col = uRefCol.a * uRefCol.rgb;
 
-    vec3 color = shadow * sun_col * ShadePBR(view, norm, l_dir, albedo, roughness);
+    vec3 color = shadow * sun_col * ShadePBR(view, norm, uLightDir, albedo, roughness);
     color += amb * sky_col * diffuseOnly(norm, up, albedo);
-    color += amb * ref_col * diffuseOnly(norm, -l_dir, albedo);
+    color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
     color *= mat_amb;
 
     //Color correction

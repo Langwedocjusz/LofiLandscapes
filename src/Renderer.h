@@ -35,7 +35,7 @@ private:
     float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f, 
           m_MinSkylight  =  0.0f;
 
-    bool m_Shadows = true, m_Materials = true, m_FixTiling = true, m_FlipView = false;     
+    bool m_Shadows = true, m_Materials = true, m_FixTiling = true;     
     
     bool m_Wireframe = false;
 

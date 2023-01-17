@@ -84,15 +84,12 @@ void Renderer::OnRender() {
 
         m_ShadedShader.Bind();
         m_ShadedShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
-        //m_ShadedShader.setUniform1f("uTheta", m_Theta);
-        //m_ShadedShader.setUniform1f("uPhi", m_Phi);
         m_ShadedShader.setUniform3f("uLightDir", m_Sky.getSunDir());
         m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
-        m_ShadedShader.setUniform1i("uFlipView", int(m_FlipView));
         m_ShadedShader.setUniform4f("uSunCol", m_SunCol);
         m_ShadedShader.setUniform4f("uSkyCol", m_SkyCol);
         m_ShadedShader.setUniform4f("uRefCol", m_RefCol);
@@ -191,13 +188,10 @@ void Renderer::OnImGuiRender() {
         m_Material.OnImGui(m_ShowMaterialMenu);
 
     if (m_ShowLightMenu) {
-        //float phi = m_Phi, theta = m_Theta;
         bool shadows = m_Shadows;
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGuiUtils::Checkbox("Shadows", &shadows);
-        //ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
-        ///ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5*3.14);
         ImGuiUtils::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
         ImGuiUtils::ColorEdit3("Sun Color" , m_SunCol);
         ImGuiUtils::ColorEdit3("Sky Color" , m_SkyCol);
@@ -209,14 +203,7 @@ void Renderer::OnImGuiRender() {
         ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
         ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
         ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
-        ImGuiUtils::Checkbox("Flip View", &m_FlipView);
         ImGui::End();
-        
-        /*if (phi != m_Phi || theta != m_Theta) {
-            m_Phi = phi;
-            m_Theta = theta;
-            if (m_Shadows) m_Map.RequestShadowUpdate();
-        }*/
 
         if (shadows != m_Shadows) {
             m_Shadows = shadows;
