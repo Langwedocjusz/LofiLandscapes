@@ -99,6 +99,17 @@ MaterialRenderer::MaterialRenderer()
     m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
     m_RoughnessEditor.AttachSliderFloat("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
     m_RoughnessEditor.AddProcedureInstance("Const Roughness");
+
+    m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
+    m_RoughnessEditor.AttachConstInt("Roughness Ramp", "uResolution", m_Albedo.getSpec().Resolution);
+    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge1", "Edge 1",
+        0.0f, 1.0f, 0.0f);
+    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge2", "Edge 2",
+        0.0f, 1.0f, 1.0f);
+    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uVal1", "Value 1",
+        0.003f, 1.0f, 0.003f);
+    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uVal2", "Value 2",
+        0.003f, 1.0f, 1.0f);
 }
 
 MaterialRenderer::~MaterialRenderer() {
@@ -255,6 +266,11 @@ void MaterialRenderer::OnImGui(bool& open) {
         if (ImGui::Button("Const Roughness")) {
             ImGui::CloseCurrentPopup();
             m_RoughnessEditor.AddProcedureInstance("Const Roughness");
+        }
+
+        if (ImGui::Button("Roughness Ramp")) {
+            ImGui::CloseCurrentPopup();
+            m_RoughnessEditor.AddProcedureInstance("Roughness Ramp");
         }
 
         m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
