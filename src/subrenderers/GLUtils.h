@@ -60,3 +60,29 @@ private:
     unsigned int m_FBO, m_Texture;
     TextureSpec m_Spec;
 };
+
+struct CubemapSpec {
+    //Represents one slice, assumed square shape
+    int Resolution;
+    //Assuming trivial conversion GLenum->int
+    int InternalFormat;
+    int Format;
+    int Type;
+    int MagFilter;
+    int MinFilter;
+};
+
+class Cubemap {
+public:
+    Cubemap();
+    ~Cubemap();
+
+    void Initialize(CubemapSpec spec);
+    void Bind(int id=0);
+    void BindImage(int id, int mip);
+
+    const CubemapSpec& getSpec() { return m_Spec; }
+private:
+    unsigned int m_Texture;
+    CubemapSpec m_Spec;
+};

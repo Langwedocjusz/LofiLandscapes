@@ -30,6 +30,9 @@ void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res
     glCullFace(GL_BACK);
     glFrontFace(GL_CW);
 
+    //Seamless cubemaps
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
     //Update Maps
     m_Map.Update(m_Sky.getSunDir());
 
@@ -90,12 +93,13 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
-        m_ShadedShader.setUniform4f("uSunCol", m_SunCol);
-        m_ShadedShader.setUniform4f("uSkyCol", m_SkyCol);
-        m_ShadedShader.setUniform4f("uRefCol", m_RefCol);
+        m_ShadedShader.setUniform3f("uSunCol", m_SunCol);
+        m_ShadedShader.setUniform1f("uSunStr", m_SunStr);
+        m_ShadedShader.setUniform1f("uSkyDiff", m_SkyDiff);
+        m_ShadedShader.setUniform1f("uSkySpec", m_SkySpec);
+        m_ShadedShader.setUniform1f("uRefStr", m_RefStr);
         m_ShadedShader.setUniform1f("uTilingFactor", m_TilingFactor);
         m_ShadedShader.setUniform1f("uNormalStrength", m_NormalStrength);
-        m_ShadedShader.setUniform1f("uMinSkylight", m_MinSkylight);
 
         m_Map.BindNormalmap(0);
         m_ShadedShader.setUniform1i("normalmap", 0);
@@ -105,8 +109,11 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("albedo", 2);
         m_Material.BindNormal(3);
         m_ShadedShader.setUniform1i("normal", 3);
-        m_Sky.BindSkyLUT(4);
-        m_ShadedShader.setUniform1i("skyLUT", 4);
+
+        m_Sky.BindIrradiance(4);
+        m_ShadedShader.setUniform1i("irradiance", 4);
+        m_Sky.BindPrefiltered(5);
+        m_ShadedShader.setUniform1i("prefiltered", 5);
     }
 
     m_Clipmap.BindAndDraw();
@@ -192,13 +199,13 @@ void Renderer::OnImGuiRender() {
 
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGuiUtils::Checkbox("Shadows", &shadows);
-        ImGuiUtils::SliderFloat("Min Skylight", &m_MinSkylight, 0.0, 1.0);
-        ImGuiUtils::ColorEdit3("Sun Color" , m_SunCol);
-        ImGuiUtils::ColorEdit3("Sky Color" , m_SkyCol);
-        ImGuiUtils::ColorEdit3("Refl Color", m_RefCol);
-        ImGuiUtils::SliderFloat("Sun Strength" , &m_SunCol[3], 1.0, 5.0);
-        ImGuiUtils::SliderFloat("Sky Strength" , &m_SkyCol[3], 1.0, 5.0);
-        ImGuiUtils::SliderFloat("Refl Strength", &m_RefCol[3], 1.0, 5.0);
+        ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);
+        ImGui::Text("Brightness values");
+        ImGuiUtils::SliderFloat("Sun" , &m_SunStr, 0.0, 4.0);
+        ImGuiUtils::SliderFloat("Sky Diffuse" , &m_SkyDiff, 0.0, 1.0);
+        ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
+        ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
+        ImGui::Text("Material params:");
         ImGuiUtils::Checkbox("Materials", &m_Materials);
         ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
         ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);

@@ -20,6 +20,8 @@ public:
 	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
 
 	void BindSkyLUT(int id=0);
+	void BindIrradiance(int id=0);
+	void BindPrefiltered(int id=0);
 
 	glm::vec3 getSunDir() { return m_SunDir; }
 private:
@@ -29,8 +31,10 @@ private:
 
 	Texture m_TransLUT, m_MultiLUT, m_SkyLUT;
 	Shader m_TransShader, m_MultiShader, m_SkyShader;
-
 	SkyUpdateFlags m_UpdateFlags;
+
+	Cubemap m_IrradianceMap, m_PrefilteredMap;
+	Shader m_IrradianceShader, m_PrefilteredShader;
 
 	Quad m_Quad;
 	Shader m_FinalShader;

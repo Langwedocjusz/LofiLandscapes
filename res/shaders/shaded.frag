@@ -16,7 +16,8 @@ uniform sampler2D shadowmap;
 uniform sampler2D albedo;
 uniform sampler2D normal;
 
-uniform sampler2D skyLUT;
+uniform samplerCube irradiance;
+uniform samplerCube prefiltered;
 
 uniform vec3 uPos;
 uniform vec3 uLightDir;
@@ -25,14 +26,15 @@ uniform int uShadow;
 uniform int uMaterial;
 uniform int uFixTiling;
 
-//rgb - color, a - additional strength parameter
-uniform vec4 uSunCol;
-uniform vec4 uSkyCol;
-uniform vec4 uRefCol;
+uniform vec3 uSunCol;
+
+uniform float uSunStr;
+uniform float uSkyDiff;
+uniform float uSkySpec;
+uniform float uRefStr;
 
 uniform float uTilingFactor;
 uniform float uNormalStrength;
-uniform float uMinSkylight;
 
 //======================================================================
 //Fixing texture tiling with 3 taps by Suslik: shadertoy.com/view/tsVGRd
@@ -180,7 +182,24 @@ vec3 ShadePBR(vec3 view, vec3 norm, vec3 ldir,
     return (kD*albedo/PI + specular) * NoL;
 }
 
-//Atm used to simulate skylighting (will try to switch to actual ibl) and reflected light
+vec3 IBL(vec3 norm, vec3 view, vec3 albedo, float roughness)
+{
+    const vec3 F0 = vec3(0.04);
+
+    float cosTheta = max(0.0, dot(norm, view));
+    vec3 F = F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+
+    vec3 kD = 1.0 - F;
+    vec3 irr = uSkyDiff * texture(irradiance, norm).rgb;
+
+    //4.0 = log2(res) - 2
+    float lod = 4.0*roughness;
+    vec3 refl = reflect(-view, norm);
+    vec3 pref = uSkySpec * textureLod(prefiltered, refl, lod).rgb;
+
+    return (kD * irr + F * pref) * albedo;
+}
+
 vec3 diffuseOnly(vec3 norm, vec3 ldir, vec3 albedo)
 {
     float NoL = sat(dot(norm, ldir));
@@ -222,17 +241,19 @@ void main() {
     float shadow = 1.0;
     if(uShadow == 1) shadow = texture(shadowmap, uv).r;
 
-    vec3 sun_col = uSunCol.a * uSunCol.rgb;
-    vec3 sky_col = uSkyCol.a * uSkyCol.rgb;
-    vec3 ref_col = uRefCol.a * uRefCol.rgb;
+    vec3 sun_col = uSunStr * uSunCol;
+    vec3 ref_col = uRefStr * uSunCol;
 
     vec3 color = shadow * sun_col * ShadePBR(view, norm, uLightDir, albedo, roughness);
-    color += amb * sky_col * diffuseOnly(norm, up, albedo);
+    color += amb * IBL(norm, view, albedo, roughness);
     color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
     color *= mat_amb;
 
     //Color correction
     color = pow(color, vec3(1.0/2.2));
+
+    vec3 refl = reflect(-view, norm);
+
     //Output
     frag_col = vec4(color, 1.0);
 }

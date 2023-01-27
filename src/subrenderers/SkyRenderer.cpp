@@ -9,6 +9,8 @@ SkyRenderer::SkyRenderer()
     : m_TransShader("res/shaders/sky/transmittance.glsl")
     , m_MultiShader("res/shaders/sky/multiscatter.glsl")
     , m_SkyShader("res/shaders/sky/skyview.glsl")
+    , m_IrradianceShader("res/shaders/sky/irradiance.glsl")
+    , m_PrefilteredShader("res/shaders/sky/prefiltered.glsl")
     , m_FinalShader("res/shaders/quad.vert", "res/shaders/sky/final.frag")
 {
     //Initialize LUT textures
@@ -40,12 +42,30 @@ SkyRenderer::SkyRenderer()
     m_MultiLUT.Initialize(multi_spec);
     m_SkyLUT.Initialize(sky_spec);
 
+    //Initialize Cubemaps
+    CubemapSpec irradinace_spec = CubemapSpec{
+        32, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
+        GL_LINEAR, GL_LINEAR,
+    };
+
+    m_IrradianceMap.Initialize(irradinace_spec);
+
+    CubemapSpec prefiltered_spec = CubemapSpec{
+        128, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
+        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+    };
+
+    m_PrefilteredMap.Initialize(prefiltered_spec);
+
+    m_PrefilteredMap.Bind();
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
     //Initialize sun direction
     float cT = cos(m_Theta), sT = sin(m_Theta);
     float cP = cos(m_Phi), sP = sin(m_Phi);
     m_SunDir = glm::vec3(cP * sT, sP * sT, cT);
 
-    //Draw all LUTs
+    //Draw all LUTs & cubemap
     m_UpdateFlags = SkyUpdateFlags::Transmittance;
     Update();
 }
@@ -101,6 +121,7 @@ void SkyRenderer::UpdateMulti() {
 }
 
 void SkyRenderer::UpdateSky() {
+    //Update sky lut
     const int res = m_SkyLUT.getSpec().Resolution;
 
     m_TransLUT.Bind(0);
@@ -115,6 +136,32 @@ void SkyRenderer::UpdateSky() {
 
     glDispatchCompute(res / 32, res / 32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    //Update cubemaps
+    m_IrradianceMap.BindImage(0, 0);
+    m_SkyLUT.Bind();
+
+    m_IrradianceShader.Bind();
+    m_IrradianceShader.setUniform1i("uResolution", m_IrradianceMap.getSpec().Resolution);
+    m_IrradianceShader.setUniform3f("uSunDir", m_SunDir);
+    m_IrradianceShader.setUniform1f("uSkyBrightness", m_Brightness);
+
+    glDispatchCompute(1, 1, 6);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    m_PrefilteredMap.BindImage(0, 0);
+    m_SkyLUT.Bind();
+
+    m_PrefilteredShader.Bind();
+    m_PrefilteredShader.setUniform1i("uResolution", m_PrefilteredMap.getSpec().Resolution);
+    m_PrefilteredShader.setUniform3f("uSunDir", m_SunDir);
+    m_PrefilteredShader.setUniform1f("uSkyBrightness", m_Brightness);
+
+    glDispatchCompute(4, 4, 6);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    m_PrefilteredMap.Bind();
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 //Draws sky on a fullscreen quad, meant to be called within appropriate context
@@ -173,6 +220,14 @@ void SkyRenderer::OnImGui(bool& open) {
 
 void SkyRenderer::BindSkyLUT(int id) {
     m_SkyLUT.Bind(id);
+}
+
+void SkyRenderer::BindIrradiance(int id) {
+    m_IrradianceMap.Bind(id);
+}
+
+void SkyRenderer::BindPrefiltered(int id) {
+    m_PrefilteredMap.Bind(id);
 }
 
 //Operator overloads

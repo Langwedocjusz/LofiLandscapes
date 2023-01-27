@@ -28,12 +28,11 @@ private:
 
     float m_ClearColor[3] = {0.0f, 0.0f, 0.0f};
 
-    float m_SunCol[4] = {0.90f, 0.85f, 0.70f, 1.0f};
-    float m_SkyCol[4] = {0.06f, 0.08f, 0.25f, 1.0f};
-    float m_RefCol[4] = {0.15f, 0.06f, 0.06f, 1.0f};
+    float m_SunCol[3] = {0.90f, 0.85f, 0.70f};
+
+    float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
     
-    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f, 
-          m_MinSkylight  =  0.0f;
+    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
 
     bool m_Shadows = true, m_Materials = true, m_FixTiling = true;     
     

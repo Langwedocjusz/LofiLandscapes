@@ -106,3 +106,38 @@ void FramebufferTexture::BindTex(int id) {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
+
+Cubemap::Cubemap() {}
+
+Cubemap::~Cubemap() {}
+
+void Cubemap::Initialize(CubemapSpec spec) {
+    glGenTextures(1, &m_Texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_Texture);
+
+    for (int i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            0, spec.InternalFormat,
+            spec.Resolution, spec.Resolution, 0,
+            spec.Format, spec.Type, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, spec.MinFilter);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, spec.MagFilter);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    m_Spec = spec;
+}
+
+void Cubemap::Bind(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_Texture);
+}
+
+void Cubemap::BindImage(int id, int mip) {
+    int format = m_Spec.InternalFormat;
+
+    glBindImageTexture(id, m_Texture, mip, GL_TRUE, 0, GL_READ_WRITE, format);
+}
