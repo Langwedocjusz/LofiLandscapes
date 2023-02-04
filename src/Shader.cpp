@@ -8,72 +8,91 @@
 
 #include "glad/glad.h"
 
+void getCodeFromFile(const std::string& file_path, std::string& output) {
+    std::ifstream file(file_path);
+
+    if (!file)
+        throw "file not read successfully: " + file_path;
+
+    std::stringstream stream;
+
+    stream << file.rdbuf();
+
+    output = stream.str();
+}
+
+//Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
+void compileShaderCode(const std::string& source, unsigned int& id, int program_type) {
+    const char* source_c = source.c_str();
+
+    int success = 0;
+    char info_log[512];
+
+    id = glCreateShader(program_type);
+
+    glShaderSource(id, 1, &source_c, NULL);
+    glCompileShader(id);
+
+    glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+        glGetShaderInfoLog(id, 512, NULL, info_log);
+        glDeleteShader(id);
+
+        throw std::string(info_log); 
+    }
+}
+
 Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
     std::string vert_code, frag_code;
 
-    std::ifstream vert_file(vert_path);
-    std::ifstream frag_file(frag_path);
+    try {
+        getCodeFromFile(vert_path, vert_code);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Vertex Shader error: " << error_message << '\n';
+    }
 
-    if (!vert_file) 
-        std::cerr << "Error: Vertex Shader file not read successfully: " 
-                  << vert_path << '\n';
+    try {
+        getCodeFromFile(frag_path, frag_code);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Fragment Shader error: " << error_message << '\n';
+    }
 
-    if(!frag_file)
-        std::cerr << "Error: Fragment Shader file not read successfully: " 
-                  << frag_path << '\n';
+    unsigned int vert_id = 0, frag_id = 0;
 
-    std::stringstream vert_stream, frag_stream;
-    vert_stream << vert_file.rdbuf();
-    frag_stream << frag_file.rdbuf();
-
-    vert_code = vert_stream.str();
-    frag_code = frag_stream.str();
-
-    const char* vert_code_c = vert_code.c_str();
-    const char* frag_code_c = frag_code.c_str();
-
-    unsigned int vert_id=0, frag_id=0;
-    int success;
-    char info_log[512];
-
-    vert_id = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vert_id, 1, &vert_code_c, NULL);
-    glCompileShader(vert_id);
-
-    glGetShaderiv(vert_id, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        glGetShaderInfoLog(vert_id, 512, NULL, info_log);
-        std::cerr << "Error: Vertex compilation failed (" << vert_path << "): \n" 
-                  << info_log << '\n';
-        glDeleteShader(vert_id);
+    try {
+        compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Vertex Shader compilation failed: \n" << error_message << '\n';
         return;
     }
 
-    frag_id = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(frag_id, 1, &frag_code_c, NULL);
-    glCompileShader(frag_id);
-
-    glGetShaderiv(frag_id, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        glGetShaderInfoLog(frag_id, 512, NULL, info_log);
-        std::cerr << "Error: Fragment compilation failed (" << frag_path << "): \n" 
-                  << info_log << '\n';
-        glDeleteShader(vert_id);
-        glDeleteShader(frag_id);
+    try {
+        compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Fragment Shader compilation failed: \n" << error_message << '\n';
         return;
     }
 
     m_ID = glCreateProgram();
+
     glAttachShader(m_ID, vert_id);
     glAttachShader(m_ID, frag_id);
     glLinkProgram(m_ID);
 
+    int success = 0;
+    char info_log[512];
+
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+
     if (!success) {
         glGetProgramInfoLog(m_ID, 512, NULL, info_log);
-        std::cerr << "Error: Shader program linking failed: \n" 
+        
+        std::cerr << "Error: Shader program linking failed: \n"
                   << info_log << '\n';
     }
 
@@ -85,40 +104,29 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
 Shader::Shader(const std::string& compute_path) {
     std::string compute_code;
 
-    std::ifstream compute_file(compute_path);
+    try {
+        getCodeFromFile(compute_path, compute_code);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Compute Shader error: " << error_message << '\n';
+    }
 
-    if(!compute_file)
-        std::cerr << "Error: Compute Shader file not read successfully: " 
-                  << compute_path << '\n';
+    unsigned int compute_id = 0;
 
-    std::stringstream compute_stream;
-    compute_stream << compute_file.rdbuf();
-
-    compute_code = compute_stream.str();
-
-    const char* compute_code_c = compute_code.c_str();
-
-    unsigned int compute_id=0;
-    int success;
-    char info_log[512];
-
-    compute_id = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(compute_id, 1, &compute_code_c, NULL);
-    glCompileShader(compute_id);
-
-    glGetShaderiv(compute_id, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        glGetShaderInfoLog(compute_id, 512, NULL, info_log);
-        std::cerr << "Error: Compute shader compilation failed (" 
-                  << compute_path << "): \n" << info_log << '\n';
-        glDeleteShader(compute_id);
+    try {
+        compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);
+    }
+    catch (std::string error_message) {
+        std::cerr << "Compute Shader compilation failed: \n" << error_message << '\n';
         return;
     }
 
     m_ID = glCreateProgram();
     glAttachShader(m_ID, compute_id);
     glLinkProgram(m_ID);
+
+    int success = 0;
+    char info_log[512];
 
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
     if (!success) {
