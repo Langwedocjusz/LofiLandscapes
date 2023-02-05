@@ -197,7 +197,7 @@ vec3 IBL(vec3 norm, vec3 view, vec3 albedo, float roughness)
     vec3 refl = reflect(-view, norm);
     vec3 pref = uSkySpec * textureLod(prefiltered, refl, lod).rgb;
 
-    return (kD * irr + F * pref) * albedo;
+    return kD * irr * albedo + F * pref;
 }
 
 vec3 diffuseOnly(vec3 norm, vec3 ldir, vec3 albedo)

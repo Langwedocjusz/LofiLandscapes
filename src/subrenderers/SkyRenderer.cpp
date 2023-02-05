@@ -34,7 +34,7 @@ SkyRenderer::SkyRenderer()
     TextureSpec sky_spec = TextureSpec{
         sky_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_REPEAT,
+        GL_MIRRORED_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
