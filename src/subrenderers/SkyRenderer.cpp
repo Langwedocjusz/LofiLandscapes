@@ -63,7 +63,7 @@ SkyRenderer::SkyRenderer()
     //Initialize sun direction
     float cT = cos(m_Theta), sT = sin(m_Theta);
     float cP = cos(m_Phi), sP = sin(m_Phi);
-    m_SunDir = glm::vec3(cP * sT, sP * sT, cT);
+    m_SunDir = glm::vec3(cP * sT, cT, sP * sT);
 
     //Draw all LUTs & cubemap
     m_UpdateFlags = SkyUpdateFlags::Transmittance;
