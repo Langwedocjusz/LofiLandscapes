@@ -23,6 +23,9 @@ void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res
     m_Map.Init(height_res, shadow_res);
 
     glEnable(GL_DEPTH_TEST);
+    //Depth function to allow sky with maximal depth (1.0)
+    //being rendered after all geometry
+    glDepthFunc(GL_LEQUAL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     //Backface culling
@@ -77,13 +80,12 @@ void Renderer::OnRender() {
         m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, 
                                                m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
+
+        m_Clipmap.BindAndDraw();
     }
 
     else {
-        //Render Sky
-        float aspect = float(m_WindowHeight) / float(m_WindowWidth);
-        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, aspect);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        //Render Clipmap (Terrain)
 
         m_ShadedShader.Bind();
         m_ShadedShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
@@ -114,9 +116,13 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("irradiance", 4);
         m_Sky.BindPrefiltered(5);
         m_ShadedShader.setUniform1i("prefiltered", 5);
-    }
 
-    m_Clipmap.BindAndDraw();
+        m_Clipmap.BindAndDraw();
+
+        //Render Sky
+        float aspect = float(m_WindowHeight) / float(m_WindowWidth);
+        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, aspect);
+    }
 }
 
 void Renderer::OnImGuiRender() {
@@ -228,18 +234,8 @@ void Renderer::OnImGuiRender() {
             m_Map.RequestShadowUpdate();
     }
 
-    //-----Process updates:
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     //Update Maps
     m_Map.Update(m_Sky.getSunDir());
-
-    //Return to normal rendering
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glViewport(0, 0, m_WindowWidth, m_WindowHeight);
-    
-    //if (m_Wireframe)
-    //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {

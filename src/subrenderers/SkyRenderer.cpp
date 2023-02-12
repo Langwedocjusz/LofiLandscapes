@@ -11,11 +11,10 @@ SkyRenderer::SkyRenderer()
     , m_SkyShader("res/shaders/sky/skyview.glsl")
     , m_IrradianceShader("res/shaders/sky/irradiance.glsl")
     , m_PrefilteredShader("res/shaders/sky/prefiltered.glsl")
-    , m_FinalShader("res/shaders/quad.vert", "res/shaders/sky/final.frag")
+    , m_FinalShader("res/shaders/sky/final.vert", "res/shaders/sky/final.frag")
 {
     //Initialize LUT textures
     const int trans_res = 256, multi_res = 32, sky_res = 128;
-    //const int trans_res = 256, multi_res = 64, sky_res = 256;
 
     TextureSpec trans_spec = TextureSpec{
         trans_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -164,7 +163,7 @@ void SkyRenderer::UpdateSky() {
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
-//Draws sky on a fullscreen quad, meant to be called within appropriate context
+//Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
 void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_TransLUT.Bind(0);
     m_SkyLUT.Bind(1);
@@ -199,7 +198,6 @@ void SkyRenderer::OnImGui(bool& open) {
         float cP = cos(phi), sP = sin(phi);
 
         m_SunDir = glm::vec3(cP * sT, cT, sP * sT);
-        //m_SunDir = glm::vec3(sP * sT, cP, sP * cT);
 
         m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
     }
