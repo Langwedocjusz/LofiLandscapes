@@ -33,10 +33,15 @@ public:
 
     glm::mat4 getViewMatrix();
 
-    glm::vec3 getPos() {return m_Pos;}
-    glm::vec3 getFront() {return m_Front;}
+    glm::vec3 getPos() const {return m_Pos;}
+    glm::vec3 getFront() const {return m_Front;}
+    glm::vec3 getRight() const { return m_Right; }
+    glm::vec3 getUp() const { return m_Up; }
 
-    CameraSettings getSettings() {return m_Settings;}
+    float getNearPlane() const { return m_NearPlane; }
+    float getFarPlane() const { return m_FarPlane; }
+
+    CameraSettings getSettings() const {return m_Settings;}
     void setSettings(CameraSettings x) {m_Settings = x;}
 
     void ProcessKeyboard(float deltatime);
@@ -49,6 +54,9 @@ protected:
     CameraSettings m_Settings; 
     CameraMovement m_Movement = CameraMovement::None;
 
+    //Won't be editable for now, so not included in settings
+    float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;
+
     void updateVectors();
 };
 
@@ -59,7 +67,7 @@ public:
 
     void Update(float deltatime);
 
-    glm::mat4 getProjMatrix(unsigned int width, unsigned int height);
+    glm::mat4 getProjMatrix(float aspect);
     
     void OnWindowResize(unsigned int width, unsigned int height);
     void OnKeyPressed(int keycode, bool repeat);

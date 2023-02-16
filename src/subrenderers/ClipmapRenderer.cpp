@@ -2,6 +2,7 @@
 
 #include "glad/glad.h"
 
+#include <algorithm>
 #include <iostream>
 
 Drawable::Drawable() {}
@@ -33,11 +34,15 @@ void Drawable::GenBuffers() {
 }
 
 void Drawable::DispatchCompute() {
+    const unsigned int invocations = std::max(size_t(1), 2*VertexData.size()/1024);
+
     glBindVertexArray(VAO);
     glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 
                 | GL_SHADER_STORAGE_BUFFER);
+
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, VBO);
-    glDispatchCompute(2 * VertexData.size() / 1024, 1, 1);
+
+    glDispatchCompute(invocations, 1, 1);
 }
 
 void Drawable::Draw() {
@@ -46,19 +51,87 @@ void Drawable::Draw() {
     glDrawElements(GL_TRIANGLES, ElementCount, GL_UNSIGNED_INT, 0);
 }
 
-void ClipmapRing::GenerateGrid(
-        unsigned int N, float L, float global_offset_x, float global_offset_y, 
-        unsigned int LodLevel)  
+Frustum::Frustum(const Camera& camera, float aspect) {
+    CameraSettings sett = camera.getSettings();
+
+    const float near = camera.getNearPlane();
+    const float far  = camera.getFarPlane();
+
+    //Camera position in coordinate system tied to the grid:
+    const float height = camera.getPos().y;
+    const glm::vec3 pos = glm::vec3(0.0f, height, 0.0f);
+
+    const glm::vec3 front = camera.getFront();
+    const glm::vec3 right = camera.getRight();
+    const glm::vec3 up    = camera.getUp();
+
+    const float halfV = far * tanf(glm::radians(sett.Fov));
+    const float halfH = aspect * halfV;
+
+    const glm::vec3 farFront = far * front;
+
+    Near = { pos + near * front,  front };
+    Far  = { pos + far  * front, -front };
+    
+    //Normals are usually normalized, but we're only going to use them
+    //to compare two values, each linear in those vectors
+    //so it doesn't matter
+    Left = { pos, (glm::cross(farFront - halfH * right, up)) };
+    Right  = { pos, (glm::cross(up, farFront + halfH * right)) };
+
+    Top = { pos, (glm::cross(farFront + halfV * up, right)) };
+    Bottom = { pos, (glm::cross(right, farFront - halfV * up)) };
+}
+
+AABB::AABB(float x, float y, float l) 
+    : m_Center{x, 0.45f, y}, m_Extents{l, 0.55f, l}
+{}
+
+bool AABB::IsInFront(const Plane& plane, float scale_y) {
+    const glm::vec3 scale = {1.0f, scale_y, 1.0f};
+    const glm::vec3 extents = scale * m_Extents;
+    const glm::vec3 normal = glm::abs(plane.Normal);
+
+    //Absolute value of the projection of the extents 
+    //vector onto subspace orthogonal to the plane
+    const float r = glm::dot(extents, normal);
+
+    //Signed distance of center to plane
+    float sd = -glm::dot(plane.Origin - scale*m_Center, plane.Normal);
+
+    //This statement is tautologically true in front of the plane
+    //which is good since we should return true in that case
+    return -r <= sd;
+}
+
+bool AABB::IsInFrustum(const Frustum& frustum, float scale_y) {
+    return IsInFront(frustum.Top,    scale_y) 
+        && IsInFront(frustum.Bottom, scale_y)
+        && IsInFront(frustum.Left,   scale_y) 
+        && IsInFront(frustum.Right,  scale_y)
+        && IsInFront(frustum.Near,   scale_y) 
+        && IsInFront(frustum.Far,    scale_y);
+}
+
+void GenerateGrid(Drawable& grid,
+                  unsigned int N, float L, int LodLevel,
+                  float global_offset_x, float global_offset_y
+                  )  
 {
-    std::vector<float> &verts = m_Grid.VertexData;
-    std::vector<unsigned int> &elements = m_Grid.IndexData;
+    //Set elements count
+    grid.ElementCount = (LodLevel == 0) ? 6 * 2*N * 2*N : 6 * N * N;
 
-    const unsigned int start = static_cast<unsigned int>(verts.size())/4;
-    const float base_offset = L/float(N-1);
+    //Aliases
+    auto& verts    = grid.VertexData;
+    auto& elements = grid.IndexData;
 
-    const unsigned int n = (LodLevel==0) ? 4*N - 3 : N; 
-    const float scale = std::pow(2.0f, LodLevel-1);
-    const float l = (LodLevel==0) ? 4.0f*L : 2.0f*scale*L;
+    //Generate data
+    const float base_offset = L / float(N - 1);
+    unsigned int lod = std::max(0, LodLevel - 1);
+
+    const unsigned int n = (LodLevel == 0) ? 2*N-1 : N;
+    const float scale = std::pow(2.0f, lod);
+    const float l = 2.0f * scale * L;
 
     //Vertex data:
     for (int i=0; i<n*n; i++) {
@@ -79,23 +152,31 @@ void ClipmapRing::GenerateGrid(
         if (ix == n-1) continue;
         if (iy == n-1) continue;
 
-        elements.push_back(start+i);
-        elements.push_back(start+i+1);
-        elements.push_back(start+i+n);
+        elements.push_back(i);
+        elements.push_back(i+1);
+        elements.push_back(i+n);
         
-        elements.push_back(start+i+1);
-        elements.push_back(start+i+1+n);
-        elements.push_back(start+i+n);
+        elements.push_back(i+1);
+        elements.push_back(i+1+n);
+        elements.push_back(i+n);
     }
 }
 
-void ClipmapRing::GenerateFill(unsigned int N, float L, unsigned int LodLevel) {
-    std::vector<float> &verts_x = m_FillX.VertexData;
-    std::vector<float> &verts_y = m_FillY.VertexData;
-    
-    std::vector<unsigned int> &elements_x = m_FillX.IndexData; 
-    std::vector<unsigned int> &elements_y = m_FillY.IndexData;
-    
+void GenerateFill(Drawable& fill_x, Drawable& fill_y, 
+                  unsigned int N, float L, int LodLevel) 
+{
+    //Set element counts
+    fill_x.ElementCount = 6 * 4 * N;
+    fill_y.ElementCount = 6 * 4 * N;
+
+    //Aliases
+    auto& verts_x    = fill_x.VertexData;
+    auto& elements_x = fill_x.IndexData;
+
+    auto& verts_y    = fill_y.VertexData;
+    auto& elements_y = fill_y.IndexData;
+
+    //Generate data
     const float base_offset = L/float(N-1);
 
     const unsigned int n = 4*N-3; 
@@ -146,35 +227,41 @@ void ClipmapRing::GenerateFill(unsigned int N, float L, unsigned int LodLevel) {
 
 ClipmapRing::ClipmapRing(int N, float L, unsigned int level) {
     //-----Provide Vertes & Index data:
+    const float scale = std::pow(2.0f, std::max(0, int(level) - 1));
+    const float l = scale * L;
+
     //Main grid:
+    std::vector<std::pair<float, float>> offsets;
+
     if (level == 0) {
-        GenerateGrid(N, L, 0.0f, 0.0f, level);
-        m_Grid.ElementCount = 6*4*N*4*N;
+        offsets = { {-1.0f, 1.0f}, {1.0f, 1.0f},
+                    {-1.0f,-1.0f}, {1.0f,-1.0f} };
     }
 
     else {
-        const float scale = std::pow(2.0, level-1);
-        
-        const float offsets[24] = 
-            {-3.0f, 3.0f, -1.0f, 3.0f,  1.0f, 3.0f,  3.0f, 3.0f,
-             -3.0f, 1.0f,  3.0f, 1.0f, -3.0f,-1.0f,  3.0f,-1.0f,
-             -3.0f,-3.0f, -1.0f,-3.0f,  1.0f,-3.0f,  3.0f,-3.0f};
+        offsets = { {-3.0f, 3.0f}, {-1.0f, 3.0f}, { 1.0f, 3.0f},  {3.0f, 3.0f},
+                    {-3.0f, 1.0f}, { 3.0f, 1.0f}, {-3.0f,-1.0f},  {3.0f,-1.0f},
+                    {-3.0f,-3.0f}, {-1.0f,-3.0f}, { 1.0f,-3.0f},  {3.0f,-3.0f} };
+    }
 
-        for (int i=0; i<12; i++){
-            GenerateGrid(N, L, scale*L*offsets[2*i], scale*L*offsets[2*i+1],
-                         level);    
-        }
+    for (size_t i = 0; i < offsets.size(); i++) {
 
-        m_Grid.ElementCount = 12*6*N*N;
+        m_Grid.push_back(Drawable());
+        m_Bounds.push_back(AABB(l * offsets[i].first, l * offsets[i].second, l));
+
+        GenerateGrid(
+            m_Grid[i], N, L, level,
+            l * offsets[i].first, l * offsets[i].second
+        );
     }
 
     //Fill meshes
-    GenerateFill(N, L, level);
-    m_FillX.ElementCount = 6*4*N;
-    m_FillY.ElementCount = 6*4*N;
+    GenerateFill(m_FillX, m_FillY, N, L, level);
 
     //-----Generate corresponding GL buffers:
-    m_Grid.GenBuffers();
+    for (int i=0; i<m_Grid.size(); i++)
+        m_Grid[i].GenBuffers();
+
     m_FillX.GenBuffers();
     m_FillY.GenBuffers();
 }
@@ -182,17 +269,24 @@ ClipmapRing::ClipmapRing(int N, float L, unsigned int level) {
 ClipmapRing::~ClipmapRing() {}
 
 void ClipmapRing::DispatchCompute() {
-    m_Grid.DispatchCompute();
+    for (int i = 0; i < m_Grid.size(); i++)
+        m_Grid[i].DispatchCompute();
+
     m_FillX.DispatchCompute();
     m_FillY.DispatchCompute();
 }
 
-void ClipmapRing::Draw() {
-    m_Grid.Draw();
+void ClipmapRing::Draw(const Frustum& frustum, float scale_y) {
+    for (int i = 0; i < m_Grid.size(); i++) {
+        //Frustum culling
+        if (m_Bounds[i].IsInFrustum(frustum, scale_y)) {
+            m_Grid[i].Draw();
+        }
+    }
+        
     m_FillX.Draw();
     m_FillY.Draw();
 }
-
 
 ClipmapRenderer::ClipmapRenderer() 
     : m_DisplaceShader("res/shaders/displace.glsl")
@@ -218,7 +312,34 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
         m_LodLevels[i].DispatchCompute();
 }
 
-void ClipmapRenderer::BindAndDraw() {
-    for (int i = 0; i < m_LodLevels.size(); i++)
-        m_LodLevels[i].Draw();
+void ClipmapRenderer::BindAndDraw(const Camera& cam, float aspect, float scale_y) {
+    Frustum frustum(cam, aspect);
+
+    for (int i = 0; i < m_LodLevels.size(); i++) {
+        m_LodLevels[i].Draw(frustum, scale_y);
+    }   
+}
+
+void ClipmapRenderer::PrintFrustum(const Camera& cam, float aspect) {
+
+    auto printVec3 = [](glm::vec3 v) {
+        std::cout << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+    };
+
+    auto printPlane = [printVec3](const std::string& name, Plane p) {
+        std::cout << name << ": ";
+        printVec3(p.Origin);
+        std::cout << ", ";
+        printVec3(p.Normal);
+        std::cout << '\n';
+    };
+
+    Frustum frustum(cam, aspect);
+
+    printPlane("Near"  , frustum.Near);
+    printPlane("Far"   , frustum.Far);
+    printPlane("Left"  , frustum.Left);
+    printPlane("Right" , frustum.Right);
+    printPlane("Top"   , frustum.Top);
+    printPlane("Bottom", frustum.Bottom);
 }

@@ -14,6 +14,8 @@ Renderer::Renderer(unsigned int width, unsigned int height)
                      "res/shaders/shaded.frag")
     , m_WireframeShader("res/shaders/wireframe.vert", 
                         "res/shaders/wireframe.frag")
+    , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
+    , m_InvAspect(1.0/m_Aspect)
 {}
 
 Renderer::~Renderer() {}
@@ -51,7 +53,7 @@ void Renderer::OnUpdate(float deltatime) {
     //Update camera
     m_Camera.Update(deltatime);
 
-    glm::mat4 proj = m_Camera.getProjMatrix(m_WindowWidth, m_WindowHeight);
+    glm::mat4 proj = m_Camera.getProjMatrix(m_Aspect);
     glm::mat4 view = m_Camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -71,6 +73,9 @@ void Renderer::OnUpdate(float deltatime) {
 }
 
 void Renderer::OnRender() {
+    const float scale_xz = m_Map.getScaleSettings().ScaleXZ;
+    const float scale_y = m_Map.getScaleSettings().ScaleY;
+
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -81,14 +86,14 @@ void Renderer::OnRender() {
                                                m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
 
-        m_Clipmap.BindAndDraw();
+        m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
     }
 
     else {
         //Render Clipmap (Terrain)
 
         m_ShadedShader.Bind();
-        m_ShadedShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+        m_ShadedShader.setUniform1f("uL", scale_xz);
         m_ShadedShader.setUniform3f("uLightDir", m_Sky.getSunDir());
         m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
@@ -117,11 +122,10 @@ void Renderer::OnRender() {
         m_Sky.BindPrefiltered(5);
         m_ShadedShader.setUniform1i("prefiltered", 5);
 
-        m_Clipmap.BindAndDraw();
+        m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
 
         //Render Sky
-        float aspect = float(m_WindowHeight) / float(m_WindowWidth);
-        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, aspect);
+        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, m_InvAspect);
     }
 }
 
@@ -223,6 +227,8 @@ void Renderer::OnImGuiRender() {
             if (m_Shadows) m_Map.RequestShadowUpdate();
         }
 
+        //if (ImGui::Button("Print Frustum"))
+        //    m_Clipmap.PrintFrustum(m_Camera, m_Aspect);
     }
 
     if (m_ShowSkyMenu) {
@@ -241,6 +247,9 @@ void Renderer::OnImGuiRender() {
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
     m_WindowWidth = width;
     m_WindowHeight = height;
+
+    m_Aspect = float(m_WindowWidth) / float(m_WindowHeight);
+    m_InvAspect = 1.0 / m_Aspect;
 
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
 }

@@ -2,29 +2,6 @@
 
 #include "Keycodes.h"
 
-CameraMovement operator~(CameraMovement x) {
-    return static_cast<CameraMovement>(~static_cast<int>(x));
-}
-
-CameraMovement operator|(CameraMovement x, CameraMovement y) {
-    return static_cast<CameraMovement>(static_cast<int>(x) 
-                                     | static_cast<int>(y));
-}
-
-CameraMovement operator&(CameraMovement x, CameraMovement y) {
-    return static_cast<CameraMovement>(static_cast<int>(x)
-                                     & static_cast<int>(y));
-}
-
-bool operator==(const CameraSettings& lhs, const CameraSettings& rhs) {
-    return (lhs.Speed == rhs.Speed) && (lhs.Sensitivity == rhs.Sensitivity)
-                                    && (lhs.Fov == rhs.Fov);
-}
-
-bool operator!=(const CameraSettings& lhs, const CameraSettings& rhs) {
-    return !(lhs == rhs);
-}
-
 Camera::Camera(glm::vec3 pos, glm::vec3 wup, float pitch, float yaw)
     : m_Pos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
 {
@@ -76,11 +53,11 @@ void FPCamera::Update(float deltatime) {
     ProcessKeyboard(deltatime);
 }
 
-glm::mat4 FPCamera::getProjMatrix(unsigned int width, unsigned int height) {
-    float aspect = float(width) / float(height);
-
-    return glm::perspective(glm::radians(m_Settings.Fov), 
-                            aspect, 0.1f, 1000.0f);
+glm::mat4 FPCamera::getProjMatrix(float aspect) {
+    return glm::perspective(
+        glm::radians(m_Settings.Fov), 
+        aspect, m_NearPlane, m_FarPlane
+    );
 }
 
 void FPCamera::OnKeyPressed(int keycode, bool repeat) {
@@ -153,4 +130,29 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
     ProcessMouse(xoffset, yoffset);
+}
+
+//Operator overloads:
+
+CameraMovement operator~(CameraMovement x) {
+    return static_cast<CameraMovement>(~static_cast<int>(x));
+}
+
+CameraMovement operator|(CameraMovement x, CameraMovement y) {
+    return static_cast<CameraMovement>(static_cast<int>(x)
+        | static_cast<int>(y));
+}
+
+CameraMovement operator&(CameraMovement x, CameraMovement y) {
+    return static_cast<CameraMovement>(static_cast<int>(x)
+        & static_cast<int>(y));
+}
+
+bool operator==(const CameraSettings& lhs, const CameraSettings& rhs) {
+    return (lhs.Speed == rhs.Speed) && (lhs.Sensitivity == rhs.Sensitivity)
+        && (lhs.Fov == rhs.Fov);
+}
+
+bool operator!=(const CameraSettings& lhs, const CameraSettings& rhs) {
+    return !(lhs == rhs);
 }

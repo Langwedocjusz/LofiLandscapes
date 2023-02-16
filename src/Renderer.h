@@ -46,6 +46,7 @@ private:
     
     //"Backend oriented" things
     unsigned int m_WindowWidth, m_WindowHeight;
+    float m_Aspect, m_InvAspect;
     
     Shader m_ShadedShader, m_WireframeShader;
     FPCamera m_Camera;
