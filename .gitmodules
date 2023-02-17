@@ -9,3 +9,6 @@
 	url = https://github.com/Langwedocjusz/imgui
 	branch = master
 	update = rebase
+[submodule "vendor/GLSL-Shader-Includes"]
+	path = vendor/GLSL-Shader-Includes
+	url = https://github.com/tntmeijs/GLSL-Shader-Includes

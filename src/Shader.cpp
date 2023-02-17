@@ -1,25 +1,13 @@
 #include "Shader.h"
 
+#include "glad/glad.h"
+#include "Shadinclude.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 
 #include <iostream>
-
-#include "glad/glad.h"
-
-void getCodeFromFile(const std::string& file_path, std::string& output) {
-    std::ifstream file(file_path);
-
-    if (!file)
-        throw "file not read successfully: " + file_path;
-
-    std::stringstream stream;
-
-    stream << file.rdbuf();
-
-    output = stream.str();
-}
 
 //Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
 void compileShaderCode(const std::string& source, unsigned int& id, int program_type) {
@@ -44,22 +32,11 @@ void compileShaderCode(const std::string& source, unsigned int& id, int program_
 }
 
 Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
-    std::string vert_code, frag_code;
+    //Get source
+    std::string vert_code = Shadinclude::load(vert_path, "#include");
+    std::string frag_code = Shadinclude::load(frag_path, "#include");
 
-    try {
-        getCodeFromFile(vert_path, vert_code);
-    }
-    catch (std::string error_message) {
-        std::cerr << "Vertex Shader error: " << error_message << '\n';
-    }
-
-    try {
-        getCodeFromFile(frag_path, frag_code);
-    }
-    catch (std::string error_message) {
-        std::cerr << "Fragment Shader error: " << error_message << '\n';
-    }
-
+    //Compile shaders
     unsigned int vert_id = 0, frag_id = 0;
 
     try {
@@ -78,6 +55,7 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
         return;
     }
 
+    //Link program
     m_ID = glCreateProgram();
 
     glAttachShader(m_ID, vert_id);
@@ -102,15 +80,10 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
 
 
 Shader::Shader(const std::string& compute_path) {
-    std::string compute_code;
+    //Get source
+    std::string compute_code = Shadinclude::load(compute_path, "#include");
 
-    try {
-        getCodeFromFile(compute_path, compute_code);
-    }
-    catch (std::string error_message) {
-        std::cerr << "Compute Shader error: " << error_message << '\n';
-    }
-
+    //Compile shader
     unsigned int compute_id = 0;
 
     try {
@@ -121,6 +94,7 @@ Shader::Shader(const std::string& compute_path) {
         return;
     }
 
+    //Link program
     m_ID = glCreateProgram();
     glAttachShader(m_ID, compute_id);
     glLinkProgram(m_ID);

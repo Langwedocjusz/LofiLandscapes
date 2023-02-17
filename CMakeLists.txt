@@ -60,3 +60,6 @@ target_link_libraries(${PROJECT_NAME} imgui)
 #Add glm
 target_include_directories(${PROJECT_NAME} PUBLIC vendor/glm)
 
+#Add shader-include
+target_include_directories(${PROJECT_NAME} PUBLIC vendor/GLSL-Shader-Includes)
+
