@@ -293,6 +293,8 @@ ClipmapRenderer::ClipmapRenderer()
 {}
 
 void ClipmapRenderer::Init(int subdivisions, int levels) {
+    m_BaseOffset = m_L / float(subdivisions);
+
     m_LodLevels.reserve(levels);
 
     for (int i = 0; i < levels; i++)
@@ -302,14 +304,37 @@ void ClipmapRenderer::Init(int subdivisions, int levels) {
 ClipmapRenderer::~ClipmapRenderer() {}
 
 void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
-                                       float offset_x, float offset_z) {
+                                       glm::vec2 pos)
+{
     m_DisplaceShader.Bind();
-    m_DisplaceShader.setUniform2f("uPos", offset_x, offset_z);
+    m_DisplaceShader.setUniform2f("uPos", pos.x, pos.y); //y would actually be z in 3d
     m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
     m_DisplaceShader.setUniform1f("uScaleY", scale_y);
 
     for (int i = 0; i < m_LodLevels.size(); i++)
         m_LodLevels[i].DispatchCompute();
+}
+
+void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
+                                       glm::vec2 curr, glm::vec2 prev) 
+{
+    m_DisplaceShader.Bind();
+    m_DisplaceShader.setUniform2f("uPos", curr.x, curr.y); //y would actually be z in 3d
+    m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
+    m_DisplaceShader.setUniform1f("uScaleY", scale_y);
+
+    auto update = [curr, prev, this](int level) {
+        float scale = std::pow(2, level) * m_BaseOffset;
+
+        glm::vec2 p_offset = prev - glm::mod(prev, scale);
+        glm::vec2 c_offset = curr - glm::mod(curr, scale);
+
+        return (p_offset.x != c_offset.x) || (p_offset.y != c_offset.y);
+    };
+
+    for (int i = 0; i < m_LodLevels.size(); i++) {
+        if (update(i)) m_LodLevels[i].DispatchCompute();
+    }
 }
 
 void ClipmapRenderer::BindAndDraw(const Camera& cam, float aspect, float scale_y) {

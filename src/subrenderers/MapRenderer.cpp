@@ -348,8 +348,9 @@ void MapRenderer::RequestShadowUpdate() {
 }
 
 bool MapRenderer::GeometryShouldUpdate() {
-    return (m_UpdateFlags & MapUpdateFlags::Height) != MapUpdateFlags::None ||
-           (m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None;
+    //If height changed, then normal must also change, but it is possible
+    //to change normals without height by changing the scale
+    return (m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None;
 }
 
 //Settings structs operator overloads:

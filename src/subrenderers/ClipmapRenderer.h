@@ -68,13 +68,18 @@ public:
     ~ClipmapRenderer();
 
     void Init(int subdivisions, int levels);
+
     void DisplaceVertices(float scale_xz, float scale_y,
-                          float offset_x, float offset_z);
+                          glm::vec2 pos);
+
+    void DisplaceVertices(float scale_xz, float scale_y,
+                          glm::vec2 curr, glm::vec2 prev);
+
     void BindAndDraw(const Camera& cam, float aspect, float scale_y);
 
     void PrintFrustum(const Camera& cam, float aspect);
 private:
-    float m_L = 4.0f;
+    float m_L = 4.0f, m_BaseOffset = 1.0f;
 
     std::vector<ClipmapRing> m_LodLevels;
     Shader m_DisplaceShader;

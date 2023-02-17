@@ -44,6 +44,17 @@ void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res
     //Update Material
     m_Material.Update();
 
+    //Initial geometry displacement
+    m_Map.BindHeightmap();
+
+    glm::vec2 pos{ m_Camera.getPos().x, m_Camera.getPos().z };
+
+    m_Clipmap.DisplaceVertices(
+        m_Map.getScaleSettings().ScaleXZ,
+        m_Map.getScaleSettings().ScaleY,
+        pos
+    );
+
     //Return to normal rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_WindowWidth, m_WindowHeight);
@@ -51,7 +62,13 @@ void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res
 
 void Renderer::OnUpdate(float deltatime) {
     //Update camera
+    glm::vec3 prev_pos3 = m_Camera.getPos();
+    glm::vec2 prev_pos2 = { prev_pos3.x, prev_pos3.z };
+
     m_Camera.Update(deltatime);
+
+    glm::vec3 curr_pos3 = m_Camera.getPos();
+    glm::vec2 curr_pos2 = { curr_pos3.x, curr_pos3.z };
 
     glm::mat4 proj = m_Camera.getProjMatrix(m_Aspect);
     glm::mat4 view = m_Camera.getViewMatrix();
@@ -68,13 +85,13 @@ void Renderer::OnUpdate(float deltatime) {
     m_Clipmap.DisplaceVertices(
         m_Map.getScaleSettings().ScaleXZ,
         m_Map.getScaleSettings().ScaleY,
-        m_Camera.getPos().x, m_Camera.getPos().z
+        curr_pos2, prev_pos2
     );
 }
 
 void Renderer::OnRender() {
     const float scale_xz = m_Map.getScaleSettings().ScaleXZ;
-    const float scale_y = m_Map.getScaleSettings().ScaleY;
+    const float scale_y  = m_Map.getScaleSettings().ScaleY;
 
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -198,6 +215,8 @@ void Renderer::OnImGuiRender() {
     if (m_ShowTerrainMenu)
         m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_Shadows);
 
+    bool update_geo = m_Map.GeometryShouldUpdate();
+
     if(m_ShowShadowMenu)
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
 
@@ -242,6 +261,19 @@ void Renderer::OnImGuiRender() {
 
     //Update Maps
     m_Map.Update(m_Sky.getSunDir());
+
+    //Update geometry
+    if (update_geo) {
+        m_Map.BindHeightmap();
+
+        glm::vec2 pos{ m_Camera.getPos().x, m_Camera.getPos().z };
+
+        m_Clipmap.DisplaceVertices(
+            m_Map.getScaleSettings().ScaleXZ,
+            m_Map.getScaleSettings().ScaleY,
+            pos
+        );
+    }  
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
