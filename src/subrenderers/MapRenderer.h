@@ -37,7 +37,7 @@ public:
     MapRenderer();
     ~MapRenderer();
 
-    void Init(int height_res, int shadow_res);
+    void Init(int height_res, int shadow_res, int wrap_type);
     void Update(const glm::vec3& sun_dir);
 
     void BindHeightmap(int id=0);

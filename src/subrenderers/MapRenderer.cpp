@@ -15,14 +15,14 @@ MapRenderer::MapRenderer()
 
 MapRenderer::~MapRenderer() {}
 
-void MapRenderer::Init(int height_res, int shadow_res) {
+void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Initialize Textures
     //-----Heightmap
 
     TextureSpec heightmap_spec = TextureSpec{
         height_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        wrap_type,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
@@ -36,7 +36,7 @@ void MapRenderer::Init(int height_res, int shadow_res) {
     TextureSpec normal_spec = TextureSpec{
         height_res, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        wrap_type,
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
         {0.5f, 1.0f, 0.5f, 1.0f}
     };
@@ -47,7 +47,7 @@ void MapRenderer::Init(int height_res, int shadow_res) {
     TextureSpec shadow_spec = TextureSpec{
         shadow_res, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-        GL_CLAMP_TO_BORDER,
+        wrap_type,
         {1.0f, 1.0f, 1.0f, 1.0f}
     };
 

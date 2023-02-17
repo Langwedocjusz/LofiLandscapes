@@ -12,7 +12,7 @@ public:
     Renderer(unsigned int width, unsigned int height);
     ~Renderer();
 
-    void Init(int subdivisions, int levels, int height_res, int shadow_res);
+    void Init(int subdivisions, int levels, int height_res, int shadow_res, int wrap_type);
     void OnUpdate(float deltatime);
     void OnRender();
     void OnImGuiRender();

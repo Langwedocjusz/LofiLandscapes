@@ -4,11 +4,14 @@
 #include "Renderer.h"
 #include "Timer.h"
 
+#include "glad/glad.h"
+
 struct StartSettings {
     int Subdivisions = 64;
     int LodLevels = 5;
     int HeightRes = 4096;
     int ShadowRes = 4096;
+    int WrapType = GL_CLAMP_TO_BORDER;
 };
 
 class Application{

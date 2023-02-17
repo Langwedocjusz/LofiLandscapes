@@ -20,9 +20,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 
 Renderer::~Renderer() {}
 
-void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res) {
+void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res, int wrap_type) {
     m_Clipmap.Init(subdivisions, levels);
-    m_Map.Init(height_res, shadow_res);
+    m_Map.Init(height_res, shadow_res, wrap_type);
 
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)

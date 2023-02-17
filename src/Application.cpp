@@ -57,6 +57,43 @@ void Application::StartMenu() {
         ImGuiUtils::SliderInt("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
         ImGuiUtils::SliderInt("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
 
+        //-----World type selection----------------------
+        //To do: Imgui combo abstraction
+        const char* items[] = {"finite", "tiling"};
+        static const char* current_item = items[0];
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        float padding = style.FramePadding.x;
+
+        ImGui::Text("World type");
+        ImGui::SameLine(ImGui::GetWindowWidth() / 3);
+        ImGui::PushItemWidth(-padding);
+
+        if (ImGui::BeginCombo("##combo", current_item))
+        {
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                bool is_selected = (current_item == items[n]);
+
+                if (ImGui::Selectable(items[n], is_selected)) {
+                    current_item = items[n];
+
+                    if (n == 0)
+                        m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
+                    else if (n == 1)
+                        m_StartSettings.WrapType = GL_REPEAT;
+                }     
+                
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+
+        //-------------------------------------------------
+
         if (ImGuiUtils::Button("Start"))
             m_ShowStartMenu = false;
 
@@ -74,7 +111,8 @@ void Application::StartMenu() {
 
 void Application::InitRenderer() {
     m_Renderer.Init(m_StartSettings.Subdivisions, m_StartSettings.LodLevels,
-                    m_StartSettings.HeightRes, m_StartSettings.ShadowRes);
+                    m_StartSettings.HeightRes, m_StartSettings.ShadowRes,
+                    m_StartSettings.WrapType);
 }
 
 void Application::Run() {
