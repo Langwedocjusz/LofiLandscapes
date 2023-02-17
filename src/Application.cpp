@@ -50,7 +50,6 @@ void Application::StartMenu() {
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::Begin("Start settings", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
         
         ImGuiUtils::SliderInt("Grid subdivisions", &m_StartSettings.Subdivisions, 16, 96);
@@ -62,7 +61,6 @@ void Application::StartMenu() {
             m_ShowStartMenu = false;
 
         ImGui::End();
-        ImGui::PopStyleVar(2);
 
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
