@@ -50,7 +50,7 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Normalized coordinates (square texture)
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = (vec2(texelCoord)+0.5)/float(uResolution);
 
     //Convert to (sun zenith angle, height above ground)
     float sunAngleCos = 2.0 * uv.x - 1.0;

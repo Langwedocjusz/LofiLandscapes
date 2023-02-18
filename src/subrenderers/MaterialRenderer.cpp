@@ -27,8 +27,8 @@ MaterialRenderer::MaterialRenderer()
 {
     //=====Initialize the textures:
     TextureSpec height_spec = TextureSpec{
-        512, GL_R16F, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        512, 512, GL_R16F, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
@@ -37,8 +37,8 @@ MaterialRenderer::MaterialRenderer()
     ClearColorTexture(m_Height, 0.0f, 0.0f, 0.0f, 0.0f);
 
     TextureSpec spec = TextureSpec{
-        512, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        512, 512, GL_RGBA8, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
@@ -63,7 +63,7 @@ MaterialRenderer::MaterialRenderer()
     m_HeightEditor.AddProcedureInstance("Const Value");
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
-    m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().Resolution);
+    m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().ResolutionX);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.AttachSliderInt("FBM", "uScale", "Scale", 
                                      0, 100, 1);
@@ -73,7 +73,7 @@ MaterialRenderer::MaterialRenderer()
 
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
-    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", m_Height.getSpec().Resolution);
+    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", m_Height.getSpec().ResolutionX);
     m_HeightEditor.AttachSliderInt("Voronoi", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
     
@@ -85,7 +85,7 @@ MaterialRenderer::MaterialRenderer()
 
     //Albedo
     m_AlbedoEditor.RegisterShader("Color Ramp", "res/shaders/materials/color_ramp.glsl");
-    m_AlbedoEditor.AttachConstInt("Color Ramp", "uResolution", m_Albedo.getSpec().Resolution);
+    m_AlbedoEditor.AttachConstInt("Color Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
     m_AlbedoEditor.AttachSliderFloat("Color Ramp", "uEdge1", "Edge 1",
                                      0.0f, 1.0f, 0.0f);
     m_AlbedoEditor.AttachSliderFloat("Color Ramp", "uEdge2", "Edge 2",
@@ -101,7 +101,7 @@ MaterialRenderer::MaterialRenderer()
     m_RoughnessEditor.AddProcedureInstance("Const Roughness");
 
     m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
-    m_RoughnessEditor.AttachConstInt("Roughness Ramp", "uResolution", m_Albedo.getSpec().Resolution);
+    m_RoughnessEditor.AttachConstInt("Roughness Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
     m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge1", "Edge 1",
         0.0f, 1.0f, 0.0f);
     m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge2", "Edge 2",
@@ -122,7 +122,7 @@ void MaterialRenderer::Update() {
     if ((m_UpdateFlags & MaterialUpdateFlags::Height) 
                       != MaterialUpdateFlags::None)
     {
-        const int res = m_Height.getSpec().Resolution;
+        const int res = m_Height.getSpec().ResolutionX;
         
         m_Height.BindImage(0, 0);
         m_HeightEditor.OnDispatch(res);
@@ -132,7 +132,7 @@ void MaterialRenderer::Update() {
     if ((m_UpdateFlags & MaterialUpdateFlags::Normal) 
                       != MaterialUpdateFlags::None)
     {
-        const int res = m_Normal.getSpec().Resolution;
+        const int res = m_Normal.getSpec().ResolutionX;
         m_Height.Bind();
         
         m_Normal.BindImage(0, 0);
@@ -156,7 +156,7 @@ void MaterialRenderer::Update() {
     if ((m_UpdateFlags & MaterialUpdateFlags::Albedo) 
                       != MaterialUpdateFlags::None)
     {
-        const int res = m_Albedo.getSpec().Resolution;
+        const int res = m_Albedo.getSpec().ResolutionX;
         m_Height.Bind();
 
         m_Albedo.BindImage(0, 0);

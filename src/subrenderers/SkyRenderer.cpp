@@ -16,23 +16,24 @@ SkyRenderer::SkyRenderer()
     //Initialize LUT textures
     const int trans_res = 256, multi_res = 32, sky_res = 128;
 
+    //All textures below are square so it will be enough to fetch for example x res
     TextureSpec trans_spec = TextureSpec{
-        trans_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        trans_res, trans_res, GL_RGBA16, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     TextureSpec multi_spec = TextureSpec{
-        multi_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        multi_res, multi_res, GL_RGBA16, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     TextureSpec sky_spec = TextureSpec{
-        sky_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        sky_res, sky_res, GL_RGBA16, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_MIRRORED_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
@@ -93,7 +94,7 @@ void SkyRenderer::Update() {
 }
 
 void SkyRenderer::UpdateTrans() {
-    const int res = m_TransLUT.getSpec().Resolution;
+    const int res = m_TransLUT.getSpec().ResolutionX;
 
     m_TransLUT.BindImage(0, 0);
 
@@ -105,7 +106,7 @@ void SkyRenderer::UpdateTrans() {
 }
 
 void SkyRenderer::UpdateMulti() {
-    const int res = m_MultiLUT.getSpec().Resolution;
+    const int res = m_MultiLUT.getSpec().ResolutionX;
 
     m_TransLUT.Bind(0);
     m_MultiLUT.BindImage(0, 0);
@@ -121,7 +122,7 @@ void SkyRenderer::UpdateMulti() {
 
 void SkyRenderer::UpdateSky() {
     //Update sky lut
-    const int res = m_SkyLUT.getSpec().Resolution;
+    const int res = m_SkyLUT.getSpec().ResolutionX;
 
     m_TransLUT.Bind(0);
     m_MultiLUT.Bind(1);
@@ -132,6 +133,7 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader.setUniform1i("multiLUT", 1);
     m_SkyShader.setUniform1i("uResolution", res);
     m_SkyShader.setUniform3f("uSunDir", m_SunDir);
+    m_SkyShader.setUniform1f("uHeight", 0.000001f * m_Height);
 
     glDispatchCompute(res / 32, res / 32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -167,17 +169,16 @@ void SkyRenderer::UpdateSky() {
 void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_TransLUT.Bind(0);
     m_SkyLUT.Bind(1);
-    m_MultiLUT.Bind(2);
 
     m_FinalShader.Bind();
     m_FinalShader.setUniform1i("transLUT", 0);
     m_FinalShader.setUniform1i("skyLUT", 1);
-    m_FinalShader.setUniform1i("multiLUT", 2);
     m_FinalShader.setUniform3f("uSunDir", m_SunDir);
     m_FinalShader.setUniform3f("uCamDir", cam_dir);
     m_FinalShader.setUniform1f("uCamFov", glm::radians(cam_fov));
     m_FinalShader.setUniform1f("uAspectRatio", aspect);
     m_FinalShader.setUniform1f("uSkyBrightness", m_Brightness);
+    m_FinalShader.setUniform1f("uHeight", 0.000001f*m_Height);
 
     m_Quad.Draw();
 }
@@ -186,13 +187,16 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGui::Begin("Sky settings", &open);
 
     float phi = m_Phi, theta = m_Theta;
+    float height = m_Height;
 
     ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
     ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5 * 3.14);
+    ImGuiUtils::SliderFloat("Height (m)", &height, 0.0f, 2000.0f);
 
-    if (phi != m_Phi || theta != m_Theta) {
+    if (phi != m_Phi || theta != m_Theta || height != m_Height) {
         m_Phi = phi;
         m_Theta = theta;
+        m_Height = height;
 
         float cT = cos(theta), sT = sin(theta);
         float cP = cos(phi), sP = sin(phi);
@@ -202,12 +206,15 @@ void SkyRenderer::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
     }
 
+
+
     glm::vec3 albedo = m_GroundAlbedo;
 
     ImGuiUtils::ColorEdit3("Ground Albedo", &albedo);
 
     if (albedo != m_GroundAlbedo) {
         m_GroundAlbedo = albedo;
+        m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
         m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::MultiScatter;
     }
 

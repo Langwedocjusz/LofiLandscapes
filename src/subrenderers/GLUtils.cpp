@@ -44,7 +44,7 @@ void Init(unsigned int &id, TextureSpec spec) {
     glBindTexture(GL_TEXTURE_2D, id);
 
     glTexImage2D(GL_TEXTURE_2D, 0, spec.InternalFormat, 
-                 spec.Resolution, spec.Resolution, 0, 
+                 spec.ResolutionX, spec.ResolutionY, 0, 
                  spec.Format, spec.Type, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.MinFilter);

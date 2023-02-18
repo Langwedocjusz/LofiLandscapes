@@ -229,11 +229,11 @@ void Renderer::OnImGuiRender() {
         ImGui::Begin("Lighting", &m_ShowLightMenu);
         ImGuiUtils::Checkbox("Shadows", &shadows);
         ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);
-        ImGui::Text("Brightness values");
         ImGuiUtils::SliderFloat("Sun" , &m_SunStr, 0.0, 4.0);
         ImGuiUtils::SliderFloat("Sky Diffuse" , &m_SkyDiff, 0.0, 1.0);
         ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
         ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
+        ImGui::Separator();
         ImGui::Text("Material params:");
         ImGuiUtils::Checkbox("Materials", &m_Materials);
         ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);

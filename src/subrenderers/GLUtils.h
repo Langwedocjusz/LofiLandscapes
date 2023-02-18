@@ -18,8 +18,8 @@ private:
 };
 
 struct TextureSpec{
-    //Only represents square textures
-    int Resolution;
+    int ResolutionX;
+    int ResolutionY;
     //Assuming trivial conversion GLenum->int
     int InternalFormat;
     int Format;

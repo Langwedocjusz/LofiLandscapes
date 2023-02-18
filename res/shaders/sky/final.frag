@@ -16,7 +16,6 @@ out vec4 frag_col;
 
 uniform sampler2D transLUT;
 uniform sampler2D skyLUT;
-uniform sampler2D multiLUT;
 
 uniform vec3 uSunDir;
 
@@ -26,18 +25,17 @@ uniform float uAspectRatio; //assumed y/x
 
 uniform float uSkyBrightness;
 
+uniform float uHeight;
+
 //Planet parameters
 //In mega-meters by assumption
 const float ground_rad = 6.360;
 const float atmosphere_rad = 6.460;
 
-// 200M above the ground.
-const vec3 view_pos = vec3(0.0, ground_rad + 0.0002, 0.0);
+const vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
 
-//Utility
-float safeacos(const float x) {
-    return acos(clamp(x, -1.0, 1.0));
-}
+float safeacos(float x);
+vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir);
 
 vec3 getValFromSkyLUT(vec3 rayDir) {
     float height = length(view_pos);
@@ -69,22 +67,6 @@ vec3 getValFromSkyLUT(vec3 rayDir) {
     vec2 ts = vec2(azimuthAngle / (2.0*PI), v);
     
     return texture(skyLUT, ts).rgb;
-}
-
-//Read Transmittance/Multiscatter LUT
-vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
-    float atmosphere_rad = 6.460;
-
-    float height = length(pos);
-    vec3 up = pos / height;
-	float sunCosZenithAngle = dot(sunDir, up);
-
-    //This is from [0,1]
-    vec2 uv;
-    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
-    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
-    
-    return texture(tex, uv).rgb;
 }
 
 vec3 getSunColor(vec3 dir)
@@ -119,4 +101,23 @@ void main() {
     color *= uSkyBrightness;
 
     frag_col = vec4(color, 1.0);
+}
+
+//Utility
+float safeacos(float x) {
+    return acos(clamp(x, -1.0, 1.0));
+}
+
+//Read Transmittance/Multiscatter LUT
+vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
+    float height = length(pos);
+    vec3 up = pos / height;
+	float sunCosZenithAngle = dot(sunDir, up);
+
+    //This is from [0,1]
+    vec2 uv;
+    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
+    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
+    
+    return texture(tex, uv).rgb;
 }

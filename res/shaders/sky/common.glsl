@@ -61,3 +61,17 @@ void getScatteringValues(vec3 pos, inout vec3 rayleigh_s, inout float mie_s, ino
     //Extinction is a sum of absorbionts and scatterings
     extinction = rayleigh_s + rayleigh_a + mie_s + mie_a + ozone_a;
 }
+
+//Read Transmittance/Multiscatter LUT
+vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
+    float height = length(pos);
+    vec3 up = pos / height;
+	float sunCosZenithAngle = dot(sunDir, up);
+
+    //This is from [0,1]
+    vec2 uv;
+    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
+    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
+    
+    return texture(tex, uv).rgb;
+}

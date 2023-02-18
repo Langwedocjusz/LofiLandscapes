@@ -19,20 +19,6 @@ uniform vec3 uGroundAlbedo;
 
 #include common.glsl
 
-//Read Transmittance/Multiscatter LUT
-vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
-    float height = length(pos);
-    vec3 up = pos / height;
-	float sunCosZenithAngle = dot(sunDir, up);
-
-    //This is from [0,1]
-    vec2 uv;
-    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
-    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
-    
-    return texture(tex, uv).rgb;
-}
-
 //Scattering phase functions
 float MiePhase(float cosTheta) {
     const float g = 0.8;
@@ -122,7 +108,7 @@ vec3 MultiScatter(vec3 pos, vec3 sun_dir) {
                 t += dt;
             }
 
-            if (gnd_dist > 1.0) {
+            if (gnd_dist > 0.0) {
                 vec3 hit_point = pos + gnd_dist*ray_dir;
                 if (dot(pos, sun_dir) > 0.0) {
                     hit_point = normalize(hit_point)*ground_rad;
@@ -137,6 +123,7 @@ vec3 MultiScatter(vec3 pos, vec3 sun_dir) {
 
     //Equation 10 from the paper (geometric series)
     vec3 psi = lum_tot/(1.0 - fms);
+
     return psi;
 }
 
@@ -144,10 +131,10 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Normalized coordinates (square texture)
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = (vec2(texelCoord)+0.5)/float(uResolution);
 
     //Convert to (sun zenith angle, height above ground)
-    float sunAngleCos = 2.0 * uv.x - 1.0;
+    float sunAngleCos = (2.0 * uv.x - 1.0);
     float sunAngle = safeacos(sunAngleCos);
 
     float height = mix(ground_rad, atmosphere_rad, uv.y);

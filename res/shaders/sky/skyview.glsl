@@ -18,24 +18,11 @@ uniform sampler2D multiLUT;
 
 uniform vec3 uSunDir;
 
+uniform float uHeight;
+
 #include common.glsl
 
-// 200M above the ground.
-const vec3 view_pos = vec3(0.0, ground_rad + 0.0002, 0.0);
-
-//Read Transmittance/Multiscatter LUT
-vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir) {
-    float height = length(pos);
-    vec3 up = pos / height;
-	float sunCosZenithAngle = dot(sunDir, up);
-
-    //This is from [0,1]
-    vec2 uv;
-    uv.x = clamp(0.5 + 0.5*sunCosZenithAngle, 0.0, 1.0);
-    uv.y = clamp((height - ground_rad)/(atmosphere_rad - ground_rad), 0.0, 1.0);
-    
-    return texture(tex, uv).rgb;
-}
+const vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
 
 //Scattering phase functions
 float MiePhase(float cosTheta) {
@@ -58,7 +45,7 @@ vec3 RaymarchScattering(vec3 pos, vec3 ray_dir, vec3 sun_dir, float t_max) {
 
     float cosTheta = dot(ray_dir, sun_dir);
     
-	float mie_phase = MiePhase(cosTheta);
+	float mie_phase      = MiePhase(cosTheta);
 	float rayleigh_phase = RayleighPhase(-cosTheta);
     
     vec3 lum = vec3(0.0);
@@ -78,10 +65,10 @@ vec3 RaymarchScattering(vec3 pos, vec3 ray_dir, vec3 sun_dir, float t_max) {
         vec3 sample_trans = exp(-dt*extinction);
 
         vec3 sun_trans = getValueFromLUT(transLUT, p, sun_dir);
-        vec3 psiMS = getValueFromLUT(multiLUT, p, sun_dir);
+        vec3 psiMS     = getValueFromLUT(multiLUT, p, sun_dir);
         
         vec3 rayleighInScattering = rayleigh_s * (rayleigh_phase * sun_trans + psiMS);
-        vec3 mieInScattering = mie_s * (mie_phase * sun_trans + psiMS);
+        vec3 mieInScattering      = mie_s      * (mie_phase      * sun_trans + psiMS);
         vec3 inScattering = (rayleighInScattering + mieInScattering);
 
         // Integrated scattering within path segment.
@@ -100,10 +87,10 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Normalized coordinates (square texture)
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = (vec2(texelCoord)+0.5)/float(uResolution);
 
     //From [-pi, pi]
-    float azimuthAngle = PI*2.0*(uv.x - 0.5);
+    float azimuthAngle = 2.0*PI*(uv.x - 0.5);
 
     //Non-linear altitude mapping (section 5.3 in the paper)
     float adjV;
@@ -125,7 +112,7 @@ void main() {
     float altitudeAngle = 0.5*PI*adjV - horizonAngle; 
 
     float cosAlt = cos(altitudeAngle), sinAlt = sin(altitudeAngle);
-    float cosAzi = cos(azimuthAngle), sinAzi = sin(azimuthAngle);
+    float cosAzi = cos(azimuthAngle) , sinAzi = sin(azimuthAngle);
     
     vec3 ray_dir = vec3(cosAlt*sinAzi, sinAlt, -cosAlt*cosAzi);
 

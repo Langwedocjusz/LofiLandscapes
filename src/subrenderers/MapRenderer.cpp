@@ -20,8 +20,8 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Heightmap
 
     TextureSpec heightmap_spec = TextureSpec{
-        height_res, GL_R32F, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        height_res, height_res, GL_R32F, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
@@ -34,8 +34,8 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
 
     //-----Normal map: 
     TextureSpec normal_spec = TextureSpec{
-        height_res, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        height_res, height_res, GL_RGBA8, GL_RGBA, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
         {0.5f, 1.0f, 0.5f, 1.0f}
@@ -45,8 +45,8 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
 
     //-----Shadow map
     TextureSpec shadow_spec = TextureSpec{
-        shadow_res, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-        GL_LINEAR, GL_LINEAR,
+        shadow_res, shadow_res, GL_R8, GL_RED, 
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         {1.0f, 1.0f, 1.0f, 1.0f}
     };
@@ -98,7 +98,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
 
     //-----Mipmap related things
     //Check if heightmap resolution is a power of 2
-    int res = m_Heightmap.getSpec().Resolution;
+    int res = m_Heightmap.getSpec().ResolutionX;
 
     if ((res & (res - 1)) != 0) {
         std::cerr << "Heightmap res is not a power of 2!" << '\n';
@@ -106,7 +106,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     }
 
     //Do the same for shadowmap
-    int res_s = m_Shadowmap.getSpec().Resolution;
+    int res_s = m_Shadowmap.getSpec().ResolutionX;
 
     if ((res_s & (res_s - 1)) != 0) {
         std::cerr << "Shadowmap res is not a power of 2!" << '\n';
@@ -125,7 +125,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
 }
 
 void MapRenderer::UpdateHeight() { 
-    const int res = m_Heightmap.getSpec().Resolution;
+    const int res = m_Heightmap.getSpec().ResolutionX;
 
     m_Heightmap.BindImage(0, 0);
     m_HeightEditor.OnDispatch(res);
@@ -136,7 +136,7 @@ void MapRenderer::UpdateHeight() {
 }
 
 void MapRenderer::UpdateNormal() {
-    const int res = m_Normalmap.getSpec().Resolution;
+    const int res = m_Normalmap.getSpec().ResolutionX;
 
     m_Heightmap.Bind();
     m_Normalmap.BindImage(0, 0);
@@ -154,7 +154,7 @@ void MapRenderer::UpdateNormal() {
 }
 
 void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
-    const int res = m_Shadowmap.getSpec().Resolution;
+    const int res = m_Shadowmap.getSpec().ResolutionX;
 
     m_Heightmap.Bind();
     m_Shadowmap.BindImage(0, 0);
@@ -180,7 +180,7 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
 void MapRenderer::GenMaxMips() {
     if (m_MipLevels == 0) return;
 
-    const int res = m_Heightmap.getSpec().Resolution;
+    const int res = m_Heightmap.getSpec().ResolutionX;
 
     for (int i = 0; i < m_MipLevels; i++) {
         m_MipShader.Bind();
