@@ -61,6 +61,35 @@ private:
     TextureSpec m_Spec;
 };
 
+struct Texture3dSpec {
+    int ResolutionX;
+    int ResolutionY;
+    int ResolutionZ;
+    //Assuming trivial conversion GLenum->int
+    int InternalFormat;
+    int Format;
+    int Type;
+    int MagFilter;
+    int MinFilter;
+    int Wrap;
+    float Border[4];
+};
+
+class Texture3d {
+public:
+    Texture3d();
+    ~Texture3d();
+
+    void Initialize(Texture3dSpec spec);
+    void Bind(int id = 0);
+    void BindImage(int id, int mip);
+
+    const Texture3dSpec& getSpec() { return m_Spec; }
+private:
+    unsigned int m_Texture;
+    Texture3dSpec m_Spec;
+};
+
 struct CubemapSpec {
     //Represents one slice, assumed square shape
     int Resolution;

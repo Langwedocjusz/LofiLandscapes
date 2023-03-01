@@ -11,12 +11,12 @@ SkyRenderer::SkyRenderer()
     , m_SkyShader("res/shaders/sky/skyview.glsl")
     , m_IrradianceShader("res/shaders/sky/irradiance.glsl")
     , m_PrefilteredShader("res/shaders/sky/prefiltered.glsl")
+    , m_AerialShader("res/shaders/sky/aerial.glsl")
     , m_FinalShader("res/shaders/sky/final.vert", "res/shaders/sky/final.frag")
 {
     //Initialize LUT textures
     const int trans_res = 256, multi_res = 32, sky_res = 128;
 
-    //All textures below are square so it will be enough to fetch for example x res
     TextureSpec trans_spec = TextureSpec{
         trans_res, trans_res, GL_RGBA16, GL_RGBA, 
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
@@ -42,19 +42,33 @@ SkyRenderer::SkyRenderer()
     m_MultiLUT.Initialize(multi_spec);
     m_SkyLUT.Initialize(sky_spec);
 
+    //Initialize Aerial LUT (3d)
+    const int aerial_res = 32;
+
+    Texture3dSpec aerial_spec = Texture3dSpec{
+        aerial_res, aerial_res, aerial_res,
+        GL_RGBA16, GL_RGBA,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+        GL_CLAMP_TO_EDGE,
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    };
+
+    m_AerialLUT.Initialize(aerial_spec);
+
     //Initialize Cubemaps
+    const int irr_res = 32, pref_res = 128;
+
     CubemapSpec irradinace_spec = CubemapSpec{
-        32, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
+        irr_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
     };
 
-    m_IrradianceMap.Initialize(irradinace_spec);
-
     CubemapSpec prefiltered_spec = CubemapSpec{
-        128, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
+        pref_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
     };
 
+    m_IrradianceMap.Initialize(irradinace_spec);
     m_PrefilteredMap.Initialize(prefiltered_spec);
 
     m_PrefilteredMap.Bind();
@@ -133,7 +147,7 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader.setUniform1i("multiLUT", 1);
     m_SkyShader.setUniform1i("uResolution", res);
     m_SkyShader.setUniform3f("uSunDir", m_SunDir);
-    m_SkyShader.setUniform1f("uHeight", 0.000001f * m_Height);
+    m_SkyShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
     glDispatchCompute(res / 32, res / 32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -165,6 +179,32 @@ void SkyRenderer::UpdateSky() {
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
+void SkyRenderer::UpdateAerial(glm::vec3 front, glm::vec3 right, 
+                               glm::vec3 up, float cam_fov, 
+                               float aspect, float far) 
+{
+    const int res = m_AerialLUT.getSpec().ResolutionZ;
+
+    m_AerialLUT.BindImage(0, 0);
+
+    m_AerialShader.Bind();
+    m_AerialShader.setUniform1i("transLUT", 0);
+    m_AerialShader.setUniform1i("multiLUT", 1);
+    m_AerialShader.setUniform1i("uResolution", res);
+    m_AerialShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
+    m_AerialShader.setUniform1f("uFar", far);
+    m_AerialShader.setUniform1f("uFov", glm::radians(cam_fov));
+    m_AerialShader.setUniform1f("uAspect", aspect);
+    m_AerialShader.setUniform3f("uFront", front);
+    m_AerialShader.setUniform3f("uRight", right);
+    m_AerialShader.setUniform3f("uTop", up);
+    m_AerialShader.setUniform1f("uBrightness", m_AerialBrightness);
+    m_AerialShader.setUniform1f("uDistScale", m_AerialDistscale);
+
+    glDispatchCompute(1, 1, res);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+}
+
 //Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
 void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_TransLUT.Bind(0);
@@ -178,7 +218,7 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_FinalShader.setUniform1f("uCamFov", glm::radians(cam_fov));
     m_FinalShader.setUniform1f("uAspectRatio", aspect);
     m_FinalShader.setUniform1f("uSkyBrightness", m_Brightness);
-    m_FinalShader.setUniform1f("uHeight", 0.000001f*m_Height);
+    m_FinalShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
     m_Quad.Draw();
 }
@@ -206,8 +246,6 @@ void SkyRenderer::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
     }
 
-
-
     glm::vec3 albedo = m_GroundAlbedo;
 
     ImGuiUtils::ColorEdit3("Ground Albedo", &albedo);
@@ -219,6 +257,9 @@ void SkyRenderer::OnImGui(bool& open) {
     }
 
     ImGuiUtils::SliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
+
+    ImGuiUtils::SliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
+    ImGuiUtils::SliderFloat("Aerial distance", &m_AerialDistscale, 0.0f, 10.0f);
 
     ImGui::End();
 }
@@ -233,6 +274,10 @@ void SkyRenderer::BindIrradiance(int id) {
 
 void SkyRenderer::BindPrefiltered(int id) {
     m_PrefilteredMap.Bind(id);
+}
+
+void SkyRenderer::BindAerial(int id) {
+    m_AerialLUT.Bind(id);
 }
 
 //Operator overloads

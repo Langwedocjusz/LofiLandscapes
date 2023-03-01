@@ -7,8 +7,6 @@
 
 #version 450 core
 
-#define PI 3.1415926535
-
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba16, binding = 0) uniform image2D multiLUT;

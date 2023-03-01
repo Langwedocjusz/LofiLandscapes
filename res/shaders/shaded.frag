@@ -7,6 +7,7 @@
 in vec2 uv;
 in mat3 norm_rot;
 in vec3 frag_pos;
+in vec4 fog_data;
 
 out vec4 frag_col;
 
@@ -25,6 +26,7 @@ uniform vec3 uLightDir;
 uniform int uShadow;
 uniform int uMaterial;
 uniform int uFixTiling;
+uniform int uFog;
 
 uniform vec3 uSunCol;
 
@@ -249,10 +251,12 @@ void main() {
     color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
     color *= mat_amb;
 
+    //Aerial perspective fog
+    if (uFog == 1)
+        color = fog_data.a * color + fog_data.rgb;
+
     //Color correction
     color = pow(color, vec3(1.0/2.2));
-
-    vec3 refl = reflect(-view, norm);
 
     //Output
     frag_col = vec4(color, 1.0);

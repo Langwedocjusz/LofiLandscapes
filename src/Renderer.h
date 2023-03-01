@@ -34,9 +34,9 @@ private:
     
     float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
 
-    bool m_Shadows = true, m_Materials = true, m_FixTiling = true;     
-    
-    bool m_Wireframe = false;
+    bool m_Wireframe = false, m_Shadows = true;
+    bool m_Materials = true, m_FixTiling = true;
+    bool m_Fog = false;
 
     //Show menu window flags
     bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,

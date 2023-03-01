@@ -5,6 +5,8 @@
 
 //This is the common code between shaders
 
+#define PI 3.1415926535
+
 uniform int uResolution;
 
 //Planet parameters

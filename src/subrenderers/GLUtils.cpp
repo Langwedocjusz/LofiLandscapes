@@ -56,6 +56,24 @@ void Init(unsigned int &id, TextureSpec spec) {
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);  
 }
 
+void Init(unsigned int& id, Texture3dSpec spec) {
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_3D, id);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, spec.InternalFormat,
+        spec.ResolutionX, spec.ResolutionY, spec.ResolutionZ,
+        0, spec.Format, spec.Type, NULL);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, spec.MinFilter);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, spec.MagFilter);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, spec.Wrap);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, spec.Wrap);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, spec.Wrap);
+
+    if (spec.Wrap == GL_CLAMP_TO_BORDER)
+        glTexParameterfv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, spec.Border);
+}
+
 void Texture::Initialize(TextureSpec spec) {
     Init(m_Texture, spec);
     m_Spec = spec;
@@ -105,6 +123,26 @@ void FramebufferTexture::BindFBO() {
 void FramebufferTexture::BindTex(int id) {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_Texture);
+}
+
+Texture3d::Texture3d() {}
+
+Texture3d::~Texture3d() {}
+
+void Texture3d::Initialize(Texture3dSpec spec) {
+    Init(m_Texture, spec);
+    m_Spec = spec;
+}
+
+void Texture3d::Bind(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_3D, m_Texture);
+}
+
+void Texture3d::BindImage(int id, int mip) {
+    int format = m_Spec.InternalFormat;
+
+    glBindImageTexture(id, m_Texture, mip, GL_TRUE, 0, GL_READ_WRITE, format);
 }
 
 Cubemap::Cubemap() {}

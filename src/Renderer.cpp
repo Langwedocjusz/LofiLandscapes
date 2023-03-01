@@ -79,7 +79,18 @@ void Renderer::OnUpdate(float deltatime) {
     //Update sky
     m_Sky.Update();
 
-    //Update clipmap geometry
+    //Update aerial perspective LUT
+    const glm::vec3 front = m_Camera.getFront();
+    const glm::vec3 right = m_Camera.getRight();
+    const glm::vec3 up    = m_Camera.getUp();
+
+    const float fov = m_Camera.getSettings().Fov;
+    const float far = m_Camera.getFarPlane();
+
+    if (m_Fog)
+        m_Sky.UpdateAerial(front, right, up, fov, m_InvAspect, far);
+
+    //Update clipmap geometry if camera moved
     m_Map.BindHeightmap();
 
     m_Clipmap.DisplaceVertices(
@@ -108,7 +119,6 @@ void Renderer::OnRender() {
 
     else {
         //Render Clipmap (Terrain)
-
         m_ShadedShader.Bind();
         m_ShadedShader.setUniform1f("uL", scale_xz);
         m_ShadedShader.setUniform3f("uLightDir", m_Sky.getSunDir());
@@ -117,6 +127,7 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
+        m_ShadedShader.setUniform1i("uFog", int(m_Fog));
         m_ShadedShader.setUniform3f("uSunCol", m_SunCol);
         m_ShadedShader.setUniform1f("uSunStr", m_SunStr);
         m_ShadedShader.setUniform1f("uSkyDiff", m_SkyDiff);
@@ -138,6 +149,8 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("irradiance", 4);
         m_Sky.BindPrefiltered(5);
         m_ShadedShader.setUniform1i("prefiltered", 5);
+        m_Sky.BindAerial(6);
+        m_ShadedShader.setUniform1i("aerial", 6);
 
         m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
 
@@ -233,6 +246,7 @@ void Renderer::OnImGuiRender() {
         ImGuiUtils::SliderFloat("Sky Diffuse" , &m_SkyDiff, 0.0, 1.0);
         ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
         ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
+        ImGuiUtils::Checkbox("Render fog", &m_Fog);
         ImGui::Separator();
         ImGui::Text("Material params:");
         ImGuiUtils::Checkbox("Materials", &m_Materials);
@@ -262,7 +276,7 @@ void Renderer::OnImGuiRender() {
     //Update Maps
     m_Map.Update(m_Sky.getSunDir());
 
-    //Update geometry
+    //Update geometry if heightmap/scale changed
     if (update_geo) {
         m_Map.BindHeightmap();
 
