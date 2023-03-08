@@ -4,17 +4,9 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-enum class CameraMovement {
-    None     =      0,
-    Forward  = (1<<0),
-    Backward = (1<<1),
-    Left     = (1<<2),
-    Right    = (1<<3)
-};
-
-CameraMovement operator~(CameraMovement x);
-CameraMovement operator|(CameraMovement x, CameraMovement y);
-CameraMovement operator&(CameraMovement x, CameraMovement y);
+//CameraMovement operator~(CameraMovement x);
+//CameraMovement operator|(CameraMovement x, CameraMovement y);
+//CameraMovement operator&(CameraMovement x, CameraMovement y);
 
 struct CameraSettings{
     float Speed = 5.0f;
@@ -47,12 +39,21 @@ public:
     void ProcessKeyboard(float deltatime);
     void ProcessMouse(float xoffset, float yoffset);
 protected:
+
+    enum CameraMovement {
+        None     =  0,
+        Forward  = (1 << 0),
+        Backward = (1 << 1),
+        Left     = (1 << 2),
+        Right    = (1 << 3)
+    };
+
     glm::vec3 m_Pos;
     glm::vec3 m_Front, m_Up, m_Right, m_WorldUp;
     float m_Pitch, m_Yaw;
 
     CameraSettings m_Settings; 
-    CameraMovement m_Movement = CameraMovement::None;
+    int m_Movement = None;
 
     //Won't be editable for now, so not included in settings
     float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;

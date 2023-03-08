@@ -3,14 +3,6 @@
 #include "GLUtils.h"
 #include "TextureEditor.h"
 
-
-enum class MaterialUpdateFlags {
-    None      = (   0),
-    Height    = (1<<0),
-    Normal    = (1<<1),
-    Albedo    = (1<<2)
-};
-
 class MaterialRenderer{
 public:
     MaterialRenderer();
@@ -23,6 +15,14 @@ public:
     void BindNormal(int id=0);
 
 private:
+
+    enum MaterialUpdateFlags {
+        None   =  0,
+        Height = (1 << 0),
+        Normal = (1 << 1),
+        Albedo = (1 << 2)
+    };
+
     Texture m_Height, m_Normal, m_Albedo;
 
     //Heightmap generation
@@ -35,8 +35,5 @@ private:
     //Roughness generation:
     TextureEditor m_RoughnessEditor;
 
-    MaterialUpdateFlags m_UpdateFlags = MaterialUpdateFlags::None;
+    int m_UpdateFlags = None;
 };
-
-MaterialUpdateFlags operator|(MaterialUpdateFlags x, MaterialUpdateFlags y);
-MaterialUpdateFlags operator&(MaterialUpdateFlags x, MaterialUpdateFlags y);

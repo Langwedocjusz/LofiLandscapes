@@ -15,15 +15,17 @@ glm::mat4 Camera::getViewMatrix() {
 void Camera::ProcessKeyboard(float deltatime) {
     float velocity = deltatime * m_Settings.Speed;
 
-    if ((m_Movement & CameraMovement::Forward) != CameraMovement::None)
+    if ((m_Movement & Forward) != None)
         m_Pos += velocity * m_Front;
-    if ((m_Movement & CameraMovement::Backward) != CameraMovement::None)
-        m_Pos -= velocity * m_Front;
-    if ((m_Movement & CameraMovement::Left) != CameraMovement::None)
-        m_Pos -= velocity * m_Right;
-    if ((m_Movement & CameraMovement::Right) != CameraMovement::None)
-        m_Pos += velocity * m_Right;
 
+    if ((m_Movement & Backward) != None)
+        m_Pos -= velocity * m_Front;
+
+    if ((m_Movement & Left) != None)
+        m_Pos -= velocity * m_Right;
+
+    if ((m_Movement & Right) != None)
+        m_Pos += velocity * m_Right;
 }
 
 void Camera::ProcessMouse(float xoffset, float yoffset) {
@@ -64,19 +66,19 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat) {
     if (!repeat) {
         switch(keycode) {
             case LOFI_KEY_W: {
-                m_Movement = m_Movement | CameraMovement::Forward;
+                m_Movement = m_Movement | Forward;
                 break;
             }
             case LOFI_KEY_S: {
-                m_Movement = m_Movement | CameraMovement::Backward;
+                m_Movement = m_Movement | Backward;
                 break;
             }
             case LOFI_KEY_A: {
-                m_Movement = m_Movement | CameraMovement::Left;
+                m_Movement = m_Movement | Left;
                 break;
             }
             case LOFI_KEY_D: {
-                m_Movement = m_Movement | CameraMovement::Right;
+                m_Movement = m_Movement | Right;
                 break;
             }
         }
@@ -87,19 +89,19 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat) {
 void FPCamera::OnKeyReleased(int keycode) {
     switch(keycode) {
         case LOFI_KEY_W: {
-            m_Movement = m_Movement & ~CameraMovement::Forward;
+            m_Movement = m_Movement & ~Forward;
             break;
         }
         case LOFI_KEY_S: {
-            m_Movement = m_Movement & ~CameraMovement::Backward;
+            m_Movement = m_Movement & ~Backward;
             break;
         }
         case LOFI_KEY_A: {
-            m_Movement = m_Movement & ~CameraMovement::Left;
+            m_Movement = m_Movement & ~Left;
             break;
         }
         case LOFI_KEY_D: {
-            m_Movement = m_Movement & ~CameraMovement::Right;
+            m_Movement = m_Movement & ~Right;
             break;
         }
     }
@@ -133,20 +135,6 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
 }
 
 //Operator overloads:
-
-CameraMovement operator~(CameraMovement x) {
-    return static_cast<CameraMovement>(~static_cast<int>(x));
-}
-
-CameraMovement operator|(CameraMovement x, CameraMovement y) {
-    return static_cast<CameraMovement>(static_cast<int>(x)
-        | static_cast<int>(y));
-}
-
-CameraMovement operator&(CameraMovement x, CameraMovement y) {
-    return static_cast<CameraMovement>(static_cast<int>(x)
-        & static_cast<int>(y));
-}
 
 bool operator==(const CameraSettings& lhs, const CameraSettings& rhs) {
     return (lhs.Speed == rhs.Speed) && (lhs.Sensitivity == rhs.Sensitivity)

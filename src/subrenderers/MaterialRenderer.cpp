@@ -119,8 +119,7 @@ MaterialRenderer::~MaterialRenderer() {
 void MaterialRenderer::Update() { 
 
     //Draw to heightmap:
-    if ((m_UpdateFlags & MaterialUpdateFlags::Height) 
-                      != MaterialUpdateFlags::None)
+    if ((m_UpdateFlags & Height) != None)
     {
         const int res = m_Height.getSpec().ResolutionX;
         
@@ -129,8 +128,7 @@ void MaterialRenderer::Update() {
     }
 
     //Draw to normal:
-    if ((m_UpdateFlags & MaterialUpdateFlags::Normal) 
-                      != MaterialUpdateFlags::None)
+    if ((m_UpdateFlags & Normal) != None)
     {
         const int res = m_Normal.getSpec().ResolutionX;
         m_Height.Bind();
@@ -153,8 +151,7 @@ void MaterialRenderer::Update() {
     }
 
     //Draw to albedo/roughness:
-    if ((m_UpdateFlags & MaterialUpdateFlags::Albedo) 
-                      != MaterialUpdateFlags::None)
+    if ((m_UpdateFlags & Albedo) != None)
     {
         const int res = m_Albedo.getSpec().ResolutionX;
         m_Height.Bind();
@@ -167,7 +164,7 @@ void MaterialRenderer::Update() {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    m_UpdateFlags = MaterialUpdateFlags::None;
+    m_UpdateFlags = None;
 }
 
 void MaterialRenderer::OnImGui(bool& open) {
@@ -176,9 +173,9 @@ void MaterialRenderer::OnImGui(bool& open) {
     ImGui::Text("Heightmap procedures:");
 
     if (m_HeightEditor.OnImGui()) {
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Height;
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Height;
+        m_UpdateFlags = m_UpdateFlags | Normal;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
     if (ImGuiUtils::Button("Add heightmap procedure")) {        
@@ -202,9 +199,9 @@ void MaterialRenderer::OnImGui(bool& open) {
             m_HeightEditor.AddProcedureInstance("Voronoi");
         }
 
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Height;
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Height;
+        m_UpdateFlags = m_UpdateFlags | Normal;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
 
         ImGui::EndPopup();
     }
@@ -216,14 +213,15 @@ void MaterialRenderer::OnImGui(bool& open) {
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
     ImGuiUtils::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
-    ImGuiUtils::SliderFloat("AO Spread", &tmp_spr, 1.0, 10.0);
-    ImGuiUtils::SliderFloat("AO Contrast", &tmp_c, 0.1, 5.0);
+    ImGuiUtils::SliderFloat("AO Spread"  , &tmp_spr, 1.00, 10.0);
+    ImGuiUtils::SliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
 
     if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {
         m_AOStrength = tmp_str;
-        m_AOSpread = tmp_spr;
+        m_AOSpread   = tmp_spr;
         m_AOContrast = tmp_c;
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Normal;
+
+        m_UpdateFlags = m_UpdateFlags | Normal;
     }
 
     ImGui::Separator();
@@ -231,7 +229,7 @@ void MaterialRenderer::OnImGui(bool& open) {
     ImGui::Text("Albedo procedures:");
     
     if (m_AlbedoEditor.OnImGui()) {
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
     if (ImGuiUtils::Button("Add albedo procedure")) {
@@ -245,7 +243,7 @@ void MaterialRenderer::OnImGui(bool& open) {
             m_AlbedoEditor.AddProcedureInstance("Color Ramp");
         }
 
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
 
         ImGui::EndPopup();
     }
@@ -255,7 +253,7 @@ void MaterialRenderer::OnImGui(bool& open) {
     ImGui::Text("Roughness procedures:");
 
     if (m_RoughnessEditor.OnImGui()) {
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
     if (ImGuiUtils::Button("Add roughness procedure")) {
@@ -273,7 +271,7 @@ void MaterialRenderer::OnImGui(bool& open) {
             m_RoughnessEditor.AddProcedureInstance("Roughness Ramp");
         }
 
-        m_UpdateFlags = m_UpdateFlags | MaterialUpdateFlags::Albedo;
+        m_UpdateFlags = m_UpdateFlags | Albedo;
 
         ImGui::EndPopup();
     }
@@ -289,18 +287,4 @@ void MaterialRenderer::BindAlbedo(int id) {
 
 void MaterialRenderer::BindNormal(int id) {
     m_Normal.Bind(id);
-}
-
-//Operator overloads for update flags:
-
-MaterialUpdateFlags operator|(MaterialUpdateFlags x, MaterialUpdateFlags y) {
-    return static_cast<MaterialUpdateFlags>(
-        static_cast<int>(x) | static_cast<int>(y)
-    );
-}
-
-MaterialUpdateFlags operator&(MaterialUpdateFlags x, MaterialUpdateFlags y) {
-    return static_cast<MaterialUpdateFlags>(
-        static_cast<int>(x) & static_cast<int>(y)
-    );
 }

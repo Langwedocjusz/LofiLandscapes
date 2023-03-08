@@ -3,13 +3,6 @@
 #include "Shader.h"
 #include "GLUtils.h"
 
-enum class SkyUpdateFlags {
-	None          =      0,
-	Transmittance = (1<<0),
-	MultiScatter  = (1<<1),
-	SkyView       = (1<<2)
-};
-
 class SkyRenderer {
 public:
 	SkyRenderer();
@@ -29,14 +22,23 @@ public:
 
 	glm::vec3 getSunDir() { return m_SunDir; }
 private:
+
+	enum SkyUpdateFlags {
+		None          =  0,
+		Transmittance = (1 << 0),
+		MultiScatter  = (1 << 1),
+		SkyView       = (1 << 2)
+	};
+
 	void UpdateTrans();
 	void UpdateMulti();
 	void UpdateSky();
 
+	int m_UpdateFlags = None;
+
 	Texture m_TransLUT, m_MultiLUT, m_SkyLUT;
 	Texture3d m_AerialLUT;
 	Shader m_TransShader, m_MultiShader, m_SkyShader, m_AerialShader;
-	SkyUpdateFlags m_UpdateFlags;
 
 	Cubemap m_IrradianceMap, m_PrefilteredMap;
 	Shader m_IrradianceShader, m_PrefilteredShader;
@@ -57,6 +59,3 @@ private:
 	float m_AerialBrightness = 1.0f;
 	float m_AerialDistscale = 1.0f;
 };
-
-SkyUpdateFlags operator|(SkyUpdateFlags x, SkyUpdateFlags y);
-SkyUpdateFlags operator&(SkyUpdateFlags x, SkyUpdateFlags y);

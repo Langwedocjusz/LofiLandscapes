@@ -92,9 +92,9 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AddProcedureInstance("Radial cutoff");
 
     //-----Set update flags
-    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
-    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
-    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+    m_UpdateFlags = m_UpdateFlags | Height;
+    m_UpdateFlags = m_UpdateFlags | Normal;
+    m_UpdateFlags = m_UpdateFlags | Shadow;
 
     //-----Mipmap related things
     //Check if heightmap resolution is a power of 2
@@ -201,16 +201,16 @@ void MapRenderer::GenMaxMips() {
 }
 
 void MapRenderer::Update(const glm::vec3& sun_dir) {
-    if ((m_UpdateFlags & MapUpdateFlags::Height) != MapUpdateFlags::None)
+    if ((m_UpdateFlags & Height) != None)
         UpdateHeight();
 
-    if ((m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None)
+    if ((m_UpdateFlags & Normal) != None)
         UpdateNormal();
 
-    if ((m_UpdateFlags & MapUpdateFlags::Shadow) != MapUpdateFlags::None)
+    if ((m_UpdateFlags & Shadow) != None)
         UpdateShadow(sun_dir);
 
-    m_UpdateFlags = MapUpdateFlags::None;
+    m_UpdateFlags = None;
 }
 
 void MapRenderer::BindHeightmap(int id) {
@@ -288,19 +288,19 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
     ImGui::End();
 
     if (height_changed) {
-        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Height;
-        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | Height;
+        m_UpdateFlags = m_UpdateFlags | Normal;
 
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | Shadow;
     }
 
     else if (scale_changed) {
         m_ScaleSettings = temp_s;
-        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | Normal;
 
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | Shadow;
     }
 
 }
@@ -330,7 +330,7 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
 
     if (temp2 != m_AOSettings) {
         m_AOSettings = temp2;
-        m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Normal;
+        m_UpdateFlags = m_UpdateFlags | Normal;
     }
 
     if (temp != m_ShadowSettings) {
@@ -339,18 +339,18 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
         m_ShadowSettings = temp;
 
         if (update_shadows)
-            m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+            m_UpdateFlags = m_UpdateFlags | Shadow;
     }
 }
 
 void MapRenderer::RequestShadowUpdate() {
-    m_UpdateFlags = m_UpdateFlags | MapUpdateFlags::Shadow;
+    m_UpdateFlags = m_UpdateFlags | Shadow;
 }
 
 bool MapRenderer::GeometryShouldUpdate() {
     //If height changed, then normal must also change, but it is possible
     //to change normals without height by changing the scale
-    return (m_UpdateFlags & MapUpdateFlags::Normal) != MapUpdateFlags::None;
+    return (m_UpdateFlags & Normal) != None;
 }
 
 //Settings structs operator overloads:
@@ -379,14 +379,4 @@ bool operator==(const AOSettings& lhs, const AOSettings& rhs) {
 
 bool operator!=(const AOSettings& lhs, const AOSettings& rhs) {
     return !(lhs==rhs);
-}
-
-MapUpdateFlags operator|(MapUpdateFlags x, MapUpdateFlags y) {
-    return static_cast<MapUpdateFlags>(static_cast<int>(x) 
-                                     | static_cast<int>(y));
-}
-
-MapUpdateFlags operator&(MapUpdateFlags x, MapUpdateFlags y) {
-    return static_cast<MapUpdateFlags>(static_cast<int>(x) 
-                                     & static_cast<int>(y));
 }

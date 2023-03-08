@@ -25,13 +25,6 @@ struct ShadowmapSettings{
     float Sharpness = 1.0f;
 };
 
-enum class MapUpdateFlags {
-    None   =      0,
-    Height = (1<<0),
-    Normal = (1<<1),
-    Shadow = (1<<2)
-};
-
 class MapRenderer {
 public:
     MapRenderer();
@@ -53,6 +46,14 @@ public:
     ScaleSettings getScaleSettings() {return m_ScaleSettings;}
 
 private:
+
+    enum UpdateFlags {
+        None   =  0,
+        Height = (1 << 0),
+        Normal = (1 << 1),
+        Shadow = (1 << 2)
+    };
+
     Texture m_Heightmap, m_Normalmap, m_Shadowmap; 
     TextureEditor m_HeightEditor;
     Shader m_NormalmapShader, m_ShadowmapShader;
@@ -63,7 +64,7 @@ private:
     ShadowmapSettings m_ShadowSettings;
     AOSettings        m_AOSettings;
 
-    MapUpdateFlags m_UpdateFlags = MapUpdateFlags::None;
+    int m_UpdateFlags = None;
 
     int m_MipLevels = 0;
     
@@ -82,6 +83,3 @@ bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);
 
 bool operator==(const AOSettings& lhs, const AOSettings& rhs);
 bool operator!=(const AOSettings& lhs, const AOSettings& rhs);
-
-MapUpdateFlags operator|(MapUpdateFlags x, MapUpdateFlags y);
-MapUpdateFlags operator&(MapUpdateFlags x, MapUpdateFlags y);

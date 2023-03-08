@@ -80,7 +80,7 @@ SkyRenderer::SkyRenderer()
     m_SunDir = glm::vec3(cP * sT, cT, sP * sT);
 
     //Draw all LUTs & cubemap
-    m_UpdateFlags = SkyUpdateFlags::Transmittance;
+    m_UpdateFlags = Transmittance;
     Update();
 }
 
@@ -88,23 +88,23 @@ SkyRenderer::~SkyRenderer() {}
 
 void SkyRenderer::Update() {
 
-    if ((m_UpdateFlags & SkyUpdateFlags::Transmittance) != SkyUpdateFlags::None)
+    if ((m_UpdateFlags & Transmittance) != None)
     {
         UpdateTrans();
         UpdateMulti();
         UpdateSky();
     }
-    else if ((m_UpdateFlags & SkyUpdateFlags::MultiScatter) != SkyUpdateFlags::None)
+    else if ((m_UpdateFlags & MultiScatter) != None)
     {
         UpdateMulti();
         UpdateSky();
     }
-    else if ((m_UpdateFlags & SkyUpdateFlags::SkyView) != SkyUpdateFlags::None)
+    else if ((m_UpdateFlags & SkyView) != None)
     {
         UpdateSky();
     }
 
-    m_UpdateFlags = SkyUpdateFlags::None;
+    m_UpdateFlags = None;
 }
 
 void SkyRenderer::UpdateTrans() {
@@ -243,7 +243,7 @@ void SkyRenderer::OnImGui(bool& open) {
 
         m_SunDir = glm::vec3(cP * sT, cT, sP * sT);
 
-        m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
+        m_UpdateFlags = m_UpdateFlags | SkyView;
     }
 
     glm::vec3 albedo = m_GroundAlbedo;
@@ -252,8 +252,8 @@ void SkyRenderer::OnImGui(bool& open) {
 
     if (albedo != m_GroundAlbedo) {
         m_GroundAlbedo = albedo;
-        m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::SkyView;
-        m_UpdateFlags = m_UpdateFlags | SkyUpdateFlags::MultiScatter;
+        m_UpdateFlags = m_UpdateFlags | SkyView;
+        m_UpdateFlags = m_UpdateFlags | MultiScatter;
     }
 
     ImGuiUtils::SliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
@@ -278,16 +278,4 @@ void SkyRenderer::BindPrefiltered(int id) {
 
 void SkyRenderer::BindAerial(int id) {
     m_AerialLUT.Bind(id);
-}
-
-//Operator overloads
-
-SkyUpdateFlags operator|(SkyUpdateFlags x, SkyUpdateFlags y) {
-    return static_cast<SkyUpdateFlags>(static_cast<int>(x)
-        | static_cast<int>(y));
-}
-
-SkyUpdateFlags operator&(SkyUpdateFlags x, SkyUpdateFlags y) {
-    return static_cast<SkyUpdateFlags>(static_cast<int>(x)
-        & static_cast<int>(y));
 }
