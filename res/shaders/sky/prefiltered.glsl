@@ -4,7 +4,7 @@
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-layout(rgba16f, binding = 0) uniform imageCube prefilteredMap;
+layout(rgba16, binding = 0) uniform imageCube prefilteredMap;
 
 uniform sampler2D skyLUT;
 
