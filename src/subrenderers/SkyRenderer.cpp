@@ -192,6 +192,7 @@ void SkyRenderer::UpdateAerial(glm::vec3 front, glm::vec3 right,
     m_AerialShader.setUniform1i("multiLUT", 1);
     m_AerialShader.setUniform1i("uResolution", res);
     m_AerialShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
+    m_AerialShader.setUniform3f("uSunDir", m_SunDir);
     m_AerialShader.setUniform1f("uFar", far);
     m_AerialShader.setUniform1f("uFov", glm::radians(cam_fov));
     m_AerialShader.setUniform1f("uAspect", aspect);

@@ -1,4 +1,7 @@
-//Aerial perspective lut
+//Physically based sky rendering following the paper 
+//"Production Ready Atmosphere Rendering" by Sebastien Hillaire.
+
+//This shader generates the aerial perspective lut
 //Work in progress
 
 #version 450 core
@@ -78,18 +81,10 @@ void main() {
     float max_t = conv_fac * atm_dist;
     if (gnd_dist > 0.0) max_t = min(max_t, conv_fac * gnd_dist);
 
-    //#define TEST
-
-    #ifndef TEST
-
     //Phase functions
-    //vec3 up = vec3(0.0, 1.0, 0.0);
-    //float sunAlt = 0.5*PI - acos(dot(uSunDir, up));
-    //vec3 sun_dir = vec3(0.0, sin(sunAlt), cos(sunAlt));
-
     float cosSunAngle = dot(norm_dir, uSunDir);        
-    float mie_phase      = MiePhase(cosSunAngle);
-    float rayleigh_phase = RayleighPhase(-cosSunAngle);
+    float mie_phase      = MiePhase(-cosSunAngle);
+    float rayleigh_phase = RayleighPhase(cosSunAngle);
 
     //Raymarching
     float t = 0.0; //distance along z axis
@@ -113,9 +108,19 @@ void main() {
         vec3 sample_trans = exp(-dt_phys*extinction);
         vec3 sun_trans = getValueFromLUT(transLUT, p, uSunDir);
 
+        //Earth shadow
+        float earth_dist = IntersectSphere(p, uSunDir, ground_rad);
+        float earth_shadow = float(earth_dist < 0.0);
+
         //Integration
-        in_scatter += dt_phys * transmittance * (rayleigh_in_s + mie_in_s) * sun_trans;
+        vec3 S = earth_shadow * sun_trans * (rayleigh_in_s + mie_in_s);
+        vec3 IntS = S*(1.0 - sample_trans)/extinction;
+
+        in_scatter += transmittance * IntS;
         transmittance *= mean(sample_trans);
+
+        //in_scatter += dt_phys * transmittance * S;
+        //transmittance *= mean(sample_trans);
 
         t += dt;
 
@@ -124,37 +129,6 @@ void main() {
 
     //Save
     vec4 res = vec4(uBrightness*in_scatter, transmittance);
-
-    #else
-
-    float t = 0.5 * t_max;
-    vec3 p = org + t*dir;
-
-    //Phase functions
-    vec3 up = vec3(0.0, 1.0, 0.0);
-    float sunAlt = 0.5*PI - acos(dot(uSunDir, up));
-    vec3 sun_dir = vec3(0.0, sin(sunAlt), cos(sunAlt));
-            
-    float cosSunAngle = dot(norm_dir, uSunDir);        
-    float mie_phase      = MiePhase(cosSunAngle);
-    float rayleigh_phase = RayleighPhase(-cosSunAngle);
-
-    //Scattering
-    float mie_s;
-    vec3 rayleigh_s, extinction;
-
-    getScatteringValues(p, rayleigh_s, mie_s, extinction);
-
-    vec3 rayleigh_in_s = rayleigh_s * rayleigh_phase;
-    float mie_in_s     = mie_s      * mie_phase;
-
-    vec3 sample_trans = exp(-dt_phys*extinction);
-
-    vec3 sun_trans = getValueFromLUT(transLUT, p, uSunDir);
-
-    vec4 res = vec4(1.0, 0.0);
-
-    #endif
 
     imageStore(aerialLUT, texelCoord, res);
 }
