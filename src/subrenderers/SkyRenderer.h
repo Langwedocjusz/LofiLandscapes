@@ -3,16 +3,15 @@
 #include "Shader.h"
 #include "GLUtils.h"
 
+#include "Camera.h"
+
 class SkyRenderer {
 public:
 	SkyRenderer();
 	~SkyRenderer();
 
 	void OnImGui(bool& open);
-	void Update();
-	void UpdateAerial(glm::vec3 front, glm::vec3 right,
-		              glm::vec3 up, float cam_fov,
-		              float aspect, float far);
+	void Update(const Camera& cam, float aspect, bool aerial);
 	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
 
 	void BindSkyLUT(int id=0);
@@ -33,6 +32,7 @@ private:
 	void UpdateTrans();
 	void UpdateMulti();
 	void UpdateSky();
+	void UpdateAerial(const Camera& cam, float aspect);
 
 	int m_UpdateFlags = None;
 

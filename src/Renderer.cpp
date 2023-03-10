@@ -77,18 +77,7 @@ void Renderer::OnUpdate(float deltatime) {
     m_MVP = proj * view * model;
 
     //Update sky
-    m_Sky.Update();
-
-    //Update aerial perspective LUT
-    const glm::vec3 front = m_Camera.getFront();
-    const glm::vec3 right = m_Camera.getRight();
-    const glm::vec3 up    = m_Camera.getUp();
-
-    const float fov = m_Camera.getSettings().Fov;
-    const float far = m_Camera.getFarPlane();
-
-    if (m_Fog)
-        m_Sky.UpdateAerial(front, right, up, fov, m_InvAspect, far);
+    m_Sky.Update(m_Camera, m_InvAspect, m_Fog);
 
     //Update clipmap geometry if camera moved
     m_Map.BindHeightmap();

@@ -82,7 +82,8 @@ void main() {
     if (gnd_dist > 0.0) max_t = min(max_t, conv_fac * gnd_dist);
 
     //Phase functions
-    float cosSunAngle = dot(norm_dir, uSunDir);        
+    vec3 sun_dir = vec3(-1,1,-1) * uSunDir;
+    float cosSunAngle = dot(norm_dir, sun_dir);        
     float mie_phase      = MiePhase(-cosSunAngle);
     float rayleigh_phase = RayleighPhase(cosSunAngle);
 
@@ -106,10 +107,10 @@ void main() {
 
         //Transmittance
         vec3 sample_trans = exp(-dt_phys*extinction);
-        vec3 sun_trans = getValueFromLUT(transLUT, p, uSunDir);
+        vec3 sun_trans = getValueFromLUT(transLUT, p, sun_dir);
 
         //Earth shadow
-        float earth_dist = IntersectSphere(p, uSunDir, ground_rad);
+        float earth_dist = IntersectSphere(p, sun_dir, ground_rad);
         float earth_shadow = float(earth_dist < 0.0);
 
         //Integration
@@ -118,9 +119,6 @@ void main() {
 
         in_scatter += transmittance * IntS;
         transmittance *= mean(sample_trans);
-
-        //in_scatter += dt_phys * transmittance * S;
-        //transmittance *= mean(sample_trans);
 
         t += dt;
 

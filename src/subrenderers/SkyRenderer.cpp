@@ -81,12 +81,11 @@ SkyRenderer::SkyRenderer()
 
     //Draw all LUTs & cubemap
     m_UpdateFlags = Transmittance;
-    Update();
 }
 
 SkyRenderer::~SkyRenderer() {}
 
-void SkyRenderer::Update() {
+void SkyRenderer::Update(const Camera& cam, float aspect, bool aerial) {
 
     if ((m_UpdateFlags & Transmittance) != None)
     {
@@ -103,6 +102,9 @@ void SkyRenderer::Update() {
     {
         UpdateSky();
     }
+
+    if (aerial)
+        UpdateAerial(cam, aspect);
 
     m_UpdateFlags = None;
 }
@@ -179,9 +181,7 @@ void SkyRenderer::UpdateSky() {
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
-void SkyRenderer::UpdateAerial(glm::vec3 front, glm::vec3 right, 
-                               glm::vec3 up, float cam_fov, 
-                               float aspect, float far) 
+void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
 {
     const int res = m_AerialLUT.getSpec().ResolutionZ;
 
@@ -193,12 +193,12 @@ void SkyRenderer::UpdateAerial(glm::vec3 front, glm::vec3 right,
     m_AerialShader.setUniform1i("uResolution", res);
     m_AerialShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader.setUniform3f("uSunDir", m_SunDir);
-    m_AerialShader.setUniform1f("uFar", far);
-    m_AerialShader.setUniform1f("uFov", glm::radians(cam_fov));
+    m_AerialShader.setUniform1f("uFar", cam.getFarPlane());
+    m_AerialShader.setUniform1f("uFov", glm::radians(cam.getSettings().Fov));
     m_AerialShader.setUniform1f("uAspect", aspect);
-    m_AerialShader.setUniform3f("uFront", front);
-    m_AerialShader.setUniform3f("uRight", right);
-    m_AerialShader.setUniform3f("uTop", up);
+    m_AerialShader.setUniform3f("uFront", cam.getFront());
+    m_AerialShader.setUniform3f("uRight", cam.getRight());
+    m_AerialShader.setUniform3f("uTop", cam.getUp());
     m_AerialShader.setUniform1f("uBrightness", m_AerialBrightness);
     m_AerialShader.setUniform1f("uDistScale", m_AerialDistscale);
 

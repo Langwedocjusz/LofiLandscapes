@@ -34,12 +34,14 @@ void main() {
 
     frag_pos = aPos.xyz;
 
-    //normalized device coordinates should be from [-1, 1]
     vec4 pos = uMVP * vec4(aPos.xyz + vec3(hoffset.x, 0.0, hoffset.y), 1.0);
 
-    //To sample fog we need [0,1]
     if (uFog == 1) {
-        vec3 sampling_point = vec3(0.5*pos.x + 0.5, 0.5*pos.y+0.5, pos.z/1000.0);
+        //normalized device coordinates should be from [-1, 1], to sample fog we need [0,1]
+        vec3 sampling_point = pos.xyz;
+        sampling_point.xy = 0.5*sampling_point.xy/pos.w + 0.5; 
+        sampling_point.z = sampling_point.z/1000;
+        
         fog_data = texture(aerial, sampling_point);
     }
 
