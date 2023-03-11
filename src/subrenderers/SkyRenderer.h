@@ -54,6 +54,7 @@ private:
 	glm::vec3 m_SunDir;
 
 	float m_Brightness = 6.0f;
+	float m_IBLOversaturation = 1.4f;
 
 	//Aerial
 	float m_AerialBrightness = 1.0f;

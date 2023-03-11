@@ -162,6 +162,7 @@ void SkyRenderer::UpdateSky() {
     m_IrradianceShader.setUniform1i("uResolution", m_IrradianceMap.getSpec().Resolution);
     m_IrradianceShader.setUniform3f("uSunDir", m_SunDir);
     m_IrradianceShader.setUniform1f("uSkyBrightness", m_Brightness);
+    m_IrradianceShader.setUniform1f("uIBLOversaturation", m_IBLOversaturation);
 
     glDispatchCompute(1, 1, 6);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -173,6 +174,7 @@ void SkyRenderer::UpdateSky() {
     m_PrefilteredShader.setUniform1i("uResolution", m_PrefilteredMap.getSpec().Resolution);
     m_PrefilteredShader.setUniform3f("uSunDir", m_SunDir);
     m_PrefilteredShader.setUniform1f("uSkyBrightness", m_Brightness);
+    m_PrefilteredShader.setUniform1f("uIBLOversaturation", m_IBLOversaturation);
 
     glDispatchCompute(4, 4, 6);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -256,6 +258,8 @@ void SkyRenderer::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | SkyView;
         m_UpdateFlags = m_UpdateFlags | MultiScatter;
     }
+
+    ImGuiUtils::SliderFloat("IBL Oversaturation", &m_IBLOversaturation, 1.0f, 3.0f);
 
     ImGuiUtils::SliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
 
