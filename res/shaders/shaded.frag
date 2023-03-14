@@ -13,9 +13,10 @@ out vec4 frag_col;
 
 uniform sampler2D normalmap;
 uniform sampler2D shadowmap;
+uniform sampler2D materialmap;
 
-uniform sampler2D albedo;
-uniform sampler2D normal;
+uniform sampler2DArray albedo;
+uniform sampler2DArray normal;
 
 uniform samplerCube irradiance;
 uniform samplerCube prefiltered;
@@ -37,6 +38,12 @@ uniform float uRefStr;
 
 uniform float uTilingFactor;
 uniform float uNormalStrength;
+
+const float MAX_ID = 3.0;
+
+float getMaterialID(vec2 uv) {
+    return MAX_ID * texture(materialmap, uv).r;
+}
 
 //======================================================================
 //Fixing texture tiling with 3 taps by Suslik: shadertoy.com/view/tsVGRd
@@ -82,18 +89,21 @@ vec3 hash33(vec3 p) {
 }
 
 //Sample with random rotation and offset - generated at the node point
-vec4 getTextureSample(sampler2D sampler, vec2 p, float freq, vec2 node) {
+vec4 getTextureSample(sampler2DArray sampler, vec2 p, float freq, vec2 node) {
     vec3 hash = hash33(vec3(node.xy, 0.0));
     float theta = 2.0*PI*hash.x;
     float c = cos(theta), s = sin(theta);
     mat2 rot = mat2(c, s, -s, c);
 
     vec2 uv = rot * freq * p + hash.yz;
-    return texture(sampler, uv);
+
+    float id = getMaterialID(p);
+
+    return texture(sampler, vec3(uv, id));
 }
 
 //Interpolate result from 3 node points
-vec4 TextureFixedTiling(sampler2D sampler, vec2 p, float freq) {
+vec4 TextureFixedTiling(sampler2DArray sampler, vec2 p, float freq) {
     vec4 res = vec4(0.0);
     
     for (int i=0; i<3; i++) {
@@ -109,15 +119,21 @@ vec4 TextureFixedTiling(sampler2D sampler, vec2 p, float freq) {
 vec4 getMatAlbedo(vec2 uv) {
     if (uFixTiling == 1)
         return TextureFixedTiling(albedo, uv, uTilingFactor);
-    else
-        return texture(albedo, uTilingFactor*uv);
+    else {
+        float id = getMaterialID(uv);
+        return texture(albedo, vec3(uTilingFactor*uv, id));
+    }
+        
 }
 
 vec4 getMatNormal(vec2 uv) {
     if (uFixTiling == 1)
         return TextureFixedTiling(normal, uv, uTilingFactor);
-    else
-        return texture(normal, uTilingFactor*uv);
+    else {
+        float id = getMaterialID(uv);
+        return texture(normal, vec3(uTilingFactor*uv, id));
+    }
+        
 }
 
 //======================================================================

@@ -129,17 +129,20 @@ void Renderer::OnRender() {
         m_ShadedShader.setUniform1i("normalmap", 0);
         m_Map.BindShadowmap(1);
         m_ShadedShader.setUniform1i("shadowmap", 1);
-        m_Material.BindAlbedo(2);
-        m_ShadedShader.setUniform1i("albedo", 2);
-        m_Material.BindNormal(3);
-        m_ShadedShader.setUniform1i("normal", 3);
+        m_Map.BindMaterialmap(2);
+        m_ShadedShader.setUniform1i("materialmap", 2);
 
-        m_Sky.BindIrradiance(4);
-        m_ShadedShader.setUniform1i("irradiance", 4);
-        m_Sky.BindPrefiltered(5);
-        m_ShadedShader.setUniform1i("prefiltered", 5);
-        m_Sky.BindAerial(6);
-        m_ShadedShader.setUniform1i("aerial", 6);
+        m_Material.BindAlbedo(3);
+        m_ShadedShader.setUniform1i("albedo", 3);
+        m_Material.BindNormal(4);
+        m_ShadedShader.setUniform1i("normal", 4);
+
+        m_Sky.BindIrradiance(5);
+        m_ShadedShader.setUniform1i("irradiance", 5);
+        m_Sky.BindPrefiltered(6);
+        m_ShadedShader.setUniform1i("prefiltered", 6);
+        m_Sky.BindAerial(7);
+        m_ShadedShader.setUniform1i("aerial", 7);
 
         m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
 
@@ -182,6 +185,9 @@ void Renderer::OnImGuiRender() {
             if (ImGui::MenuItem("Material"))
                 m_ShowMaterialMenu = !m_ShowMaterialMenu;
 
+            if (ImGui::MenuItem("Material Map"))
+                m_ShowMapMaterialMenu = !m_ShowMapMaterialMenu;
+
             if (ImGui::MenuItem("Sky"))
                 m_ShowSkyMenu = !m_ShowSkyMenu;
 
@@ -217,6 +223,9 @@ void Renderer::OnImGuiRender() {
     if (m_ShowTerrainMenu)
         m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_Shadows);
 
+    if (m_ShowMapMaterialMenu)
+        m_Map.ImGuiMaterials(m_ShowMapMaterialMenu);
+
     bool update_geo = m_Map.GeometryShouldUpdate();
 
     if(m_ShowShadowMenu)
@@ -248,9 +257,6 @@ void Renderer::OnImGuiRender() {
             m_Shadows = shadows;
             if (m_Shadows) m_Map.RequestShadowUpdate();
         }
-
-        //if (ImGui::Button("Print Frustum"))
-        //    m_Clipmap.PrintFrustum(m_Camera, m_Aspect);
     }
 
     if (m_ShowSkyMenu) {

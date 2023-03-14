@@ -23,17 +23,20 @@ private:
         Albedo = (1 << 2)
     };
 
-    Texture m_Height, m_Normal, m_Albedo;
+    TextureArray m_Height, m_Normal, m_Albedo;
+
+    static const int m_Layers = 4;
+    int m_Current = 0;
 
     //Heightmap generation
-    TextureEditor m_HeightEditor;
+    TextureArrayEditor m_HeightEditor;
     //Normalmap generation
     Shader m_NormalShader;
     float m_AOStrength = 1.0f, m_AOSpread = 1.0f, m_AOContrast = 1.0f;
     //Albedo generation:
-    TextureEditor m_AlbedoEditor;
+    TextureArrayEditor m_AlbedoEditor;
     //Roughness generation:
-    TextureEditor m_RoughnessEditor;
+    TextureArrayEditor m_RoughnessEditor;
 
     int m_UpdateFlags = None;
 };

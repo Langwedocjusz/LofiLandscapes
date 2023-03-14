@@ -286,7 +286,7 @@ ProcedureInstance::ProcedureInstance(const std::string& name) : Name(name) {}
 
 //===========================================================================
 
-void TextureEditor::RegisterShader(const std::string& name, 
+void EditorBase::RegisterShader(const std::string& name, 
                                     const std::string& filepath)
 {
     if (m_Procedures.count(name)) return;
@@ -294,7 +294,7 @@ void TextureEditor::RegisterShader(const std::string& name,
     m_Procedures[name].CompileShader(filepath);
 }
 
-void TextureEditor::AttachConstInt(const std::string& name, 
+void EditorBase::AttachConstInt(const std::string& name,
                                     const std::string& uniform_name,
                                     int def_val)
 {
@@ -302,7 +302,7 @@ void TextureEditor::AttachConstInt(const std::string& name,
         m_Procedures[name].AddConstInt(uniform_name, def_val);
 }
     
-void TextureEditor::AttachConstFloat(const std::string& name, 
+void EditorBase::AttachConstFloat(const std::string& name,
                                       const std::string& uniform_name,
                                       float def_val)
 {
@@ -310,7 +310,7 @@ void TextureEditor::AttachConstFloat(const std::string& name,
         m_Procedures[name].AddConstFloat(uniform_name, def_val);
 }
 
-void TextureEditor::AttachSliderInt(const std::string& name, 
+void EditorBase::AttachSliderInt(const std::string& name,
                                      const std::string& uniform_name, 
                                      const std::string& ui_name,
                                      int min_val, int max_val, int def_val)
@@ -320,7 +320,7 @@ void TextureEditor::AttachSliderInt(const std::string& name,
                                         min_val, max_val, def_val);
 }
 
-void TextureEditor::AttachSliderFloat(const std::string& name, 
+void EditorBase::AttachSliderFloat(const std::string& name,
                                        const std::string& uniform_name, 
                                        const std::string& ui_name,
                                        float min_val, float max_val, 
@@ -331,7 +331,7 @@ void TextureEditor::AttachSliderFloat(const std::string& name,
                                           min_val, max_val, def_val);
 }
 
-void TextureEditor::AttachColorEdit3(const std::string& name, 
+void EditorBase::AttachColorEdit3(const std::string& name,
                                       const std::string& uniform_name, 
                                       const std::string& ui_name,
                                       glm::vec3 def_val) 
@@ -340,7 +340,7 @@ void TextureEditor::AttachColorEdit3(const std::string& name,
         m_Procedures[name].AddColorEdit3(uniform_name, ui_name, def_val);
 }
 
-void TextureEditor::AttachGLEnum(const std::string& name,
+void EditorBase::AttachGLEnum(const std::string& name,
                                   const std::string& uniform_name,
                                   const std::string& ui_name,
                                   const std::vector <std::string>& labels)
@@ -349,102 +349,150 @@ void TextureEditor::AttachGLEnum(const std::string& name,
         m_Procedures[name].AddGLEnum(uniform_name, ui_name, labels);
 }
 
-void TextureEditor::AddProcedureInstance(const std::string& name) {
-    if (m_Procedures.count(name)) {
-        m_Instances.push_back(ProcedureInstance(name));
+//===========================================================================
 
-        auto& procedure = m_Procedures[name];
+void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
+                              std::vector<ProcedureInstance>& instances,
+                              const std::string& name) {
+    if (procedures.count(name)) {
+        instances.push_back(ProcedureInstance(name));
+
+        auto& procedure = procedures[name];
 
         for (auto& task : procedure.m_Tasks) {
             auto type = task->getType();
 
-            switch(type) {
-                case TaskType::ConstInt:
-                {
-                    ConstIntTask* typed_task = 
-                        dynamic_cast<ConstIntTask*>(task.get());
+            switch (type) {
+            case TaskType::ConstInt:
+            {
+                ConstIntTask* typed_task =
+                    dynamic_cast<ConstIntTask*>(task.get());
 
-                    m_Instances.back().Data.push_back(typed_task->Value);
-                    break;
-                }
-                case TaskType::ConstFloat:
-                {
-                    ConstFloatTask* typed_task = 
-                        dynamic_cast<ConstFloatTask*>(task.get());
+                instances.back().Data.push_back(typed_task->Value);
+                break;
+            }
+            case TaskType::ConstFloat:
+            {
+                ConstFloatTask* typed_task =
+                    dynamic_cast<ConstFloatTask*>(task.get());
 
-                    m_Instances.back().Data.push_back(typed_task->Value);
-                    break;
-                }
-                case TaskType::SliderInt:
-                {
-                    SliderIntTask* typed_task = 
-                        dynamic_cast<SliderIntTask*>(task.get());
+                instances.back().Data.push_back(typed_task->Value);
+                break;
+            }
+            case TaskType::SliderInt:
+            {
+                SliderIntTask* typed_task =
+                    dynamic_cast<SliderIntTask*>(task.get());
 
-                    m_Instances.back().Data.push_back(typed_task->Def);
-                    break;
-                }
-                case TaskType::SliderFloat:
-                {
-                    SliderFloatTask* typed_task = 
-                        dynamic_cast<SliderFloatTask*>(task.get());
+                instances.back().Data.push_back(typed_task->Def);
+                break;
+            }
+            case TaskType::SliderFloat:
+            {
+                SliderFloatTask* typed_task =
+                    dynamic_cast<SliderFloatTask*>(task.get());
 
-                    m_Instances.back().Data.push_back(typed_task->Def);
-                    break;
-                }
-                case TaskType::ColorEdit3:
-                {
-                    ColorEdit3Task* typed_task = 
-                        dynamic_cast<ColorEdit3Task*>(task.get());
+                instances.back().Data.push_back(typed_task->Def);
+                break;
+            }
+            case TaskType::ColorEdit3:
+            {
+                ColorEdit3Task* typed_task =
+                    dynamic_cast<ColorEdit3Task*>(task.get());
 
-                    m_Instances.back().Data.push_back(typed_task->Def);
-                    break;
-                }
-                case TaskType::GLEnum:
-                {
-                    GLEnumTask* typed_task =
-                        dynamic_cast<GLEnumTask*>(task.get());
+                instances.back().Data.push_back(typed_task->Def);
+                break;
+            }
+            case TaskType::GLEnum:
+            {
+                GLEnumTask* typed_task =
+                    dynamic_cast<GLEnumTask*>(task.get());
 
-                    m_Instances.back().Data.push_back(std::pair<int, char*>(0, &((typed_task->m_Labels[0])[0])));
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
+                instances.back().Data.push_back(std::pair<int, char*>(0, &((typed_task->m_Labels[0])[0])));
+                break;
+            }
+            default:
+            {
+                break;
+            }
             }
         }
     }
 }
 
-void TextureEditor::OnDispatch(int res) {
-    for (auto& instance : m_Instances) {
+void OnDispatchImpl(std::unordered_map<std::string, Procedure>& procedures,
+                    std::vector<ProcedureInstance>& instances,
+                    int res) 
+{
+    for (auto& instance : instances) {
         auto& data = instance.Data;
-        
-        m_Procedures[instance.Name].OnDispatch(res, data);
+
+        procedures[instance.Name].OnDispatch(res, data);
     }
 }
 
-bool TextureEditor::OnImGui() {
+bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
+                 std::vector<ProcedureInstance>& instances)
+{
     bool res = false;
 
-    for (int i = 0; i < m_Instances.size(); i++) {
-        auto& instance = m_Instances[i];
+    for (int i = 0; i < instances.size(); i++) {
+        auto& instance = instances[i];
         auto& data = instance.Data;
 
         ImGui::PushID(i);
 
         if (ImGui::CollapsingHeader(instance.Name.c_str(), &instance.KeepAlive))
         {
-            res = res || m_Procedures[instance.Name].OnImGui(data);            
+            res = res || procedures[instance.Name].OnImGui(data);
         }
 
         ImGui::PopID();
 
         if (!instance.KeepAlive) {
-            m_Instances.erase(m_Instances.begin() + i);
+            instances.erase(instances.begin() + i);
             res = true;
         }
     }
 
     return res;
+}
+
+//===========================================================================
+
+void TextureEditor::AddProcedureInstance(const std::string& name) {
+    AddProcedureInstanceImpl(m_Procedures, m_Instances, name);
+}
+
+void TextureEditor::OnDispatch(int res) {
+    OnDispatchImpl(m_Procedures, m_Instances, res);
+}
+
+bool TextureEditor::OnImGui() {
+    return OnImGuiImpl(m_Procedures, m_Instances);
+}
+
+//===========================================================================
+
+TextureArrayEditor::TextureArrayEditor(int n) {
+    for (int i = 0; i < n; i++)
+        m_InstanceLists.push_back(std::vector<ProcedureInstance>());
+}
+
+void TextureArrayEditor::AddProcedureInstance(int layer, const std::string& name) {
+    auto& instances = m_InstanceLists[layer];
+
+    AddProcedureInstanceImpl(m_Procedures, instances, name);
+}
+
+void TextureArrayEditor::OnDispatch(int layer, int res) {
+    auto& instances = m_InstanceLists[layer];
+
+    OnDispatchImpl(m_Procedures, instances, res);
+}
+
+bool TextureArrayEditor::OnImGui(int layer) {
+    auto& instances = m_InstanceLists[layer];
+
+    return OnImGuiImpl(m_Procedures, instances);
 }

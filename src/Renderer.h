@@ -39,12 +39,13 @@ private:
     bool m_Fog = false;
 
     //Show menu window flags
-    bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu = true,
-         m_ShowLightMenu   = true, m_ShowShadowMenu     = true,
-         m_ShowCamMenu     = true, m_ShowMaterialMenu   = true,
-         m_ShowSkyMenu     = true;
+    bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu  = false,
+         m_ShowLightMenu   = true, m_ShowShadowMenu      = true,
+         m_ShowCamMenu     = true, m_ShowMaterialMenu    = true,
+         m_ShowSkyMenu     = true, m_ShowMapMaterialMenu = true;
     
     //"Backend oriented" things
+
     unsigned int m_WindowWidth, m_WindowHeight;
     float m_Aspect, m_InvAspect;
     

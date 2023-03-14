@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 class Quad{
 public:
     Quad();
@@ -44,6 +46,28 @@ public:
 private:
     unsigned int m_Texture;
     TextureSpec m_Spec;
+};
+
+class TextureArray {
+public:
+    TextureArray();
+    ~TextureArray();
+
+    void Initialize(TextureSpec spec, int layers);
+
+    void Bind(int id = 0);
+    void BindLayer(int id, int layer);
+    void BindImage(int id, int layer, int mip);
+
+    const TextureSpec& getSpec() { return m_Spec; }
+    int getLayers() { return m_Layers; }
+
+private:
+    unsigned int m_Texture;
+    int m_Layers;
+    TextureSpec m_Spec;
+
+    std::vector<unsigned int> m_TextureViews;
 };
 
 class FramebufferTexture{

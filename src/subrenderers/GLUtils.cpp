@@ -95,6 +95,67 @@ void Texture::AttachToFramebuffer() {
         GL_TEXTURE_2D, m_Texture, 0);
 }
 
+TextureArray::TextureArray() {}
+
+TextureArray::~TextureArray() {}
+
+void TextureArray::Initialize(TextureSpec spec, int layers) {
+    
+    auto log2 = [](int value) {
+        int copy = value, result = 0;
+        while (copy >>= 1) ++result;
+        return result;
+    };
+
+    int mips = log2(spec.ResolutionX);
+    
+    glGenTextures(1, &m_Texture);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, m_Texture);
+
+    //glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, spec.InternalFormat,
+    //             spec.ResolutionX, spec.ResolutionY, layers, 0,
+    //             spec.Format, spec.Type, NULL);
+
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, mips, spec.InternalFormat,
+                   spec.ResolutionX, spec.ResolutionY, layers);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, spec.MinFilter);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, spec.MagFilter);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, spec.Wrap);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, spec.Wrap);
+
+    if (spec.Wrap == GL_CLAMP_TO_BORDER)
+        glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, spec.Border);
+
+    for (int i = 0; i < layers; i++) {
+        m_TextureViews.push_back(0);
+
+        glGenTextures(1, &m_TextureViews[i]);
+
+        glTextureView(m_TextureViews[i], GL_TEXTURE_2D, m_Texture,
+            spec.InternalFormat, 0, 1, i, 1);
+    }
+
+    m_Spec = spec;
+    m_Layers = layers;
+}
+
+void TextureArray::Bind(int id) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, m_Texture);
+}
+
+void TextureArray::BindLayer(int id, int layer) {
+    glActiveTexture(GL_TEXTURE0 + id);
+    glBindTexture(GL_TEXTURE_2D, m_TextureViews[layer]);
+}
+
+void TextureArray::BindImage(int id, int layer, int mip) {
+    int format = m_Spec.InternalFormat;
+
+    glBindImageTexture(id, m_Texture, mip, GL_FALSE, layer, GL_READ_WRITE, format);
+}
+
 FramebufferTexture::FramebufferTexture() {}
 
 FramebufferTexture::~FramebufferTexture() {

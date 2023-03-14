@@ -7,23 +7,11 @@
 
 #include <iostream>
 
-void ClearColorTexture(Texture& tex, float r, float g, float b, float a) {
-    unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    tex.Bind();
-    tex.AttachToFramebuffer();
-
-    glClearColor(r, g, b, a);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &fbo);
-}
-
 MaterialRenderer::MaterialRenderer()
     : m_NormalShader("res/shaders/materials/normal.glsl")
+    , m_HeightEditor(m_Layers)
+    , m_AlbedoEditor(m_Layers)
+    , m_RoughnessEditor(m_Layers)
 {
     //=====Initialize the textures:
     TextureSpec height_spec = TextureSpec{
@@ -33,9 +21,6 @@ MaterialRenderer::MaterialRenderer()
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
-    m_Height.Initialize(height_spec);
-    ClearColorTexture(m_Height, 0.0f, 0.0f, 0.0f, 0.0f);
-
     TextureSpec spec = TextureSpec{
         512, 512, GL_RGBA8, GL_RGBA, 
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
@@ -43,15 +28,15 @@ MaterialRenderer::MaterialRenderer()
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
-    m_Albedo.Initialize(spec);
-    ClearColorTexture(m_Albedo, 1.0f, 1.0f, 1.0f, 1.0f);
-    m_Albedo.Bind();
-    glGenerateMipmap(GL_TEXTURE_2D);
+    m_Height.Initialize(height_spec, m_Layers);
 
-    m_Normal.Initialize(spec);
-    ClearColorTexture(m_Normal, 0.5f, 1.0f, 0.5f, 1.0f);
+    m_Albedo.Initialize(spec, m_Layers);
+    m_Albedo.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+    m_Normal.Initialize(spec, m_Layers);
     m_Normal.Bind();
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
 
     //=====Initialize material editors:
@@ -60,7 +45,6 @@ MaterialRenderer::MaterialRenderer()
     //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
     m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
-    m_HeightEditor.AddProcedureInstance("Const Value");
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
     m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().ResolutionX);
@@ -98,7 +82,6 @@ MaterialRenderer::MaterialRenderer()
     //Roughness
     m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
     m_RoughnessEditor.AttachSliderFloat("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
-    m_RoughnessEditor.AddProcedureInstance("Const Roughness");
 
     m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
     m_RoughnessEditor.AttachConstInt("Roughness Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
@@ -110,6 +93,14 @@ MaterialRenderer::MaterialRenderer()
         0.003f, 1.0f, 0.003f);
     m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uVal2", "Value 2",
         0.003f, 1.0f, 1.0f);
+
+    //Initial procedures
+    for (int i = 0; i < 2; i++) {
+        m_HeightEditor.AddProcedureInstance(i, "Const Value");
+        m_RoughnessEditor.AddProcedureInstance(i, "Const Roughness");
+    }
+
+    m_UpdateFlags = Height | Normal | Albedo;
 }
 
 MaterialRenderer::~MaterialRenderer() {
@@ -123,17 +114,17 @@ void MaterialRenderer::Update() {
     {
         const int res = m_Height.getSpec().ResolutionX;
         
-        m_Height.BindImage(0, 0);
-        m_HeightEditor.OnDispatch(res);
+        m_Height.BindImage(0, m_Current, 0);
+        m_HeightEditor.OnDispatch(m_Current, res);
     }
 
     //Draw to normal:
     if ((m_UpdateFlags & Normal) != None)
     {
         const int res = m_Normal.getSpec().ResolutionX;
-        m_Height.Bind();
+        m_Height.BindLayer(0, m_Current);
         
-        m_Normal.BindImage(0, 0);
+        m_Normal.BindImage(0, m_Current, 0);
 
         m_NormalShader.Bind();
         m_NormalShader.setUniform1i("uResolution", res);
@@ -147,21 +138,21 @@ void MaterialRenderer::Update() {
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     
         m_Normal.Bind();
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }
 
     //Draw to albedo/roughness:
     if ((m_UpdateFlags & Albedo) != None)
     {
         const int res = m_Albedo.getSpec().ResolutionX;
-        m_Height.Bind();
+        m_Height.BindLayer(0, m_Current);
 
-        m_Albedo.BindImage(0, 0);
-        m_AlbedoEditor.OnDispatch(res);
-        m_RoughnessEditor.OnDispatch(res);
+        m_Albedo.BindImage(0, m_Current, 0);
+        m_AlbedoEditor.OnDispatch(m_Current, res);
+        m_RoughnessEditor.OnDispatch(m_Current, res);
     
         m_Albedo.Bind();
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }
 
     m_UpdateFlags = None;
@@ -170,9 +161,11 @@ void MaterialRenderer::Update() {
 void MaterialRenderer::OnImGui(bool& open) {
     ImGui::Begin("Material editor", &open);
     
+    ImGuiUtils::SliderInt("Currently editing", &m_Current, 0, m_Layers-1);
+
     ImGui::Text("Heightmap procedures:");
 
-    if (m_HeightEditor.OnImGui()) {
+    if (m_HeightEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Height;
         m_UpdateFlags = m_UpdateFlags | Normal;
         m_UpdateFlags = m_UpdateFlags | Albedo;
@@ -186,17 +179,17 @@ void MaterialRenderer::OnImGui(bool& open) {
 
         if (ImGui::Button("Const Value")) {
             ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Const Value");
+            m_HeightEditor.AddProcedureInstance(m_Current, "Const Value");
         }
 
         if (ImGui::Button("FBM")) {
             ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("FBM");
+            m_HeightEditor.AddProcedureInstance(m_Current, "FBM");
         }     
 
         if (ImGui::Button("Voronoi")) {
             ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Voronoi");
+            m_HeightEditor.AddProcedureInstance(m_Current, "Voronoi");
         }
 
         m_UpdateFlags = m_UpdateFlags | Height;
@@ -228,7 +221,7 @@ void MaterialRenderer::OnImGui(bool& open) {
 
     ImGui::Text("Albedo procedures:");
     
-    if (m_AlbedoEditor.OnImGui()) {
+    if (m_AlbedoEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
@@ -240,7 +233,7 @@ void MaterialRenderer::OnImGui(bool& open) {
 
         if (ImGui::Button("Color Ramp")) {
             ImGui::CloseCurrentPopup();
-            m_AlbedoEditor.AddProcedureInstance("Color Ramp");
+            m_AlbedoEditor.AddProcedureInstance(m_Current, "Color Ramp");
         }
 
         m_UpdateFlags = m_UpdateFlags | Albedo;
@@ -252,7 +245,7 @@ void MaterialRenderer::OnImGui(bool& open) {
 
     ImGui::Text("Roughness procedures:");
 
-    if (m_RoughnessEditor.OnImGui()) {
+    if (m_RoughnessEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
@@ -263,12 +256,12 @@ void MaterialRenderer::OnImGui(bool& open) {
     if (ImGui::BeginPopupModal("Choose procedure (roughness)")) {
         if (ImGui::Button("Const Roughness")) {
             ImGui::CloseCurrentPopup();
-            m_RoughnessEditor.AddProcedureInstance("Const Roughness");
+            m_RoughnessEditor.AddProcedureInstance(m_Current, "Const Roughness");
         }
 
         if (ImGui::Button("Roughness Ramp")) {
             ImGui::CloseCurrentPopup();
-            m_RoughnessEditor.AddProcedureInstance("Roughness Ramp");
+            m_RoughnessEditor.AddProcedureInstance(m_Current, "Roughness Ramp");
         }
 
         m_UpdateFlags = m_UpdateFlags | Albedo;

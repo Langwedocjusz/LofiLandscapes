@@ -36,9 +36,11 @@ public:
     void BindHeightmap(int id=0);
     void BindNormalmap(int id=0);
     void BindShadowmap(int id=0);
+    void BindMaterialmap(int id=0);
 
     void ImGuiTerrain(bool &open, bool update_shadows);
     void ImGuiShadowmap(bool &open, bool update_shadows);
+    void ImGuiMaterials(bool& open);
     void RequestShadowUpdate();
 
     bool GeometryShouldUpdate();
@@ -48,14 +50,15 @@ public:
 private:
 
     enum UpdateFlags {
-        None   =  0,
-        Height = (1 << 0),
-        Normal = (1 << 1),
-        Shadow = (1 << 2)
+        None     =  0,
+        Height   = (1 << 0),
+        Normal   = (1 << 1),
+        Shadow   = (1 << 2),
+        Material = (1 << 3)
     };
 
-    Texture m_Heightmap, m_Normalmap, m_Shadowmap; 
-    TextureEditor m_HeightEditor;
+    Texture m_Heightmap, m_Normalmap, m_Shadowmap, m_Materialmap; 
+    TextureEditor m_HeightEditor, m_MaterialEditor;
     Shader m_NormalmapShader, m_ShadowmapShader;
 
     Shader m_MipShader;
@@ -71,6 +74,7 @@ private:
     void UpdateHeight();
     void UpdateNormal();
     void UpdateShadow(const glm::vec3& sun_dir);
+    void UpdateMaterial();
 
     void GenMaxMips();
 };

@@ -53,6 +53,18 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
 
     m_Shadowmap.Initialize(shadow_spec);
 
+    //--Material map
+    const int material_res = height_res;
+
+    TextureSpec material_spec = TextureSpec{
+        material_res, material_res, GL_R8, GL_RED,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+        wrap_type,
+        {0.0f, 0.0f, 0.0f, 1.0f}
+    };
+
+    m_Materialmap.Initialize(material_spec);
+
     //-----Setup heightmap editor:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
 
@@ -60,7 +72,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/terrain/fbm.glsl");
-    m_HeightEditor.AttachConstInt("FBM", "uResolution", 4096);
+    m_HeightEditor.AttachConstInt("FBM", "uResolution", height_res);
     m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.AttachSliderFloat("FBM", "uScale", "Scale", 1.0, 64.0, 32.0);
     m_HeightEditor.AttachSliderFloat("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
@@ -68,7 +80,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
-    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", 4096);
+    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", height_res);
     m_HeightEditor.AttachSliderFloat("Voronoi", "uScale", "Scale", 1.0, 64.0, 8.0);
     m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
 
@@ -82,7 +94,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AttachSliderFloat("Curves", "uExponent", "Exponent", 0.1, 4.0, 1.0);
 
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
-    m_HeightEditor.AttachConstInt("Radial cutoff", "uResolution", 4096);
+    m_HeightEditor.AttachConstInt("Radial cutoff", "uResolution", height_res);
     m_HeightEditor.AttachSliderFloat("Radial cutoff", "uBias", "Bias", 0.0, 1.0, 0.5);
     m_HeightEditor.AttachSliderFloat("Radial cutoff", "uSlope", "Slope", 0.0, 10.0, 4.0);
 
@@ -91,10 +103,29 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AddProcedureInstance("FBM");
     m_HeightEditor.AddProcedureInstance("Radial cutoff");
 
+    //-----Setup material editor:
+    const int max_layer_id = 3;
+
+    m_MaterialEditor.RegisterShader("One material", "res/shaders/terrain/one_material.glsl");
+    m_MaterialEditor.AttachSliderInt("One material", "uID", "Material id", 0, max_layer_id, 0);
+
+    m_MaterialEditor.RegisterShader("Select height", "res/shaders/terrain/select_height.glsl");
+    m_MaterialEditor.AttachConstInt("Select height", "uResolution", material_res);
+    m_MaterialEditor.AttachSliderFloat("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
+    m_MaterialEditor.AttachSliderFloat("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.AttachSliderInt("Select height", "uID", "Material id", 0, max_layer_id, 0);
+
+    m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
+    m_MaterialEditor.AttachConstInt("Select slope", "uResolution", material_res);
+    m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
+    m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.AttachSliderInt("Select slope", "uID", "Material id", 0, max_layer_id, 0);
+
+    //Initial procedures:
+    m_MaterialEditor.AddProcedureInstance("One material");
+
     //-----Set update flags
-    m_UpdateFlags = m_UpdateFlags | Height;
-    m_UpdateFlags = m_UpdateFlags | Normal;
-    m_UpdateFlags = m_UpdateFlags | Shadow;
+    m_UpdateFlags = Height | Normal | Shadow | Material;
 
     //-----Mipmap related things
     //Check if heightmap resolution is a power of 2
@@ -177,6 +208,15 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
+void MapRenderer::UpdateMaterial() {
+    const int res = m_Materialmap.getSpec().ResolutionX;
+
+    m_Heightmap.Bind();
+
+    m_Materialmap.BindImage(0, 0);
+    m_MaterialEditor.OnDispatch(res);
+}
+
 void MapRenderer::GenMaxMips() {
     if (m_MipLevels == 0) return;
 
@@ -210,6 +250,9 @@ void MapRenderer::Update(const glm::vec3& sun_dir) {
     if ((m_UpdateFlags & Shadow) != None)
         UpdateShadow(sun_dir);
 
+    if ((m_UpdateFlags & Material) != None)
+        UpdateMaterial();
+
     m_UpdateFlags = None;
 }
 
@@ -223,6 +266,10 @@ void MapRenderer::BindNormalmap(int id) {
 
 void MapRenderer::BindShadowmap(int id) {
     m_Shadowmap.Bind(id);
+}
+
+void MapRenderer::BindMaterialmap(int id) {
+    m_Materialmap.Bind(id);
 }
 
 void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
@@ -341,6 +388,40 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | Shadow;
     }
+}
+
+void MapRenderer::ImGuiMaterials(bool& open) {
+    ImGui::Begin("Material Map", &open);
+
+    bool material_changed = m_MaterialEditor.OnImGui();
+
+    if (ImGuiUtils::Button("Add material procedure")) {
+        ImGui::OpenPopup("Choose procedure (material)");
+    }
+
+    if (ImGui::BeginPopupModal("Choose procedure (material)")) {
+
+        if (ImGui::Button("Select height")) {
+            ImGui::CloseCurrentPopup();
+            m_MaterialEditor.AddProcedureInstance("Select height");
+
+            material_changed = true;
+        }
+
+        if (ImGui::Button("Select slope")) {
+            ImGui::CloseCurrentPopup();
+            m_MaterialEditor.AddProcedureInstance("Select slope");
+
+            material_changed = true;
+        }
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::End();
+
+    if (material_changed)
+        m_UpdateFlags = m_UpdateFlags | Material;
 }
 
 void MapRenderer::RequestShadowUpdate() {

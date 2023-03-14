@@ -139,46 +139,67 @@ public:
     bool KeepAlive = true;
 };
 
-class TextureEditor{
+class EditorBase {
+public:
+    EditorBase() = default;
+    ~EditorBase() = default;
+
+    void RegisterShader(const std::string& name, const std::string& filepath);
+
+    void AttachConstInt(const std::string& name,
+        const std::string& uniform_name,
+        int def_val);
+
+    void AttachConstFloat(const std::string& name,
+        const std::string& uniform_name,
+        float def_val);
+
+    void AttachSliderInt(const std::string& name,
+        const std::string& uniform_name,
+        const std::string& ui_name,
+        int min_val, int max_val, int def_val);
+
+    void AttachSliderFloat(const std::string& name,
+        const std::string& uniform_name,
+        const std::string& ui_name,
+        float min_val, float max_val, float def_val);
+
+    void AttachColorEdit3(const std::string& name,
+        const std::string& uniform_name,
+        const std::string& ui_name,
+        glm::vec3 def_val);
+
+    void AttachGLEnum(const std::string& name,
+        const std::string& uniform_name,
+        const std::string& ui_name,
+        const std::vector<std::string>& labels);
+
+protected:
+    std::unordered_map<std::string, Procedure> m_Procedures;
+};
+
+class TextureEditor : public EditorBase{
 public:
      TextureEditor() = default;
     ~TextureEditor() = default;
 
-    void RegisterShader(const std::string& name, const std::string& filepath);
- 
-    void AttachConstInt(const std::string& name, 
-                        const std::string& uniform_name,
-                        int def_val);
-    
-    void AttachConstFloat(const std::string& name, 
-                        const std::string& uniform_name,
-                        float def_val);
-
-    void AttachSliderInt(const std::string& name, 
-                         const std::string& uniform_name, 
-                         const std::string& ui_name,
-                         int min_val, int max_val, int def_val);
-    
-    void AttachSliderFloat(const std::string& name, 
-                           const std::string& uniform_name, 
-                           const std::string& ui_name,
-                           float min_val, float max_val, float def_val);
-
-    void AttachColorEdit3(const std::string& name, 
-                          const std::string& uniform_name, 
-                          const std::string& ui_name,
-                          glm::vec3 def_val);
-
     void AddProcedureInstance(const std::string& name);
-
-    void AttachGLEnum(const std::string& name,
-                      const std::string& uniform_name,
-                      const std::string& ui_name,
-                      const std::vector<std::string>& labels);
 
     void OnDispatch(int res);
     bool OnImGui();
 private:
-    std::unordered_map<std::string, Procedure> m_Procedures;
     std::vector<ProcedureInstance> m_Instances;
+};
+
+class TextureArrayEditor : public EditorBase {
+public:
+    TextureArrayEditor(int n);
+    ~TextureArrayEditor() = default;
+
+    void AddProcedureInstance(int layer, const std::string& name);
+
+    void OnDispatch(int layer, int res);
+    bool OnImGui(int layer);
+private:
+    std::vector<std::vector<ProcedureInstance>> m_InstanceLists;
 };
