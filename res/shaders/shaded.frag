@@ -39,10 +39,23 @@ uniform float uRefStr;
 uniform float uTilingFactor;
 uniform float uNormalStrength;
 
-const float MAX_ID = 3.0;
+#define SUM_COMPONENTS(v) (v.x + v.y + v.z + v.w)
 
-float getMaterialID(vec2 uv) {
-    return MAX_ID * texture(materialmap, uv).r;
+vec4 getMaterialTexture(sampler2DArray sampler, vec2 uv_map, vec2 uv_mat) {
+
+    vec4 weights = texture(materialmap, uv_map);
+    float weight4 = 1.0 - SUM_COMPONENTS(weights);
+
+    vec4 res = vec4(0.0);
+
+    //Favor branching over additional texture fetches
+    if (weights.x > 0.0) res += weights.x * texture(sampler, vec3(uv_mat, 0.0));
+    if (weights.y > 0.0) res += weights.y * texture(sampler, vec3(uv_mat, 1.0));
+    if (weights.z > 0.0) res += weights.z * texture(sampler, vec3(uv_mat, 2.0));
+    if (weights.w > 0.0) res += weights.w * texture(sampler, vec3(uv_mat, 3.0));
+    if (weight4 > 0.0)   res += weight4   * texture(sampler, vec3(uv_mat, 4.0));
+
+    return res;
 }
 
 //======================================================================
@@ -97,9 +110,7 @@ vec4 getTextureSample(sampler2DArray sampler, vec2 p, float freq, vec2 node) {
 
     vec2 uv = rot * freq * p + hash.yz;
 
-    float id = getMaterialID(p);
-
-    return texture(sampler, vec3(uv, id));
+    return getMaterialTexture(sampler, p, uv);
 }
 
 //Interpolate result from 3 node points
@@ -119,21 +130,15 @@ vec4 TextureFixedTiling(sampler2DArray sampler, vec2 p, float freq) {
 vec4 getMatAlbedo(vec2 uv) {
     if (uFixTiling == 1)
         return TextureFixedTiling(albedo, uv, uTilingFactor);
-    else {
-        float id = getMaterialID(uv);
-        return texture(albedo, vec3(uTilingFactor*uv, id));
-    }
-        
+    else 
+        return getMaterialTexture(albedo, uv, uTilingFactor*uv);    
 }
 
 vec4 getMatNormal(vec2 uv) {
     if (uFixTiling == 1)
         return TextureFixedTiling(normal, uv, uTilingFactor);
-    else {
-        float id = getMaterialID(uv);
-        return texture(normal, vec3(uTilingFactor*uv, id));
-    }
-        
+    else
+        return getMaterialTexture(normal, uv, uTilingFactor*uv);    
 }
 
 //======================================================================

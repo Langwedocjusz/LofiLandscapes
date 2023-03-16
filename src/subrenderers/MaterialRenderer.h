@@ -25,7 +25,7 @@ private:
 
     TextureArray m_Height, m_Normal, m_Albedo;
 
-    static const int m_Layers = 4;
+    static const int m_Layers = 5;
     int m_Current = 0;
 
     //Heightmap generation

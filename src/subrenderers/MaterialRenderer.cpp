@@ -95,7 +95,7 @@ MaterialRenderer::MaterialRenderer()
         0.003f, 1.0f, 1.0f);
 
     //Initial procedures
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < m_Layers; i++) {
         m_HeightEditor.AddProcedureInstance(i, "Const Value");
         m_RoughnessEditor.AddProcedureInstance(i, "Const Roughness");
     }

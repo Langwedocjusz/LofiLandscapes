@@ -57,7 +57,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     const int material_res = height_res;
 
     TextureSpec material_spec = TextureSpec{
-        material_res, material_res, GL_R8, GL_RED,
+        material_res, material_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         {0.0f, 0.0f, 0.0f, 1.0f}
@@ -104,7 +104,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AddProcedureInstance("Radial cutoff");
 
     //-----Setup material editor:
-    const int max_layer_id = 3;
+    const int max_layer_id = 4;
 
     m_MaterialEditor.RegisterShader("One material", "res/shaders/terrain/one_material.glsl");
     m_MaterialEditor.AttachSliderInt("One material", "uID", "Material id", 0, max_layer_id, 0);
@@ -113,12 +113,14 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_MaterialEditor.AttachConstInt("Select height", "uResolution", material_res);
     m_MaterialEditor.AttachSliderFloat("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.AttachSliderFloat("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.AttachSliderFloat("Select height", "uBlend", "Blending", 0.0, 0.1, 0.01);
     m_MaterialEditor.AttachSliderInt("Select height", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
     m_MaterialEditor.AttachConstInt("Select slope", "uResolution", material_res);
     m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.AttachSliderFloat("Select slope", "uBlend", "Blending", 0.0, 0.1, 0.01);
     m_MaterialEditor.AttachSliderInt("Select slope", "uID", "Material id", 0, max_layer_id, 0);
 
     //Initial procedures:
@@ -335,8 +337,7 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
     ImGui::End();
 
     if (height_changed) {
-        m_UpdateFlags = m_UpdateFlags | Height;
-        m_UpdateFlags = m_UpdateFlags | Normal;
+        m_UpdateFlags = m_UpdateFlags | Height | Normal | Material;
 
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | Shadow;

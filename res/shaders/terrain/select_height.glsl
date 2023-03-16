@@ -2,30 +2,57 @@
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-layout(r8, binding = 0) uniform image2D materialmap;
+layout(rgba8, binding = 0) uniform image2D materialmap;
 
 uniform sampler2D heightmap;
 
 uniform int uResolution;
 uniform float uHeightUpper;
 uniform float uHeightLower;
+uniform float uBlend;
 uniform int uID;
 
-const float MAX_ID = 3.0;
+#define SUM_COMPONENTS(v) (v.x + v.y + v.z + v.w)
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
-
-    float prev = imageLoad(materialmap, texelCoord).r;
-
+    
+    //Height
     vec2 uv = vec2(texelCoord)/float(uResolution);
-
     float height = texture(heightmap, uv).r;
 
-    float res = prev;
+    //Mask
+    float mask = smoothstep(uHeightLower - uBlend, uHeightLower + uBlend, height)
+        * (1.0 - smoothstep(uHeightUpper - uBlend, uHeightUpper + uBlend, height));
 
-    if (height <= uHeightUpper && height >= uHeightLower)
-        res = float(uID)/MAX_ID;
+    //Previous
+    vec4 prev03 = imageLoad(materialmap, texelCoord);
+    float prev4 = 1.0 - SUM_COMPONENTS(prev03);
 
-    imageStore(materialmap, texelCoord, vec4(res, 0.0, 0.0, 1.0));
+    float prev[5] = float[5](prev03.x, prev03.y, prev03.z, prev03.w, prev4);
+
+    //Overlay
+    float sum = 0.0;
+
+    for (int i=0; i<5; i++)
+    {
+        if (i != uID)
+            sum += prev[i];
+    }
+
+    for (int i=0; i<5; i++)
+    {
+        if (i == uID)
+        {
+            prev[i] = mask;
+        }
+        else
+        {
+            prev[i] = (1-mask)*prev[i]/sum;
+        }
+    }
+
+    vec4 res = vec4(prev[0], prev[1], prev[2], prev[3]);
+
+    imageStore(materialmap, texelCoord, res);
 }
