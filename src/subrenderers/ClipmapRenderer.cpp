@@ -51,68 +51,6 @@ void Drawable::Draw() {
     glDrawElements(GL_TRIANGLES, ElementCount, GL_UNSIGNED_INT, 0);
 }
 
-Frustum::Frustum(const Camera& camera, float aspect) {
-    CameraSettings sett = camera.getSettings();
-
-    const float near = camera.getNearPlane();
-    const float far  = camera.getFarPlane();
-
-    //Camera position in coordinate system tied to the grid:
-    const float height = camera.getPos().y;
-    const glm::vec3 pos = glm::vec3(0.0f, height, 0.0f);
-
-    const glm::vec3 front = camera.getFront();
-    const glm::vec3 right = camera.getRight();
-    const glm::vec3 up    = camera.getUp();
-
-    const float halfV = far * tanf(glm::radians(sett.Fov));
-    const float halfH = aspect * halfV;
-
-    const glm::vec3 farFront = far * front;
-
-    Near = { pos + near * front,  front };
-    Far  = { pos + far  * front, -front };
-    
-    //Normals are usually normalized, but we're only going to use them
-    //to compare two values, each linear in those vectors
-    //so it doesn't matter
-    Left = { pos, (glm::cross(farFront - halfH * right, up)) };
-    Right  = { pos, (glm::cross(up, farFront + halfH * right)) };
-
-    Top = { pos, (glm::cross(farFront + halfV * up, right)) };
-    Bottom = { pos, (glm::cross(right, farFront - halfV * up)) };
-}
-
-AABB::AABB(float x, float y, float l) 
-    : m_Center{x, 0.45f, y}, m_Extents{l, 0.55f, l}
-{}
-
-bool AABB::IsInFront(const Plane& plane, float scale_y) {
-    const glm::vec3 scale = {1.0f, scale_y, 1.0f};
-    const glm::vec3 extents = scale * m_Extents;
-    const glm::vec3 normal = glm::abs(plane.Normal);
-
-    //Absolute value of the projection of the extents 
-    //vector onto subspace orthogonal to the plane
-    const float r = glm::dot(extents, normal);
-
-    //Signed distance of center to plane
-    float sd = -glm::dot(plane.Origin - scale*m_Center, plane.Normal);
-
-    //This statement is tautologically true in front of the plane
-    //which is good since we should return true in that case
-    return -r <= sd;
-}
-
-bool AABB::IsInFrustum(const Frustum& frustum, float scale_y) {
-    return IsInFront(frustum.Top,    scale_y) 
-        && IsInFront(frustum.Bottom, scale_y)
-        && IsInFront(frustum.Left,   scale_y) 
-        && IsInFront(frustum.Right,  scale_y)
-        && IsInFront(frustum.Near,   scale_y) 
-        && IsInFront(frustum.Far,    scale_y);
-}
-
 void GenerateGrid(Drawable& grid,
                   unsigned int N, float L, int LodLevel,
                   float global_offset_x, float global_offset_y
@@ -247,7 +185,11 @@ ClipmapRing::ClipmapRing(int N, float L, unsigned int level) {
     for (size_t i = 0; i < offsets.size(); i++) {
 
         m_Grid.push_back(Drawable());
-        m_Bounds.push_back(AABB(l * offsets[i].first, l * offsets[i].second, l));
+
+        m_Bounds.push_back(AABB{
+            glm::vec3(l * offsets[i].first, 0.45f, l * offsets[i].second), //center pos
+            glm::vec3(l, 0.55f, l)  //extents
+        });
 
         GenerateGrid(
             m_Grid[i], N, L, level,
@@ -276,12 +218,15 @@ void ClipmapRing::DispatchCompute() {
     m_FillY.DispatchCompute();
 }
 
-void ClipmapRing::Draw(const Frustum& frustum, float scale_y) {
+void ClipmapRing::Draw(const Camera& cam, float scale_y) {
     for (int i = 0; i < m_Grid.size(); i++) {
         //Frustum culling
-        if (m_Bounds[i].IsInFrustum(frustum, scale_y)) {
+        if (cam.IsInFrustum(m_Bounds[i], scale_y)) {
             m_Grid[i].Draw();
+            //std::cout << "1";
         }
+
+        //else std::cout << "0";
     }
         
     m_FillX.Draw();
@@ -337,34 +282,11 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
     }
 }
 
-void ClipmapRenderer::BindAndDraw(const Camera& cam, float aspect, float scale_y) {
-    Frustum frustum(cam, aspect);
+void ClipmapRenderer::BindAndDraw(const Camera& cam, float scale_y) {
 
     for (int i = 0; i < m_LodLevels.size(); i++) {
-        m_LodLevels[i].Draw(frustum, scale_y);
+        //std::cout << "Level " << i << ": ";
+        m_LodLevels[i].Draw(cam, scale_y);
+        //std::cout << '\n';
     }   
-}
-
-void ClipmapRenderer::PrintFrustum(const Camera& cam, float aspect) {
-
-    auto printVec3 = [](glm::vec3 v) {
-        std::cout << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-    };
-
-    auto printPlane = [printVec3](const std::string& name, Plane p) {
-        std::cout << name << ": ";
-        printVec3(p.Origin);
-        std::cout << ", ";
-        printVec3(p.Normal);
-        std::cout << '\n';
-    };
-
-    Frustum frustum(cam, aspect);
-
-    printPlane("Near"  , frustum.Near);
-    printPlane("Far"   , frustum.Far);
-    printPlane("Left"  , frustum.Left);
-    printPlane("Right" , frustum.Right);
-    printPlane("Top"   , frustum.Top);
-    printPlane("Bottom", frustum.Bottom);
 }

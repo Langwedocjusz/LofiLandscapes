@@ -20,9 +20,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 
 Renderer::~Renderer() {}
 
-void Renderer::Init(int subdivisions, int levels, int height_res, int shadow_res, int wrap_type) {
-    m_Clipmap.Init(subdivisions, levels);
-    m_Map.Init(height_res, shadow_res, wrap_type);
+void Renderer::Init(StartSettings settings) {
+    m_Clipmap.Init(settings.Subdivisions, settings.LodLevels);
+    m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
 
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)
@@ -103,7 +103,7 @@ void Renderer::OnRender() {
                                                m_Camera.getPos().z);
         m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
 
-        m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
+        m_Clipmap.BindAndDraw(m_Camera, scale_y);
     }
 
     else {
@@ -144,7 +144,7 @@ void Renderer::OnRender() {
         m_Sky.BindAerial(7);
         m_ShadedShader.setUniform1i("aerial", 7);
 
-        m_Clipmap.BindAndDraw(m_Camera, m_Aspect, scale_y);
+        m_Clipmap.BindAndDraw(m_Camera, scale_y);
 
         //Render Sky
         m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, m_InvAspect);
@@ -304,7 +304,7 @@ void Renderer::OnKeyReleased(int keycode) {
 }
 
 void Renderer::OnMouseMoved(float x, float y) {
-    m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight);
+    m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight, m_Aspect);
 }
 
 void Renderer::RestartMouse() {

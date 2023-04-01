@@ -41,11 +41,25 @@ Application::~Application() {
     ImGui::DestroyContext();
 }
 
+void Application::StartFrame() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void Application::EndFrame() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    m_Window.OnUpdate();
+}
+
 void Application::StartMenu() {
     while (m_ShowStartMenu) {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        StartFrame();
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
@@ -99,20 +113,12 @@ void Application::StartMenu() {
 
         ImGui::End();
 
-        ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        m_Window.OnUpdate();
+        EndFrame();
     }
 }
 
 void Application::InitRenderer() {
-    m_Renderer.Init(m_StartSettings.Subdivisions, m_StartSettings.LodLevels,
-                    m_StartSettings.HeightRes, m_StartSettings.ShadowRes,
-                    m_StartSettings.WrapType);
+    m_Renderer.Init(m_StartSettings);
 }
 
 void Application::Run() {
@@ -122,19 +128,11 @@ void Application::Run() {
 
         m_Renderer.OnRender();
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        StartFrame();
 
         if (m_ShowMenu) m_Renderer.OnImGuiRender();
 
-        ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        m_Window.OnUpdate();
+        EndFrame();
     }
 }
 

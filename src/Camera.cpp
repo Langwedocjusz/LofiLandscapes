@@ -2,6 +2,32 @@
 
 #include "Keycodes.h"
 
+bool Plane::IsInFront(const AABB& aabb, float scale_y) const {
+    const glm::vec3 scale = {1.0f, scale_y, 1.0f};
+    const glm::vec3 extents = scale * aabb.Extents;
+    const glm::vec3 normal = glm::abs(Normal);
+
+    //Absolute value of the projection of the extents 
+    //vector onto subspace orthogonal to the plane
+    const float r = glm::dot(extents, normal);
+
+    //Signed distance of center to plane
+    float sd = -glm::dot(Origin - scale*aabb.Center, Normal);
+
+    //This statement is tautologically true in front of the plane
+    //which is good since we should return true in that case
+    return -r <= sd;
+}
+
+bool Frustum::IsInFrustum(const AABB& aabb, float scale_y) const {
+    return Top.IsInFront(aabb, scale_y)
+        && Bottom.IsInFront(aabb, scale_y)
+        && Left.IsInFront(aabb, scale_y)
+        && Right.IsInFront(aabb, scale_y)
+        && Near.IsInFront(aabb, scale_y)
+        && Far.IsInFront(aabb, scale_y);
+}
+
 Camera::Camera(glm::vec3 pos, glm::vec3 wup, float pitch, float yaw)
     : m_Pos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
 {
@@ -28,7 +54,7 @@ void Camera::ProcessKeyboard(float deltatime) {
         m_Pos += velocity * m_Right;
 }
 
-void Camera::ProcessMouse(float xoffset, float yoffset) {
+void Camera::ProcessMouse(float xoffset, float yoffset, float aspect) {
     m_Pitch += m_Settings.Sensitivity * yoffset;
     m_Yaw += m_Settings.Sensitivity * xoffset;
 
@@ -36,6 +62,7 @@ void Camera::ProcessMouse(float xoffset, float yoffset) {
     if (m_Pitch < -89.0f) m_Pitch = -89.0f;
 
     updateVectors();
+    updateFrustum(aspect);
 }
 
 void Camera::updateVectors() {
@@ -46,6 +73,32 @@ void Camera::updateVectors() {
 
    m_Right = glm::normalize(glm::cross(m_Front, m_WorldUp));
    m_Up = glm::normalize(glm::cross(m_Right, m_Front));
+}
+
+void Camera::updateFrustum(float aspect) {
+    //Camera position in coordinate system tied to the grid:
+    const glm::vec3 pos = glm::vec3(0.0f, m_Pos.y, 0.0f);
+
+    const float halfV = m_FarPlane * tanf(glm::radians(m_Settings.Fov));
+    const float halfH = aspect * halfV; //aspect = horizontal/vertical
+
+    const glm::vec3 farFront = m_FarPlane * m_Front;
+
+    m_Frustum.Near = { pos + m_NearPlane * m_Front,  m_Front };
+    m_Frustum.Far  = { pos + m_FarPlane  * m_Front, -m_Front };
+
+    //Normals are usually normalized, but we're only going to use them
+    //to compare two values, each linear in those vectors
+    //so it doesn't matter
+    m_Frustum.Left  = { pos, (glm::cross(farFront - halfH * m_Right, m_Up)) };
+    m_Frustum.Right = { pos, (glm::cross(m_Up, farFront + halfH * m_Right)) };
+
+    m_Frustum.Top    = { pos, (glm::cross(farFront + halfV * m_Up, m_Right)) };
+    m_Frustum.Bottom = { pos, (glm::cross(m_Right, farFront - halfV * m_Up)) };
+}
+
+bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
+    return m_Frustum.IsInFrustum(aabb, scale_y);
 }
 
 FPCamera::FPCamera() {}
@@ -107,7 +160,7 @@ void FPCamera::OnKeyReleased(int keycode) {
     }
 }
 
-void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int height) {
+void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect) {
     float xpos = x/width;
     float ypos = y/height;
 
@@ -131,7 +184,7 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
     if (abs(yoffset) > max_offset)
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
-    ProcessMouse(xoffset, yoffset);
+    ProcessMouse(xoffset, yoffset, aspect);
 }
 
 //Operator overloads:

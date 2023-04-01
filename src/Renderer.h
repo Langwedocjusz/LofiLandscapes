@@ -7,12 +7,22 @@
 
 #include "Camera.h"
 
+#include "glad/glad.h"
+
 class Renderer {
 public:
     Renderer(unsigned int width, unsigned int height);
     ~Renderer();
 
-    void Init(int subdivisions, int levels, int height_res, int shadow_res, int wrap_type);
+    struct StartSettings {
+        int Subdivisions = 64;
+        int LodLevels = 5;
+        int HeightRes = 4096;
+        int ShadowRes = 4096;
+        int WrapType = GL_CLAMP_TO_BORDER;
+    };
+
+    void Init(StartSettings settings);
     void OnUpdate(float deltatime);
     void OnRender();
     void OnImGuiRender();
