@@ -61,6 +61,8 @@ public:
     void ProcessMouse(float xoffset, float yoffset, float aspect);
 
     bool IsInFrustum(const AABB& aabb, float scale_y) const;
+
+    void OnImGui(bool& open);
 protected:
 
     enum CameraMovement {

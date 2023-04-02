@@ -14,12 +14,12 @@ public:
 	void Update(const Camera& cam, float aspect, bool aerial);
 	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
 
-	void BindSkyLUT(int id=0);
-	void BindIrradiance(int id=0);
-	void BindPrefiltered(int id=0);
-	void BindAerial(int id=0);
+	void BindSkyLUT(int id=0) const;
+	void BindIrradiance(int id=0) const;
+	void BindPrefiltered(int id=0) const;
+	void BindAerial(int id=0) const;
 
-	glm::vec3 getSunDir() { return m_SunDir; }
+	glm::vec3 getSunDir() const { return m_SunDir; }
 private:
 
 	enum SkyUpdateFlags {

@@ -38,8 +38,8 @@ public:
     ~Texture();
 
     void Initialize(TextureSpec spec);
-    void Bind(int id=0);
-    void BindImage(int id, int mip);
+    void Bind(int id=0) const;
+    void BindImage(int id, int mip) const;
     void AttachToFramebuffer();
 
     const TextureSpec& getSpec() {return m_Spec;}
@@ -55,9 +55,9 @@ public:
 
     void Initialize(TextureSpec spec, int layers);
 
-    void Bind(int id = 0);
-    void BindLayer(int id, int layer);
-    void BindImage(int id, int layer, int mip);
+    void Bind(int id = 0) const;
+    void BindLayer(int id, int layer) const;
+    void BindImage(int id, int layer, int mip) const;
 
     const TextureSpec& getSpec() { return m_Spec; }
     int getLayers() { return m_Layers; }
@@ -105,8 +105,8 @@ public:
     ~Texture3d();
 
     void Initialize(Texture3dSpec spec);
-    void Bind(int id = 0);
-    void BindImage(int id, int mip);
+    void Bind(int id = 0) const;
+    void BindImage(int id, int mip) const;
 
     const Texture3dSpec& getSpec() { return m_Spec; }
 private:
@@ -131,8 +131,8 @@ public:
     ~Cubemap();
 
     void Initialize(CubemapSpec spec);
-    void Bind(int id=0);
-    void BindImage(int id, int mip);
+    void Bind(int id=0) const;
+    void BindImage(int id, int mip) const;
 
     const CubemapSpec& getSpec() { return m_Spec; }
 private:

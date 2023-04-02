@@ -25,18 +25,18 @@ struct ShadowmapSettings{
     float Sharpness = 1.0f;
 };
 
-class MapRenderer {
+class MapGenerator {
 public:
-    MapRenderer();
-    ~MapRenderer();
+    MapGenerator();
+    ~MapGenerator();
 
     void Init(int height_res, int shadow_res, int wrap_type);
     void Update(const glm::vec3& sun_dir);
 
-    void BindHeightmap(int id=0);
-    void BindNormalmap(int id=0);
-    void BindShadowmap(int id=0);
-    void BindMaterialmap(int id=0);
+    void BindHeightmap(int id=0) const;
+    void BindNormalmap(int id=0) const;
+    void BindShadowmap(int id=0) const;
+    void BindMaterialmap(int id=0) const;
 
     void ImGuiTerrain(bool &open, bool update_shadows);
     void ImGuiShadowmap(bool &open, bool update_shadows);
@@ -45,7 +45,7 @@ public:
 
     bool GeometryShouldUpdate();
 
-    ScaleSettings getScaleSettings() {return m_ScaleSettings;}
+    ScaleSettings getScaleSettings() const {return m_ScaleSettings;}
 
 private:
 

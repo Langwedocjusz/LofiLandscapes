@@ -2,6 +2,9 @@
 
 #include "Keycodes.h"
 
+#include "imgui.h"
+#include "ImGuiUtils.h"
+
 bool Plane::IsInFront(const AABB& aabb, float scale_y) const {
     const glm::vec3 scale = {1.0f, scale_y, 1.0f};
     const glm::vec3 extents = scale * aabb.Extents;
@@ -99,6 +102,14 @@ void Camera::updateFrustum(float aspect) {
 
 bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
     return m_Frustum.IsInFrustum(aabb, scale_y);
+}
+
+void Camera::OnImGui(bool& open) {
+    ImGui::Begin("Camera", &open);
+    ImGuiUtils::SliderFloat("Speed", &(m_Settings.Speed), 0.0, 10.0f);
+    ImGuiUtils::SliderFloat("Sensitivity", &(m_Settings.Sensitivity), 0.0f, 200.0f);
+    ImGuiUtils::SliderFloat("Fov", &(m_Settings.Fov), 0.0f, 90.0f);
+    ImGui::End();
 }
 
 FPCamera::FPCamera() {}

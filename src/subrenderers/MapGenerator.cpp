@@ -1,4 +1,4 @@
-#include "MapRenderer.h"
+#include "MapGenerator.h"
 
 #include "glad/glad.h"
 
@@ -7,15 +7,15 @@
 
 #include <iostream>
 
-MapRenderer::MapRenderer()
+MapGenerator::MapGenerator()
     : m_NormalmapShader("res/shaders/terrain/normal.glsl")
     , m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
     , m_MipShader("res/shaders/terrain/maximal_mip.glsl")
 {}
 
-MapRenderer::~MapRenderer() {}
+MapGenerator::~MapGenerator() {}
 
-void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
+void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Initialize Textures
     //-----Heightmap
 
@@ -157,7 +157,7 @@ void MapRenderer::Init(int height_res, int shadow_res, int wrap_type) {
     m_ShadowSettings.MipOffset = log2(res / res_s);
 }
 
-void MapRenderer::UpdateHeight() { 
+void MapGenerator::UpdateHeight() { 
     const int res = m_Heightmap.getSpec().ResolutionX;
 
     m_Heightmap.BindImage(0, 0);
@@ -168,7 +168,7 @@ void MapRenderer::UpdateHeight() {
     GenMaxMips();
 }
 
-void MapRenderer::UpdateNormal() {
+void MapGenerator::UpdateNormal() {
     const int res = m_Normalmap.getSpec().ResolutionX;
 
     m_Heightmap.Bind();
@@ -186,7 +186,7 @@ void MapRenderer::UpdateNormal() {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
+void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     const int res = m_Shadowmap.getSpec().ResolutionX;
 
     m_Heightmap.Bind();
@@ -210,7 +210,7 @@ void MapRenderer::UpdateShadow(const glm::vec3& sun_dir) {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void MapRenderer::UpdateMaterial() {
+void MapGenerator::UpdateMaterial() {
     const int res = m_Materialmap.getSpec().ResolutionX;
 
     m_Heightmap.Bind();
@@ -219,7 +219,7 @@ void MapRenderer::UpdateMaterial() {
     m_MaterialEditor.OnDispatch(res);
 }
 
-void MapRenderer::GenMaxMips() {
+void MapGenerator::GenMaxMips() {
     if (m_MipLevels == 0) return;
 
     const int res = m_Heightmap.getSpec().ResolutionX;
@@ -242,7 +242,7 @@ void MapRenderer::GenMaxMips() {
     }
 }
 
-void MapRenderer::Update(const glm::vec3& sun_dir) {
+void MapGenerator::Update(const glm::vec3& sun_dir) {
     if ((m_UpdateFlags & Height) != None)
         UpdateHeight();
 
@@ -258,23 +258,23 @@ void MapRenderer::Update(const glm::vec3& sun_dir) {
     m_UpdateFlags = None;
 }
 
-void MapRenderer::BindHeightmap(int id) {
+void MapGenerator::BindHeightmap(int id) const {
     m_Heightmap.Bind(id);
 }
 
-void MapRenderer::BindNormalmap(int id) {
+void MapGenerator::BindNormalmap(int id) const {
     m_Normalmap.Bind(id);
 }
 
-void MapRenderer::BindShadowmap(int id) {
+void MapGenerator::BindShadowmap(int id) const {
     m_Shadowmap.Bind(id);
 }
 
-void MapRenderer::BindMaterialmap(int id) {
+void MapGenerator::BindMaterialmap(int id) const {
     m_Materialmap.Bind(id);
 }
 
-void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
+void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     ScaleSettings temp_s = m_ScaleSettings;
 
     ImGui::Begin("Terrain editor", &open);
@@ -353,7 +353,7 @@ void MapRenderer::ImGuiTerrain(bool &open, bool update_shadows) {
 
 }
 
-void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
+void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
@@ -391,7 +391,7 @@ void MapRenderer::ImGuiShadowmap(bool &open, bool update_shadows) {
     }
 }
 
-void MapRenderer::ImGuiMaterials(bool& open) {
+void MapGenerator::ImGuiMaterials(bool& open) {
     ImGui::Begin("Material Map", &open);
 
     bool material_changed = m_MaterialEditor.OnImGui();
@@ -425,11 +425,11 @@ void MapRenderer::ImGuiMaterials(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Material;
 }
 
-void MapRenderer::RequestShadowUpdate() {
+void MapGenerator::RequestShadowUpdate() {
     m_UpdateFlags = m_UpdateFlags | Shadow;
 }
 
-bool MapRenderer::GeometryShouldUpdate() {
+bool MapGenerator::GeometryShouldUpdate() {
     //If height changed, then normal must also change, but it is possible
     //to change normals without height by changing the scale
     return (m_UpdateFlags & Normal) != None;

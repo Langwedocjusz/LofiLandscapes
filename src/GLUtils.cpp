@@ -79,12 +79,12 @@ void Texture::Initialize(TextureSpec spec) {
     m_Spec = spec;
 }
 
-void Texture::Bind(int id) {
+void Texture::Bind(int id) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 
-void Texture::BindImage(int id, int mip) {
+void Texture::BindImage(int id, int mip) const {
     int format = m_Spec.InternalFormat; 
 
     glBindImageTexture(id, m_Texture, mip, GL_FALSE, 0, GL_READ_WRITE, format);
@@ -140,17 +140,17 @@ void TextureArray::Initialize(TextureSpec spec, int layers) {
     m_Layers = layers;
 }
 
-void TextureArray::Bind(int id) {
+void TextureArray::Bind(int id) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_Texture);
 }
 
-void TextureArray::BindLayer(int id, int layer) {
+void TextureArray::BindLayer(int id, int layer) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_TextureViews[layer]);
 }
 
-void TextureArray::BindImage(int id, int layer, int mip) {
+void TextureArray::BindImage(int id, int layer, int mip) const {
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_Texture, mip, GL_FALSE, layer, GL_READ_WRITE, format);
@@ -195,12 +195,12 @@ void Texture3d::Initialize(Texture3dSpec spec) {
     m_Spec = spec;
 }
 
-void Texture3d::Bind(int id) {
+void Texture3d::Bind(int id) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_3D, m_Texture);
 }
 
-void Texture3d::BindImage(int id, int mip) {
+void Texture3d::BindImage(int id, int mip) const {
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_Texture, mip, GL_TRUE, 0, GL_READ_WRITE, format);
@@ -230,12 +230,12 @@ void Cubemap::Initialize(CubemapSpec spec) {
     m_Spec = spec;
 }
 
-void Cubemap::Bind(int id) {
+void Cubemap::Bind(int id) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_Texture);
 }
 
-void Cubemap::BindImage(int id, int mip) {
+void Cubemap::BindImage(int id, int mip) const {
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_Texture, mip, GL_TRUE, 0, GL_READ_WRITE, format);

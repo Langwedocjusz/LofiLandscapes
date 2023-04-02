@@ -36,10 +36,10 @@ private:
     Drawable m_FillX, m_FillY;
 };
 
-class ClipmapRenderer {
+class Clipmap {
 public:
-    ClipmapRenderer();
-    ~ClipmapRenderer();
+    Clipmap();
+    ~Clipmap();
 
     void Init(int subdivisions, int levels);
 

@@ -34,6 +34,11 @@ target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources} ${imgui_impl})
 #Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
+#Directory structure for IDEs like Visual Studio
+source_group(src REGULAR_EXPRESSION "src/*")
+source_group(src/subrenderers REGULAR_EXPRESSION "src/subrenderers/*")
+source_group(imgui_impl FILES ${imgui_impl})
+
 #Set current project as Visual Studio start project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 #Set Visual Studio Debugger working directory

@@ -269,18 +269,18 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGui::End();
 }
 
-void SkyRenderer::BindSkyLUT(int id) {
+void SkyRenderer::BindSkyLUT(int id) const {
     m_SkyLUT.Bind(id);
 }
 
-void SkyRenderer::BindIrradiance(int id) {
+void SkyRenderer::BindIrradiance(int id) const {
     m_IrradianceMap.Bind(id);
 }
 
-void SkyRenderer::BindPrefiltered(int id) {
+void SkyRenderer::BindPrefiltered(int id) const {
     m_PrefilteredMap.Bind(id);
 }
 
-void SkyRenderer::BindAerial(int id) {
+void SkyRenderer::BindAerial(int id) const {
     m_AerialLUT.Bind(id);
 }

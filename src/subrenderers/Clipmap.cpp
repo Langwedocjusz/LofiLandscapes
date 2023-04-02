@@ -1,4 +1,4 @@
-#include "ClipmapRenderer.h"
+#include "Clipmap.h"
 
 #include "glad/glad.h"
 
@@ -233,11 +233,11 @@ void ClipmapRing::Draw(const Camera& cam, float scale_y) {
     m_FillY.Draw();
 }
 
-ClipmapRenderer::ClipmapRenderer() 
+Clipmap::Clipmap() 
     : m_DisplaceShader("res/shaders/displace.glsl")
 {}
 
-void ClipmapRenderer::Init(int subdivisions, int levels) {
+void Clipmap::Init(int subdivisions, int levels) {
     m_BaseOffset = m_L / float(subdivisions);
 
     m_LodLevels.reserve(levels);
@@ -246,9 +246,9 @@ void ClipmapRenderer::Init(int subdivisions, int levels) {
         m_LodLevels.emplace_back(subdivisions + 1, m_L, i);
 }
 
-ClipmapRenderer::~ClipmapRenderer() {}
+Clipmap::~Clipmap() {}
 
-void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
+void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
                                        glm::vec2 pos)
 {
     m_DisplaceShader.Bind();
@@ -260,7 +260,7 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
         m_LodLevels[i].DispatchCompute();
 }
 
-void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
+void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
                                        glm::vec2 curr, glm::vec2 prev) 
 {
     m_DisplaceShader.Bind();
@@ -282,7 +282,7 @@ void ClipmapRenderer::DisplaceVertices(float scale_xz, float scale_y,
     }
 }
 
-void ClipmapRenderer::BindAndDraw(const Camera& cam, float scale_y) {
+void Clipmap::BindAndDraw(const Camera& cam, float scale_y) {
 
     for (int i = 0; i < m_LodLevels.size(); i++) {
         //std::cout << "Level " << i << ": ";

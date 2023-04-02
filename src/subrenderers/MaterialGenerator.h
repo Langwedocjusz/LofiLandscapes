@@ -3,16 +3,16 @@
 #include "GLUtils.h"
 #include "TextureEditor.h"
 
-class MaterialRenderer{
+class MaterialGenerator{
 public:
-    MaterialRenderer();
-    ~MaterialRenderer();
+    MaterialGenerator();
+    ~MaterialGenerator();
 
     void Update();
     void OnImGui(bool& open);
 
-    void BindAlbedo(int id=0);
-    void BindNormal(int id=0);
+    void BindAlbedo(int id=0) const;
+    void BindNormal(int id=0) const;
 
 private:
 

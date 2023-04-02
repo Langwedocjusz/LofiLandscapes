@@ -1,4 +1,4 @@
-#include "MaterialRenderer.h"
+#include "MaterialGenerator.h"
 
 #include "glad/glad.h"
 
@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-MaterialRenderer::MaterialRenderer()
+MaterialGenerator::MaterialGenerator()
     : m_NormalShader("res/shaders/materials/normal.glsl")
     , m_HeightEditor(m_Layers)
     , m_AlbedoEditor(m_Layers)
@@ -103,11 +103,11 @@ MaterialRenderer::MaterialRenderer()
     m_UpdateFlags = Height | Normal | Albedo;
 }
 
-MaterialRenderer::~MaterialRenderer() {
+MaterialGenerator::~MaterialGenerator() {
 
 }
 
-void MaterialRenderer::Update() { 
+void MaterialGenerator::Update() { 
 
     //Draw to heightmap:
     if ((m_UpdateFlags & Height) != None)
@@ -158,7 +158,7 @@ void MaterialRenderer::Update() {
     m_UpdateFlags = None;
 }
 
-void MaterialRenderer::OnImGui(bool& open) {
+void MaterialGenerator::OnImGui(bool& open) {
     ImGui::Begin("Material editor", &open);
     
     ImGuiUtils::SliderInt("Currently editing", &m_Current, 0, m_Layers-1);
@@ -274,10 +274,10 @@ void MaterialRenderer::OnImGui(bool& open) {
     Update();
 }
 
-void MaterialRenderer::BindAlbedo(int id) {
+void MaterialGenerator::BindAlbedo(int id) const {
     m_Albedo.Bind(id);
 }
 
-void MaterialRenderer::BindNormal(int id) {
+void MaterialGenerator::BindNormal(int id) const {
     m_Normal.Bind(id);
 }

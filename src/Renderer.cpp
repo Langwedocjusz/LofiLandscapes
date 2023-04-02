@@ -10,10 +10,6 @@
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height)
-    , m_ShadedShader("res/shaders/shaded.vert", 
-                     "res/shaders/shaded.frag")
-    , m_WireframeShader("res/shaders/wireframe.vert", 
-                        "res/shaders/wireframe.frag")
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
 {}
@@ -39,7 +35,7 @@ void Renderer::Init(StartSettings settings) {
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     //Update Maps
-    m_Map.Update(m_Sky.getSunDir());
+    m_Map.Update(m_SkyRenderer.getSunDir());
 
     //Update Material
     m_Material.Update();
@@ -77,7 +73,7 @@ void Renderer::OnUpdate(float deltatime) {
     m_MVP = proj * view * model;
 
     //Update sky
-    m_Sky.Update(m_Camera, m_InvAspect, m_Fog);
+    m_SkyRenderer.Update(m_Camera, m_InvAspect, m_TerrainRenderer.DoFog());
 
     //Update clipmap geometry if camera moved
     m_Map.BindHeightmap();
@@ -90,64 +86,25 @@ void Renderer::OnUpdate(float deltatime) {
 }
 
 void Renderer::OnRender() {
-    const float scale_xz = m_Map.getScaleSettings().ScaleXZ;
     const float scale_y  = m_Map.getScaleSettings().ScaleY;
 
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (m_Wireframe) {
-        m_WireframeShader.Bind();
-        m_WireframeShader.setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
-        m_WireframeShader.setUniform2f("uPos", m_Camera.getPos().x, 
-                                               m_Camera.getPos().z);
-        m_WireframeShader.setUniformMatrix4fv("uMVP", m_MVP);
+        m_TerrainRenderer.PrepareWireframe(m_MVP, m_Camera, m_Map);
 
         m_Clipmap.BindAndDraw(m_Camera, scale_y);
     }
 
     else {
         //Render Clipmap (Terrain)
-        m_ShadedShader.Bind();
-        m_ShadedShader.setUniform1f("uL", scale_xz);
-        m_ShadedShader.setUniform3f("uLightDir", m_Sky.getSunDir());
-        m_ShadedShader.setUniform3f("uPos", m_Camera.getPos());
-        m_ShadedShader.setUniformMatrix4fv("uMVP", m_MVP);
-        m_ShadedShader.setUniform1i("uShadow", int(m_Shadows));
-        m_ShadedShader.setUniform1i("uMaterial", int(m_Materials));
-        m_ShadedShader.setUniform1i("uFixTiling", int(m_FixTiling));
-        m_ShadedShader.setUniform1i("uFog", int(m_Fog));
-        m_ShadedShader.setUniform3f("uSunCol", m_SunCol);
-        m_ShadedShader.setUniform1f("uSunStr", m_SunStr);
-        m_ShadedShader.setUniform1f("uSkyDiff", m_SkyDiff);
-        m_ShadedShader.setUniform1f("uSkySpec", m_SkySpec);
-        m_ShadedShader.setUniform1f("uRefStr", m_RefStr);
-        m_ShadedShader.setUniform1f("uTilingFactor", m_TilingFactor);
-        m_ShadedShader.setUniform1f("uNormalStrength", m_NormalStrength);
-
-        m_Map.BindNormalmap(0);
-        m_ShadedShader.setUniform1i("normalmap", 0);
-        m_Map.BindShadowmap(1);
-        m_ShadedShader.setUniform1i("shadowmap", 1);
-        m_Map.BindMaterialmap(2);
-        m_ShadedShader.setUniform1i("materialmap", 2);
-
-        m_Material.BindAlbedo(3);
-        m_ShadedShader.setUniform1i("albedo", 3);
-        m_Material.BindNormal(4);
-        m_ShadedShader.setUniform1i("normal", 4);
-
-        m_Sky.BindIrradiance(5);
-        m_ShadedShader.setUniform1i("irradiance", 5);
-        m_Sky.BindPrefiltered(6);
-        m_ShadedShader.setUniform1i("prefiltered", 6);
-        m_Sky.BindAerial(7);
-        m_ShadedShader.setUniform1i("aerial", 7);
+        m_TerrainRenderer.PrepareShaded(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer);
 
         m_Clipmap.BindAndDraw(m_Camera, scale_y);
 
         //Render Sky
-        m_Sky.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, m_InvAspect);
+        m_SkyRenderer.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, m_InvAspect);
     }
 }
 
@@ -208,20 +165,11 @@ void Renderer::OnImGuiRender() {
         ImGui::End();
     }
     
-    if (m_ShowCamMenu) {
-        CameraSettings temp = m_Camera.getSettings();
-
-        ImGui::Begin("Camera", &m_ShowCamMenu);
-        ImGuiUtils::SliderFloat("Speed", &(temp.Speed), 0.0, 10.0f);
-        ImGuiUtils::SliderFloat("Sensitivity", &(temp.Sensitivity), 0.0f, 200.0f);
-        ImGuiUtils::SliderFloat("Fov", &(temp.Fov), 0.0f, 90.0f);
-        ImGui::End();
-
-        m_Camera.setSettings(temp);
-    }
+    if (m_ShowCamMenu)
+        m_Camera.OnImGui(m_ShowCamMenu);
     
     if (m_ShowTerrainMenu)
-        m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_Shadows);
+        m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_TerrainRenderer.DoShadows());
 
     if (m_ShowMapMaterialMenu)
         m_Map.ImGuiMaterials(m_ShowMapMaterialMenu);
@@ -229,47 +177,33 @@ void Renderer::OnImGuiRender() {
     bool update_geo = m_Map.GeometryShouldUpdate();
 
     if(m_ShowShadowMenu)
-        m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_Shadows);
+        m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_TerrainRenderer.DoShadows());
 
     if (m_ShowMaterialMenu)
         m_Material.OnImGui(m_ShowMaterialMenu);
 
     if (m_ShowLightMenu) {
-        bool shadows = m_Shadows;
+        bool shadows = m_TerrainRenderer.DoShadows();
 
-        ImGui::Begin("Lighting", &m_ShowLightMenu);
-        ImGuiUtils::Checkbox("Shadows", &shadows);
-        ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);
-        ImGuiUtils::SliderFloat("Sun" , &m_SunStr, 0.0, 4.0);
-        ImGuiUtils::SliderFloat("Sky Diffuse" , &m_SkyDiff, 0.0, 1.0);
-        ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
-        ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
-        ImGuiUtils::Checkbox("Render fog", &m_Fog);
-        ImGui::Separator();
-        ImGui::Text("Material params:");
-        ImGuiUtils::Checkbox("Materials", &m_Materials);
-        ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
-        ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
-        ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
-        ImGui::End();
+        m_TerrainRenderer.OnImGui(m_ShowLightMenu);
 
-        if (shadows != m_Shadows) {
-            m_Shadows = shadows;
-            if (m_Shadows) m_Map.RequestShadowUpdate();
+        if (shadows != m_TerrainRenderer.DoShadows()) {
+            if (m_TerrainRenderer.DoShadows()) 
+                m_Map.RequestShadowUpdate();
         }
     }
 
     if (m_ShowSkyMenu) {
-        glm::vec3 sun_dir = m_Sky.getSunDir();
+        glm::vec3 sun_dir = m_SkyRenderer.getSunDir();
 
-        m_Sky.OnImGui(m_ShowSkyMenu);
+        m_SkyRenderer.OnImGui(m_ShowSkyMenu);
 
-        if (sun_dir != m_Sky.getSunDir() && m_Shadows)
+        if (sun_dir != m_SkyRenderer.getSunDir() && m_TerrainRenderer.DoShadows())
             m_Map.RequestShadowUpdate();
     }
 
     //Update Maps
-    m_Map.Update(m_Sky.getSunDir());
+    m_Map.Update(m_SkyRenderer.getSunDir());
 
     //Update geometry if heightmap/scale changed
     if (update_geo) {
