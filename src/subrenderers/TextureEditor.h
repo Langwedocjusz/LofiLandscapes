@@ -122,7 +122,7 @@ public:
                    const std::vector<std::string>& labels);
 
     void OnDispatch(int res, const std::vector<InstanceData>& data);
-    bool OnImGui(std::vector<InstanceData>& data);
+    bool OnImGui(std::vector<InstanceData>& data, unsigned int id);
 
     std::unique_ptr<Shader> m_Shader;
     std::vector<std::unique_ptr<EditorTask>> m_Tasks;
@@ -180,7 +180,7 @@ protected:
 
 class TextureEditor : public EditorBase{
 public:
-     TextureEditor() = default;
+     TextureEditor(const std::string& name);
     ~TextureEditor() = default;
 
     void AddProcedureInstance(const std::string& name);
@@ -189,11 +189,19 @@ public:
     bool OnImGui();
 private:
     std::vector<ProcedureInstance> m_Instances;
+    
+    std::string m_Name;
+
+    bool m_PopupOpen = true;
+    bool Popup();
+
+    unsigned int m_InstanceID;
+    static unsigned int InstanceCount;
 };
 
 class TextureArrayEditor : public EditorBase {
 public:
-    TextureArrayEditor(int n);
+    TextureArrayEditor(const std::string& name, int n);
     ~TextureArrayEditor() = default;
 
     void AddProcedureInstance(int layer, const std::string& name);
@@ -202,4 +210,12 @@ public:
     bool OnImGui(int layer);
 private:
     std::vector<std::vector<ProcedureInstance>> m_InstanceLists;
+
+    std::string m_Name;
+
+    bool m_PopupOpen = true;
+    bool Popup(int layer);
+
+    unsigned int m_InstanceID;
+    static unsigned int InstanceCount;
 };

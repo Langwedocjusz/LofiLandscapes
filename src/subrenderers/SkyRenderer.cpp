@@ -232,6 +232,8 @@ void SkyRenderer::OnImGui(bool& open) {
     float phi = m_Phi, theta = m_Theta;
     float height = m_Height;
 
+    ImGui::Columns(2, "###col");
+
     ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
     ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5 * 3.14);
     ImGuiUtils::SliderFloat("Height (m)", &height, 0.0f, 2000.0f);
@@ -265,6 +267,8 @@ void SkyRenderer::OnImGui(bool& open) {
 
     ImGuiUtils::SliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
     ImGuiUtils::SliderFloat("Aerial distance", &m_AerialDistscale, 0.0f, 10.0f);
+
+    ImGui::Columns(1, "###col");
 
     ImGui::End();
 }

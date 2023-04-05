@@ -6,10 +6,16 @@
 #include "glm/glm.hpp"
 
 namespace ImGuiUtils {
-	void Checkbox(const std::string& label, bool* value);
-	void SliderInt(const std::string& label, int* value, int min, int max);
-	void SliderFloat(const std::string& label, float* value, float min, float max);
-	void ColorEdit3(const std::string& label, float* value);
-	void ColorEdit3(const std::string& label, glm::vec3* value);
+	void Checkbox(const std::string& label, bool* value, const std::string& suffix = "");
+	void SliderInt(const std::string& label, int* value, int min, int max, const std::string& suffix = "");
+	void SliderIntLog(const std::string& label, int* value, int min, int max, const std::string& suffix = "");
+	void SliderFloat(const std::string& label, float* value, float min, float max, const std::string& suffix = "");
+	void ColorEdit3(const std::string& label, float* value, const std::string& suffix = "");
+	void ColorEdit3(const std::string& label, glm::vec3* value, const std::string& suffix = "");
+	void Combo(const std::string& label, const std::vector<std::string> options,
+		       int& selected_id, const std::string& suffix = "");
+
+	void Separator();
+
 	bool Button(const std::string& label);
 }

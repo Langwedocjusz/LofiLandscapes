@@ -3,7 +3,10 @@
 #include "glad/glad.h"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "ImGuiUtils.h"
+
+#include <algorithm>
 
 ConstIntTask::ConstIntTask(const std::string& uniform_name, int val) 
     : UniformName(uniform_name), Value(val) {}
@@ -168,10 +171,12 @@ void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-bool Procedure::OnImGui(std::vector<InstanceData>& data) {
+bool Procedure::OnImGui(std::vector<InstanceData>& data, unsigned int id) {
+    const std::string suffix = std::to_string(id);
+
     bool res = false;
     unsigned int i = 0;
-    
+
     for (auto& task : m_Tasks) {
         auto type = task->getType();
 
@@ -184,8 +189,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 int* ptr = &std::get<int>(data[i]);
                 int value = *ptr;
 
-                ImGuiUtils::SliderInt(typed_task->UiName, &value, 
-                    typed_task->Min, typed_task->Max);
+                ImGuiUtils::SliderInt((typed_task->UiName), &value, 
+                                       typed_task->Min, typed_task->Max, suffix);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -202,8 +207,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 float* ptr = &std::get<float>(data[i]);
                 float value = *ptr;
 
-                ImGuiUtils::SliderFloat(typed_task->UiName, &value,
-                    typed_task->Min, typed_task->Max);
+                ImGuiUtils::SliderFloat((typed_task->UiName), &value, 
+                                         typed_task->Min, typed_task->Max, suffix);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -220,7 +225,7 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 glm::vec3* ptr = &std::get<glm::vec3>(data[i]);
                 glm::vec3 value = *ptr;
 
-                ImGuiUtils::ColorEdit3(typed_task->UiName, &value);
+                ImGuiUtils::ColorEdit3((typed_task->UiName), &value, suffix);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -239,26 +244,9 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data) {
                 int value = *ptr;
 
                 std::string& name = typed_task->UiName;
+                std::vector<std::string>& labels = typed_task->m_Labels;
 
-                ImGui::Text(name.c_str());
-                ImGui::SameLine(ImGui::GetWindowWidth() / 3);
-                ImGui::PushItemWidth(-ImGui::GetStyle().FramePadding.x);
-
-                if (ImGui::BeginCombo(("##"+name).c_str(), current_item))
-                {
-                    for (int n = 0; n < typed_task->m_Labels.size(); n++)
-                    {
-                        bool is_selected = (current_item == typed_task->m_Labels[n].c_str());
-
-                        if (ImGui::Selectable(typed_task->m_Labels[n].c_str(), is_selected)) {
-                            current_item = &((typed_task->m_Labels[n])[0]);
-                            value = n;
-                        }
-                    }
-                    ImGui::EndCombo();
-                }
-
-                ImGui::PopItemWidth();
+                ImGuiUtils::Combo(name, labels, value, suffix);
 
                 if (value != *ptr) {
                     *ptr = value;
@@ -432,7 +420,7 @@ void OnDispatchImpl(std::unordered_map<std::string, Procedure>& procedures,
 }
 
 bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
-                 std::vector<ProcedureInstance>& instances)
+                 std::vector<ProcedureInstance>& instances, unsigned int id)
 {
     bool res = false;
 
@@ -440,25 +428,58 @@ bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
         auto& instance = instances[i];
         auto& data = instance.Data;
 
-        ImGui::PushID(i);
+        const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_AllowItemOverlap;
+        const std::string name = instance.Name + "##" + std::to_string(id) + std::to_string(i);
 
-        if (ImGui::CollapsingHeader(instance.Name.c_str(), &instance.KeepAlive))
+        bool uncolapsed = ImGui::CollapsingHeader(name.c_str(), &instance.KeepAlive, flags);
+
+        //To-do: rigorous computation of "offset"
+        const float offset = 70.0f;
+
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - offset);
+
+        if (ImGui::ArrowButton((name + "up").c_str(), 2) && i>0)
         {
-            res = res || procedures[instance.Name].OnImGui(data);
+            std::iter_swap(instances.begin() + i - 1, instances.begin() + i);
+            res = true;
         }
 
-        ImGui::PopID();
+        ImGui::SameLine();
+
+        if (ImGui::ArrowButton((name + "down").c_str(), 3) && i < instances.size() - 1)
+        {
+            std::iter_swap(instances.begin() + i, instances.begin() + i + 1);
+            res = true;
+        }
+
+        if (uncolapsed)
+        {
+            ImGui::Columns(2, "###col");
+            ImGui::PushID(i);
+
+            res = res || procedures[instance.Name].OnImGui(data, id);
+
+            ImGui::PopID();
+            ImGui::Columns(1, "###col");
+        }
 
         if (!instance.KeepAlive) {
             instances.erase(instances.begin() + i);
             res = true;
         }
+
+        ImGui::Spacing();
     }
 
     return res;
 }
 
 //===========================================================================
+
+#include <iostream>
+
+TextureEditor::TextureEditor(const std::string& name)
+    : m_Name(name), m_InstanceID(InstanceCount++) {}
 
 void TextureEditor::AddProcedureInstance(const std::string& name) {
     AddProcedureInstanceImpl(m_Procedures, m_Instances, name);
@@ -469,12 +490,55 @@ void TextureEditor::OnDispatch(int res) {
 }
 
 bool TextureEditor::OnImGui() {
-    return OnImGuiImpl(m_Procedures, m_Instances);
+    bool res =  OnImGuiImpl(m_Procedures, m_Instances, m_InstanceID);
+    res |= Popup();
+
+    return res;
 }
+
+bool TextureEditor::Popup() {
+    bool res = false;
+
+    std::string name = "Choose procedure##" + m_Name;
+
+    if (ImGuiUtils::Button(("Add procedure##" + m_Name).c_str())) {
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
+        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
+
+        ImGui::OpenPopup(name.c_str());
+    }
+
+    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::BeginPopupModal(name.c_str(), &m_PopupOpen, popup_flags)) {
+
+        for (auto& it : m_Procedures)
+        {
+            if (ImGuiUtils::Button(it.first.c_str()))
+            {
+                res = true;
+                AddProcedureInstance(it.first);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    m_PopupOpen = true;
+    
+    return res;
+}
+
+unsigned int TextureEditor::InstanceCount = 0;
 
 //===========================================================================
 
-TextureArrayEditor::TextureArrayEditor(int n) {
+TextureArrayEditor::TextureArrayEditor(const std::string& name, int n)
+    : m_Name(name), m_InstanceID(InstanceCount++)
+{
     for (int i = 0; i < n; i++)
         m_InstanceLists.push_back(std::vector<ProcedureInstance>());
 }
@@ -494,5 +558,47 @@ void TextureArrayEditor::OnDispatch(int layer, int res) {
 bool TextureArrayEditor::OnImGui(int layer) {
     auto& instances = m_InstanceLists[layer];
 
-    return OnImGuiImpl(m_Procedures, instances);
+    bool res = OnImGuiImpl(m_Procedures, instances, m_InstanceID);
+    res |= Popup(layer);
+    
+    return res;
 }
+
+bool TextureArrayEditor::Popup(int layer) {
+    bool res = false;
+
+    std::string name = "Choose procedure##" + m_Name;
+
+    if (ImGuiUtils::Button(("Add procedure##" + m_Name).c_str())) {
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
+        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
+
+        ImGui::OpenPopup(name.c_str());
+    }
+
+    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::BeginPopupModal(name.c_str(), &m_PopupOpen, popup_flags)) {
+
+        for (auto& it : m_Procedures)
+        {
+            if (ImGuiUtils::Button(it.first.c_str()))
+            {
+                res = true;
+                AddProcedureInstance(layer, it.first);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    m_PopupOpen = true;
+
+    return res;
+}
+
+
+unsigned int TextureArrayEditor::InstanceCount = 0;

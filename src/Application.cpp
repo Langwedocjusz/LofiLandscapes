@@ -66,47 +66,34 @@ void Application::StartMenu() {
 
         ImGui::Begin("Start settings", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
         
+        ImGui::Columns(2, "###col");
         ImGuiUtils::SliderInt("Grid subdivisions", &m_StartSettings.Subdivisions, 16, 96);
         ImGuiUtils::SliderInt("Lod levels", &m_StartSettings.LodLevels, 1, 10);
-        ImGuiUtils::SliderInt("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
-        ImGuiUtils::SliderInt("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
+        ImGuiUtils::SliderIntLog("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
+        ImGuiUtils::SliderIntLog("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
+
+        //To do: create custom slider that takes in v, but displayes 2^v
+        //For now just round to closest power of 2 manually
+        m_StartSettings.HeightRes = std::exp2(std::round(std::log2(m_StartSettings.HeightRes)));
+        m_StartSettings.ShadowRes = std::exp2(std::round(std::log2(m_StartSettings.ShadowRes)));
 
         //-----World type selection----------------------
-        //To do: Imgui combo abstraction
-        const char* items[] = {"finite", "tiling"};
-        static const char* current_item = items[0];
+        std::vector<std::string> options{"finite", "tiling"};
 
-        ImGuiStyle& style = ImGui::GetStyle();
-        float padding = style.FramePadding.x;
+        static int selected_id = 0;
 
-        ImGui::Text("World type");
-        ImGui::SameLine(ImGui::GetWindowWidth() / 3);
-        ImGui::PushItemWidth(-padding);
+        ImGuiUtils::Combo("World type", options, selected_id);
 
-        if (ImGui::BeginCombo("##combo", current_item))
-        {
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            {
-                bool is_selected = (current_item == items[n]);
+        if (selected_id == 0)
+            m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
+        else if (selected_id == 1)
+            m_StartSettings.WrapType = GL_REPEAT;
 
-                if (ImGui::Selectable(items[n], is_selected)) {
-                    current_item = items[n];
-
-                    if (n == 0)
-                        m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
-                    else if (n == 1)
-                        m_StartSettings.WrapType = GL_REPEAT;
-                }     
-                
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::PopItemWidth();
+        ImGui::Columns(1, "###col");
 
         //-------------------------------------------------
+
+        ImGui::Spacing();
 
         if (ImGuiUtils::Button("Start"))
             m_ShowStartMenu = false;

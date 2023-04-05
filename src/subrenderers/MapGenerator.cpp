@@ -11,6 +11,8 @@ MapGenerator::MapGenerator()
     : m_NormalmapShader("res/shaders/terrain/normal.glsl")
     , m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
     , m_MipShader("res/shaders/terrain/maximal_mip.glsl")
+    , m_HeightEditor("Height")
+    , m_MaterialEditor("Material")
 {}
 
 MapGenerator::~MapGenerator() {}
@@ -21,7 +23,7 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
 
     TextureSpec heightmap_spec = TextureSpec{
         height_res, height_res, GL_R32F, GL_RGBA, 
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
@@ -280,59 +282,17 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     ImGui::Begin("Terrain editor", &open);
 
     ImGui::Text("Scale:");
+    ImGui::Columns(2, "###col");
     ImGuiUtils::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
     ImGuiUtils::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
-    ImGui::Separator();
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::Separator();
 
     bool scale_changed = (temp_s != m_ScaleSettings);
 
     ImGui::Text("Heightmap procedures:");
 
     bool height_changed = m_HeightEditor.OnImGui();
-
-    if (ImGuiUtils::Button("Add heightmap procedure")) {
-        ImGui::OpenPopup("Choose procedure (heightmap)");
-    }
-
-    if (ImGui::BeginPopupModal("Choose procedure (heightmap)")) {
-
-        if (ImGui::Button("Const Value")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Const Value");
-
-            height_changed = true;
-        }
-
-        if (ImGui::Button("FBM")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("FBM");
-
-            height_changed = true;
-        }
-
-        if (ImGui::Button("Voronoi")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Voronoi");
-
-            height_changed = true;
-        }
-
-        if (ImGui::Button("Curves")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Curves");
-
-            height_changed = true;
-        }
-
-        if (ImGui::Button("Radial Cutoff")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance("Radial cutoff");
-
-            height_changed = true;
-        }
-
-        ImGui::EndPopup();
-    }
 
     ImGui::End();
 
@@ -362,17 +322,21 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ImGui::Text("Shadowmap Settings:");
     ImGui::Spacing();
 
+    ImGui::Columns(2, "###col");
     ImGuiUtils::SliderInt("Min level", &temp.MinLevel, 0, 12);
     ImGuiUtils::SliderFloat("Nudge fac", &temp.NudgeFac, 1.005, 1.1);
     ImGuiUtils::Checkbox("Soft Shadows", &temp.Soft);
     ImGuiUtils::SliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
+    ImGui::Columns(1, "###col");
 
-    ImGui::Separator();
+    ImGuiUtils::Separator();
     ImGui::Text("AO Settings:");
     ImGui::Spacing();
 
+    ImGui::Columns(2, "###col");
     ImGuiUtils::SliderInt("AO Samples", &temp2.Samples, 1, 64);
     ImGuiUtils::SliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
+    ImGui::Columns(1, "###col");
 
     ImGui::End();
 
@@ -395,29 +359,6 @@ void MapGenerator::ImGuiMaterials(bool& open) {
     ImGui::Begin("Material Map", &open);
 
     bool material_changed = m_MaterialEditor.OnImGui();
-
-    if (ImGuiUtils::Button("Add material procedure")) {
-        ImGui::OpenPopup("Choose procedure (material)");
-    }
-
-    if (ImGui::BeginPopupModal("Choose procedure (material)")) {
-
-        if (ImGui::Button("Select height")) {
-            ImGui::CloseCurrentPopup();
-            m_MaterialEditor.AddProcedureInstance("Select height");
-
-            material_changed = true;
-        }
-
-        if (ImGui::Button("Select slope")) {
-            ImGui::CloseCurrentPopup();
-            m_MaterialEditor.AddProcedureInstance("Select slope");
-
-            material_changed = true;
-        }
-
-        ImGui::EndPopup();
-    }
 
     ImGui::End();
 

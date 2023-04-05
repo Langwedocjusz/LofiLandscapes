@@ -9,9 +9,9 @@
 
 MaterialGenerator::MaterialGenerator()
     : m_NormalShader("res/shaders/materials/normal.glsl")
-    , m_HeightEditor(m_Layers)
-    , m_AlbedoEditor(m_Layers)
-    , m_RoughnessEditor(m_Layers)
+    , m_HeightEditor("Height", m_Layers)
+    , m_AlbedoEditor("Albedo", m_Layers)
+    , m_RoughnessEditor("Roughness", m_Layers)
 {
     //=====Initialize the textures:
     TextureSpec height_spec = TextureSpec{
@@ -159,9 +159,12 @@ void MaterialGenerator::Update() {
 }
 
 void MaterialGenerator::OnImGui(bool& open) {
+
     ImGui::Begin("Material editor", &open);
     
+    ImGui::Columns(2, "###col");
     ImGuiUtils::SliderInt("Currently editing", &m_Current, 0, m_Layers-1);
+    ImGui::Columns(1, "###col");
 
     ImGui::Text("Heightmap procedures:");
 
@@ -171,43 +174,17 @@ void MaterialGenerator::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
-    if (ImGuiUtils::Button("Add heightmap procedure")) {        
-        ImGui::OpenPopup("Choose procedure (height)");
-    }
-
-    if (ImGui::BeginPopupModal("Choose procedure (height)")) {
-
-        if (ImGui::Button("Const Value")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance(m_Current, "Const Value");
-        }
-
-        if (ImGui::Button("FBM")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance(m_Current, "FBM");
-        }     
-
-        if (ImGui::Button("Voronoi")) {
-            ImGui::CloseCurrentPopup();
-            m_HeightEditor.AddProcedureInstance(m_Current, "Voronoi");
-        }
-
-        m_UpdateFlags = m_UpdateFlags | Height;
-        m_UpdateFlags = m_UpdateFlags | Normal;
-        m_UpdateFlags = m_UpdateFlags | Albedo;
-
-        ImGui::EndPopup();
-    }
-
-    ImGui::Separator();
+    ImGuiUtils::Separator();
 
     ImGui::Text("Normal/AO map settings:");
 
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
+    ImGui::Columns(2, "###col");
     ImGuiUtils::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
     ImGuiUtils::SliderFloat("AO Spread"  , &tmp_spr, 1.00, 10.0);
     ImGuiUtils::SliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
+    ImGui::Columns(1, "###col");
 
     if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {
         m_AOStrength = tmp_str;
@@ -217,7 +194,7 @@ void MaterialGenerator::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Normal;
     }
 
-    ImGui::Separator();
+    ImGuiUtils::Separator();
 
     ImGui::Text("Albedo procedures:");
     
@@ -225,48 +202,12 @@ void MaterialGenerator::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
-    if (ImGuiUtils::Button("Add albedo procedure")) {
-        ImGui::OpenPopup("Choose procedure (albedo)");
-    }
-
-    if (ImGui::BeginPopupModal("Choose procedure (albedo)")) {
-
-        if (ImGui::Button("Color Ramp")) {
-            ImGui::CloseCurrentPopup();
-            m_AlbedoEditor.AddProcedureInstance(m_Current, "Color Ramp");
-        }
-
-        m_UpdateFlags = m_UpdateFlags | Albedo;
-
-        ImGui::EndPopup();
-    }
-
-    ImGui::Separator();
+    ImGuiUtils::Separator();
 
     ImGui::Text("Roughness procedures:");
 
     if (m_RoughnessEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
-    }
-
-    if (ImGuiUtils::Button("Add roughness procedure")) {
-        ImGui::OpenPopup("Choose procedure (roughness)");
-    }
-
-    if (ImGui::BeginPopupModal("Choose procedure (roughness)")) {
-        if (ImGui::Button("Const Roughness")) {
-            ImGui::CloseCurrentPopup();
-            m_RoughnessEditor.AddProcedureInstance(m_Current, "Const Roughness");
-        }
-
-        if (ImGui::Button("Roughness Ramp")) {
-            ImGui::CloseCurrentPopup();
-            m_RoughnessEditor.AddProcedureInstance(m_Current, "Roughness Ramp");
-        }
-
-        m_UpdateFlags = m_UpdateFlags | Albedo;
-
-        ImGui::EndPopup();
     }
 
     ImGui::End();

@@ -61,6 +61,7 @@ void TerrainRenderer::PrepareShaded(const glm::mat4& mvp, const Camera& cam, con
 
 void TerrainRenderer::OnImGui(bool& open) {
     ImGui::Begin("Lighting", &open);
+    ImGui::Columns(2, "###col");
     ImGuiUtils::Checkbox("Shadows", &m_Shadows);
     ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);
     ImGuiUtils::SliderFloat("Sun", &m_SunStr, 0.0, 4.0);
@@ -68,11 +69,17 @@ void TerrainRenderer::OnImGui(bool& open) {
     ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
     ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
     ImGuiUtils::Checkbox("Render fog", &m_Fog);
-    ImGui::Separator();
+    ImGui::Columns(1, "###col");
+
+    ImGuiUtils::Separator();
     ImGui::Text("Material params:");
+
+    ImGui::Columns(2, "###col");
     ImGuiUtils::Checkbox("Materials", &m_Materials);
     ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
     ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
     ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
+    ImGui::Columns(1, "###col");
+
     ImGui::End();
 }
