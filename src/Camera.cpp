@@ -105,7 +105,7 @@ bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
 }
 
 void Camera::OnImGui(bool& open) {
-    ImGui::Begin("Camera", &open);
+    ImGui::Begin("Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
     ImGuiUtils::SliderFloat("Speed", &(m_Settings.Speed), 0.0, 10.0f);
     ImGuiUtils::SliderFloat("Sensitivity", &(m_Settings.Sensitivity), 0.0f, 200.0f);

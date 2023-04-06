@@ -60,7 +60,7 @@ void TerrainRenderer::PrepareShaded(const glm::mat4& mvp, const Camera& cam, con
 }
 
 void TerrainRenderer::OnImGui(bool& open) {
-    ImGui::Begin("Lighting", &open);
+    ImGui::Begin("Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
     ImGuiUtils::Checkbox("Shadows", &m_Shadows);
     ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);

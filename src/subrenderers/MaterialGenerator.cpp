@@ -174,7 +174,7 @@ void MaterialGenerator::Update() {
 
 void MaterialGenerator::OnImGui(bool& open) {
 
-    ImGui::Begin("Material editor", &open);
+    ImGui::Begin("Material editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     
     ImGui::Columns(2, "###col");
     ImGuiUtils::SliderInt("Currently editing", &m_Current, 0, m_Layers-1);

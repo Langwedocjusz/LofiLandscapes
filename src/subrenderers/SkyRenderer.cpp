@@ -227,7 +227,7 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
 }
 
 void SkyRenderer::OnImGui(bool& open) {
-    ImGui::Begin("Sky settings", &open);
+    ImGui::Begin("Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     float phi = m_Phi, theta = m_Theta;
     float height = m_Height;

@@ -279,7 +279,7 @@ void MapGenerator::BindMaterialmap(int id) const {
 void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     ScaleSettings temp_s = m_ScaleSettings;
 
-    ImGui::Begin("Terrain editor", &open);
+    ImGui::Begin("Terrain editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGui::Text("Scale:");
     ImGui::Columns(2, "###col");
@@ -317,7 +317,7 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
-    ImGui::Begin("Shadow/AO settings", &open);
+    ImGui::Begin("Shadow/AO settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGui::Text("Shadowmap Settings:");
     ImGui::Spacing();
@@ -356,7 +356,7 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
 }
 
 void MapGenerator::ImGuiMaterials(bool& open) {
-    ImGui::Begin("Material Map", &open);
+    ImGui::Begin("Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     bool material_changed = m_MaterialEditor.OnImGui();
 

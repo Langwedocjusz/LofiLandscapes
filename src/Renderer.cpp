@@ -160,7 +160,7 @@ void Renderer::OnImGuiRender() {
 
     //-----Windows
     if (m_ShowBackgroundMenu) {
-        ImGui::Begin("Background", &m_ShowBackgroundMenu);
+        ImGui::Begin("Background", &m_ShowBackgroundMenu, ImGuiWindowFlags_NoFocusOnAppearing);
         ImGui::Columns(2, "###col");
         ImGuiUtils::ColorEdit3("##ClearColor", m_ClearColor);
         ImGui::Columns(1, "###col");
