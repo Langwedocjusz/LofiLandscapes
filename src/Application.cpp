@@ -127,12 +127,14 @@ void Application::OnEvent(Event& e) {
    EventType type = e.getEventType();
 
    switch(type) {
-        case EventType::WindowResize: {
+        case EventType::WindowResize: 
+        {
             WindowResizeEvent* ptr = dynamic_cast<WindowResizeEvent*>(&e);
             m_Renderer.OnWindowResize(ptr->getWidth(), ptr->getHeight());
             break; 
         }
-        case EventType::KeyPressed: {
+        case EventType::KeyPressed: 
+        {
             KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
 
             if(ptr->getKeycode() == LOFI_KEY_ESCAPE) {
@@ -151,18 +153,27 @@ void Application::OnEvent(Event& e) {
 
             break;
         }
-        case EventType::KeyReleased: {
+        case EventType::KeyReleased: 
+        {
             if (!m_ShowMenu) {
                 KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
                 m_Renderer.OnKeyReleased(ptr->getKeycode());
             }
             break;
         }
-        case EventType::MouseMoved: {
+        case EventType::MouseMoved: 
+        {
             if (!m_ShowMenu) {
                 MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
                 m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
             }
+            break;
+        }
+        case EventType::MousePressed:
+        {
+            //This needs to be called when menu is open
+            MousePressedEvent* ptr = dynamic_cast<MousePressedEvent*>(&e);
+            m_Renderer.OnMousePressed(ptr->getButton(), ptr->getMods());
             break;
         }
    }

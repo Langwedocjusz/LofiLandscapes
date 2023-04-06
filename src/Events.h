@@ -5,7 +5,7 @@ enum class EventType {
     None = 0,
     WindowResize,
     KeyPressed, KeyReleased,
-    MouseMoved
+    MouseMoved, MousePressed, MouseReleased
 };
 
 class Event {
@@ -64,3 +64,30 @@ private:
     float m_X, m_Y;
 };
 
+class MousePressedEvent : public Event {
+public:
+    MousePressedEvent(int button, int mods)
+        : m_Button(button), m_Mods(mods) {}
+
+    virtual EventType getEventType() override { return EventType::MousePressed; }
+
+    int getButton() { return m_Button; }
+    int getMods() { return m_Mods; }
+
+private:
+    int m_Button, m_Mods;
+};
+
+class MouseReleasedEvent : public Event {
+public:
+    MouseReleasedEvent(int button, int mods)
+        : m_Button(button), m_Mods(mods) {}
+
+    virtual EventType getEventType() override { return EventType::MouseReleased; }
+
+    int getButton() { return m_Button; }
+    int getMods() { return m_Mods; }
+
+private:
+    int m_Button, m_Mods;
+};

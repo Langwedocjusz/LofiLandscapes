@@ -32,6 +32,7 @@ public:
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
     void OnMouseMoved(float x, float y);
+    void OnMousePressed(int button, int mods);
     void RestartMouse();
 private:
 

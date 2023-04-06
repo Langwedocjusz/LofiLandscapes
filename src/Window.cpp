@@ -48,46 +48,71 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
                   << "Message: " << message << '\n';
     });
 
-    glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window,
-                int width, int height){
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-        data.Width = width;
-        data.Height = height;
+    glfwSetFramebufferSizeCallback(m_Window, 
+        [](GLFWwindow* window, int width, int height)
+        {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+            data.Width = width;
+            data.Height = height;
 
-        WindowResizeEvent event(width, height);
-        data.EventCallback(event);
-    });
+            WindowResizeEvent event(width, height);
+            data.EventCallback(event);
+        });
 
-    glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode,
-                                    int action, int mods){
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+    glfwSetKeyCallback(m_Window, 
+        [](GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-        switch(action) {
-            case GLFW_PRESS: {
-                KeyPressedEvent event(key, false);
-                data.EventCallback(event);
-                break;
+            switch(action) {
+                case GLFW_PRESS: {
+                    KeyPressedEvent event(key, false);
+                    data.EventCallback(event);
+                    break;
+                }
+                case GLFW_REPEAT: {
+                    KeyPressedEvent event(key, true);
+                    data.EventCallback(event);
+                    break;
+                }
+                case GLFW_RELEASE: {
+                    KeyReleasedEvent event(key);
+                    data.EventCallback(event);
+                    break;
+                }
             }
-            case GLFW_REPEAT: {
-                KeyPressedEvent event(key, true);
-                data.EventCallback(event);
-                break;
-            }
-            case GLFW_RELEASE: {
-                KeyReleasedEvent event(key);
-                data.EventCallback(event);
-                break;
-            }
-        }
-    });
+        });
 
-    glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window,
-                                          double xPos, double yPos){
-        WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+    glfwSetCursorPosCallback(m_Window, 
+        [](GLFWwindow* window, double xPos, double yPos)
+        {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-        MouseMovedEvent event(xPos, yPos);
-        data.EventCallback(event);
-    });
+            MouseMovedEvent event(xPos, yPos);
+            data.EventCallback(event);
+        });
+
+    glfwSetMouseButtonCallback(m_Window, 
+        [](GLFWwindow* window, int button, int action, int mods) 
+        {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+            switch (action)
+            {
+                case GLFW_PRESS:
+                {
+                    MousePressedEvent event(button, mods);
+                    data.EventCallback(event);
+                    break;
+                }
+                case GLFW_RELEASE:
+                {
+                    MouseReleasedEvent event(button, mods);
+                    data.EventCallback(event);
+                    break;
+                }
+            }
+        });
 
     //Enable vsync
     glfwSwapInterval(1);

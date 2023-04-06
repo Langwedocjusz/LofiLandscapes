@@ -243,6 +243,10 @@ void Renderer::OnMouseMoved(float x, float y) {
     m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight, m_Aspect);
 }
 
+void Renderer::OnMousePressed(int button, int mods) {
+    //std::cout << button << mods << '\n';
+}
+
 void Renderer::RestartMouse() {
     m_Camera.setMouseInit(true);
 }

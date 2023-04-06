@@ -1,5 +1,7 @@
 #pragma once
 
+//Copied and renamed from glfw3.h in order not to include glfw functionality unnecessarily into non-window related code
+
 #define LOFI_KEY_SPACE              32
 #define LOFI_KEY_APOSTROPHE         39  /* ' */
 #define LOFI_KEY_COMMA              44  /* , */
@@ -122,3 +124,17 @@
 #define LOFI_KEY_RIGHT_ALT          346
 #define LOFI_KEY_RIGHT_SUPER        347
 #define LOFI_KEY_MENU               348
+
+
+#define LOFI_MOUSE_BUTTON_1         0
+#define LOFI_MOUSE_BUTTON_2         1
+#define LOFI_MOUSE_BUTTON_3         2
+#define LOFI_MOUSE_BUTTON_4         3
+#define LOFI_MOUSE_BUTTON_5         4
+#define LOFI_MOUSE_BUTTON_6         5
+#define LOFI_MOUSE_BUTTON_7         6
+#define LOFI_MOUSE_BUTTON_8         7
+#define LOFI_MOUSE_BUTTON_LAST      LOFI_MOUSE_BUTTON_8
+#define LOFI_MOUSE_BUTTON_LEFT      LOFI_MOUSE_BUTTON_1
+#define LOFI_MOUSE_BUTTON_RIGHT     LOFI_MOUSE_BUTTON_2
+#define LOFI_MOUSE_BUTTON_MIDDLE    LOFI_MOUSE_BUTTON_3
