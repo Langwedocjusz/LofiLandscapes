@@ -62,7 +62,7 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
         material_res, material_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
-        {0.0f, 0.0f, 0.0f, 1.0f}
+        {1.0f, 0.0f, 0.0f, 0.0f}
     };
 
     m_Materialmap.Initialize(material_spec);

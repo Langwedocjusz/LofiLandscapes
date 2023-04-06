@@ -21,23 +21,29 @@ MaterialGenerator::MaterialGenerator()
         {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
-    TextureSpec spec = TextureSpec{
+    TextureSpec normal_spec = TextureSpec{
+        512, 512, GL_RGBA8, GL_RGBA,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        GL_REPEAT,
+        {0.5f, 1.0f, 0.5f, 1.0f}
+    };
+
+    TextureSpec albedo_spec = TextureSpec{
         512, 512, GL_RGBA8, GL_RGBA, 
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
-        {0.0f, 0.0f, 0.0f, 0.0f}
+        {0.0f, 0.0f, 0.0f, 0.7f}
     };
 
     m_Height.Initialize(height_spec, m_Layers);
 
-    m_Albedo.Initialize(spec, m_Layers);
-    m_Albedo.Bind();
-    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-
-    m_Normal.Initialize(spec, m_Layers);
+    m_Normal.Initialize(normal_spec, m_Layers);
     m_Normal.Bind();
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
+    m_Albedo.Initialize(albedo_spec, m_Layers);
+    m_Albedo.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
     //=====Initialize material editors:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
@@ -100,7 +106,15 @@ MaterialGenerator::MaterialGenerator()
         m_RoughnessEditor.AddProcedureInstance(i, "Const Roughness");
     }
 
-    m_UpdateFlags = Height | Normal | Albedo;
+    //Update all layers
+    for (int i = 0; i < m_Layers; i++)
+    {
+        m_UpdateFlags = Height | Normal | Albedo;
+        m_Current = i;
+        Update();
+    }
+
+    m_Current = 0;
 }
 
 MaterialGenerator::~MaterialGenerator() {

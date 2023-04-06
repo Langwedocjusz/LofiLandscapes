@@ -112,10 +112,7 @@ void TextureArray::Initialize(TextureSpec spec, int layers) {
     glGenTextures(1, &m_Texture);
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_Texture);
 
-    //glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, spec.InternalFormat,
-    //             spec.ResolutionX, spec.ResolutionY, layers, 0,
-    //             spec.Format, spec.Type, NULL);
-
+    //Storage instead of Image is crucial since TextureViews REQUIRE immutable storage
     glTexStorage3D(GL_TEXTURE_2D_ARRAY, mips, spec.InternalFormat,
                    spec.ResolutionX, spec.ResolutionY, layers);
 
