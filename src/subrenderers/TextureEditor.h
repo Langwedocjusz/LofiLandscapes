@@ -6,8 +6,7 @@
 #include <memory>
 #include <unordered_map>
 
-typedef std::pair<int, char*> GLEnumData;
-typedef std::variant<int, float, glm::vec3, GLEnumData> InstanceData;
+typedef std::variant<int, float, glm::vec3> InstanceData;
 
 enum class TaskType{
     None, ConstInt, ConstFloat, SliderInt, SliderFloat, ColorEdit3, GLEnum
@@ -193,7 +192,6 @@ private:
     std::string m_Name;
 
     bool m_PopupOpen = true;
-    bool Popup();
 
     unsigned int m_InstanceID;
     static unsigned int InstanceCount;
@@ -214,7 +212,6 @@ private:
     std::string m_Name;
 
     bool m_PopupOpen = true;
-    bool Popup(int layer);
 
     unsigned int m_InstanceID;
     static unsigned int InstanceCount;

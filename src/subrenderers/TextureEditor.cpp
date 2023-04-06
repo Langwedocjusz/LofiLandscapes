@@ -152,7 +152,7 @@ void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
                 GLEnumTask* typed_task =
                     dynamic_cast<GLEnumTask*>(task.get());
 
-                auto value = std::get<GLEnumData>(data[i]).first;
+                auto value = std::get<int>(data[i]);
                 m_Shader->setUniform1i(typed_task->UniformName, value);
                 break;
             }
@@ -239,8 +239,7 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data, unsigned int id) {
                 GLEnumTask* typed_task =
                     dynamic_cast<GLEnumTask*>(task.get());
 
-                char* current_item = std::get<GLEnumData>(data[i]).second;
-                int* ptr = &std::get<GLEnumData>(data[i]).first;
+                int* ptr = &std::get<int>(data[i]);
                 int value = *ptr;
 
                 std::string& name = typed_task->UiName;
@@ -251,7 +250,6 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data, unsigned int id) {
                 if (value != *ptr) {
                     *ptr = value;
                     res = true;
-                    std::get<GLEnumData>(data[i]).second = current_item;
                 }
 
                 break;
@@ -396,7 +394,7 @@ void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& proced
                 GLEnumTask* typed_task =
                     dynamic_cast<GLEnumTask*>(task.get());
 
-                instances.back().Data.push_back(std::pair<int, char*>(0, &((typed_task->m_Labels[0])[0])));
+                instances.back().Data.push_back(0);
                 break;
             }
             default:
@@ -474,6 +472,46 @@ bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
     return res;
 }
 
+
+bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
+               std::vector<ProcedureInstance>& instances,
+               const std::string& editor_name, bool& popup_open) 
+{
+    bool res = false;
+
+    std::string name = "Choose procedure##" + editor_name;
+
+    if (ImGuiUtils::Button(("Add procedure##" + editor_name).c_str())) {
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
+        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
+
+        ImGui::OpenPopup(name.c_str());
+    }
+
+    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::BeginPopupModal(name.c_str(), &popup_open, popup_flags)) {
+
+        for (auto& it : procedures)
+        {
+            if (ImGuiUtils::Button(it.first.c_str()))
+            {
+                res = true;
+                AddProcedureInstanceImpl(procedures, instances, it.first);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    popup_open = true;
+
+    return res;
+}
+
 //===========================================================================
 
 #include <iostream>
@@ -491,44 +529,8 @@ void TextureEditor::OnDispatch(int res) {
 
 bool TextureEditor::OnImGui() {
     bool res =  OnImGuiImpl(m_Procedures, m_Instances, m_InstanceID);
-    res |= Popup();
+    res |= PopupImpl(m_Procedures, m_Instances, m_Name, m_PopupOpen);
 
-    return res;
-}
-
-bool TextureEditor::Popup() {
-    bool res = false;
-
-    std::string name = "Choose procedure##" + m_Name;
-
-    if (ImGuiUtils::Button(("Add procedure##" + m_Name).c_str())) {
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
-        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
-
-        ImGui::OpenPopup(name.c_str());
-    }
-
-    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-
-    if (ImGui::BeginPopupModal(name.c_str(), &m_PopupOpen, popup_flags)) {
-
-        for (auto& it : m_Procedures)
-        {
-            if (ImGuiUtils::Button(it.first.c_str()))
-            {
-                res = true;
-                AddProcedureInstance(it.first);
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::EndPopup();
-    }
-
-    m_PopupOpen = true;
-    
     return res;
 }
 
@@ -559,46 +561,9 @@ bool TextureArrayEditor::OnImGui(int layer) {
     auto& instances = m_InstanceLists[layer];
 
     bool res = OnImGuiImpl(m_Procedures, instances, m_InstanceID);
-    res |= Popup(layer);
+    res |= PopupImpl(m_Procedures, instances, m_Name, m_PopupOpen);
     
     return res;
 }
-
-bool TextureArrayEditor::Popup(int layer) {
-    bool res = false;
-
-    std::string name = "Choose procedure##" + m_Name;
-
-    if (ImGuiUtils::Button(("Add procedure##" + m_Name).c_str())) {
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
-        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
-
-        ImGui::OpenPopup(name.c_str());
-    }
-
-    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-
-    if (ImGui::BeginPopupModal(name.c_str(), &m_PopupOpen, popup_flags)) {
-
-        for (auto& it : m_Procedures)
-        {
-            if (ImGuiUtils::Button(it.first.c_str()))
-            {
-                res = true;
-                AddProcedureInstance(layer, it.first);
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::EndPopup();
-    }
-
-    m_PopupOpen = true;
-
-    return res;
-}
-
 
 unsigned int TextureArrayEditor::InstanceCount = 0;
