@@ -37,35 +37,41 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Normal map: 
     TextureSpec normal_spec = TextureSpec{
         height_res, height_res, GL_RGBA8, GL_RGBA, 
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
         {0.5f, 1.0f, 0.5f, 1.0f}
     };
 
     m_Normalmap.Initialize(normal_spec);
+    m_Normalmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Shadow map
     TextureSpec shadow_spec = TextureSpec{
         shadow_res, shadow_res, GL_R8, GL_RED, 
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 1.0f, 1.0f, 1.0f}
     };
 
     m_Shadowmap.Initialize(shadow_spec);
+    m_Shadowmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     //--Material map
     const int material_res = height_res;
 
     TextureSpec material_spec = TextureSpec{
         material_res, material_res, GL_RGBA8, GL_RGBA,
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 0.0f, 0.0f, 0.0f}
     };
 
     m_Materialmap.Initialize(material_spec);
+    m_Materialmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Setup heightmap editor:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
@@ -186,6 +192,9 @@ void MapGenerator::UpdateNormal() {
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    m_Normalmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
@@ -210,6 +219,9 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    m_Shadowmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void MapGenerator::UpdateMaterial() {
@@ -219,6 +231,9 @@ void MapGenerator::UpdateMaterial() {
 
     m_Materialmap.BindImage(0, 0);
     m_MaterialEditor.OnDispatch(res);
+
+    m_Materialmap.Bind();
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void MapGenerator::GenMaxMips() {
