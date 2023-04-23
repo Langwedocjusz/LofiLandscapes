@@ -28,7 +28,6 @@ uniform bool uSoftShadows;
 uniform float uSharpness;
 
 const float epsilon = 2*1e-6;
-const float texel_size = 1.0/uResolution;
 
 float DistToNextIntersection(vec2 pos, vec2 dir2, vec2 delta, float cell_size)
 {
@@ -56,6 +55,8 @@ bool IntersectTerrain(vec2 org2, vec2 dir2, vec3 org3, vec3 dir3,
     const int samples = 5;
     const float ve = 1.0/float(samples-1);
 
+    float texel_size = 1.0/uResolution;
+    
     for (int i=0; i<5; i++) {
         float t = t_start + ve*float(i)*t_delta;
 
@@ -86,6 +87,8 @@ void main() {
     vec2 uv = vec2(texelCoord);
     
     //Get sun ray origin and direction:
+    float texel_size = 1.0/uResolution;
+    
     float height = texture(heightmap, texel_size*uv).r;
 
     vec3 org3 = vec3(uv.x, uResolution*height, uv.y);
@@ -103,7 +106,7 @@ void main() {
 
     vec2 pos = org2 + 0.01*dir2;
 
-    //Constants derived from ray direction
+    //Constants derived from ray direction 
     vec2 delta;
          delta.x  = abs(dir2.x) < texel_size ? 1e30 : abs(1.0/dir2.x);
          delta.y  = abs(dir2.y) < texel_size ? 1e30 : abs(1.0/dir2.y);

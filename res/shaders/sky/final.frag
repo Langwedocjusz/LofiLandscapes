@@ -32,12 +32,13 @@ uniform float uHeight;
 const float ground_rad = 6.360;
 const float atmosphere_rad = 6.460;
 
-const vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
 
 float safeacos(float x);
 vec3 getValueFromLUT(sampler2D tex, vec3 pos, vec3 sunDir);
 
 vec3 getValFromSkyLUT(vec3 rayDir) {
+    vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
+    
     float height = length(view_pos);
     vec3 up = view_pos/height;
     
@@ -74,6 +75,8 @@ vec3 getSunColor(vec3 dir)
     const float sunSolidAngle = 2.0*0.53*PI/180.0;
     const float minSunCosTheta = cos(sunSolidAngle);
 
+    vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
+    
     float cosTheta = dot(dir, uSunDir);
 
     //Antialiasing

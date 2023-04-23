@@ -20,8 +20,6 @@ uniform float uHeight;
 
 #include common.glsl
 
-const vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
-
 //Scattering phase functions
 float MiePhase(float cosTheta) {
     const float g = 0.8;
@@ -81,7 +79,7 @@ vec3 RaymarchScattering(vec3 pos, vec3 ray_dir, vec3 sun_dir, float t_max) {
     return lum;
 }
 
-void main() {
+void main() { 
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Normalized coordinates (square texture)
@@ -103,6 +101,7 @@ void main() {
         adjV = coord*coord;
     }
 
+    vec3 view_pos = vec3(0.0, ground_rad + uHeight, 0.0);
     float height = length(view_pos);
     vec3 up = view_pos/height;
 
