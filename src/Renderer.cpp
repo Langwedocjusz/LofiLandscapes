@@ -4,9 +4,11 @@
 #include "glad/glad.h"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "ImGuiUtils.h"
 
 #include <iostream>
+#include <functional>
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height)
@@ -120,29 +122,15 @@ void Renderer::OnImGuiRender() {
         }
 
         if (ImGui::BeginMenu("Windows")) {
-            if (ImGui::MenuItem("Terrain"))
-                m_ShowTerrainMenu = !m_ShowTerrainMenu;
 
-            if (ImGui::MenuItem("Background"))
-                m_ShowBackgroundMenu = !m_ShowBackgroundMenu;
-
-            if (ImGui::MenuItem("Lighting"))
-                m_ShowLightMenu = !m_ShowLightMenu;
-
-            if (ImGui::MenuItem("Shadows"))
-                m_ShowShadowMenu = !m_ShowShadowMenu;
-
-            if (ImGui::MenuItem("Camera"))
-                m_ShowCamMenu = !m_ShowCamMenu;
-
-            if (ImGui::MenuItem("Material"))
-                m_ShowMaterialMenu = !m_ShowMaterialMenu;
-
-            if (ImGui::MenuItem("Material Map"))
-                m_ShowMapMaterialMenu = !m_ShowMapMaterialMenu;
-
-            if (ImGui::MenuItem("Sky"))
-                m_ShowSkyMenu = !m_ShowSkyMenu;
+            ImGui::MenuItem("Terrain",      NULL, &m_ShowTerrainMenu);
+            ImGui::MenuItem("Background",   NULL, &m_ShowBackgroundMenu);
+            ImGui::MenuItem("Lighting",     NULL, &m_ShowLightMenu);
+            ImGui::MenuItem("Shadows",      NULL, &m_ShowShadowMenu);
+            ImGui::MenuItem("Camera",       NULL, &m_ShowCamMenu);
+            ImGui::MenuItem("Material",     NULL, &m_ShowMaterialMenu);
+            ImGui::MenuItem("Material Map", NULL, &m_ShowMapMaterialMenu);
+            ImGui::MenuItem("Sky",          NULL, &m_ShowSkyMenu);
 
             ImGui::EndMenu();
         }
@@ -158,7 +146,7 @@ void Renderer::OnImGuiRender() {
     if (m_ShowBackgroundMenu) {
         ImGui::Begin("Background", &m_ShowBackgroundMenu, ImGuiWindowFlags_NoFocusOnAppearing);
         ImGui::Columns(2, "###col");
-        ImGuiUtils::ColorEdit3("##ClearColor", m_ClearColor);
+        ImGuiUtils::ColorEdit3("ClearColor", m_ClearColor);
         ImGui::Columns(1, "###col");
         ImGui::End();
     }
@@ -245,4 +233,57 @@ void Renderer::OnMousePressed(int button, int mods) {
 
 void Renderer::RestartMouse() {
     m_Camera.setMouseInit(true);
+}
+
+void Renderer::InitImGuiIniHandler() {
+    auto MyUserData_ReadOpen = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name)
+    {
+        return (void*)1;
+    };
+
+    auto MyUserData_ReadLine = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line)
+    {
+        Renderer* r = (Renderer*)handler->UserData;
+        int value;
+
+        auto CheckLine = [&line, &value](const char* fmt)
+        {
+            return sscanf(line, fmt, &value) == 1;
+        };
+
+        if (CheckLine("ShowTerrainMenu=%d\n"))     r->m_ShowTerrainMenu     = bool(value);
+        if (CheckLine("ShowBackgroundMenu=%d\n"))  r->m_ShowBackgroundMenu  = bool(value);
+        if (CheckLine("ShowLightMenu=%d\n"))       r->m_ShowLightMenu       = bool(value);
+        if (CheckLine("ShowShadowMenu=%d\n"))      r->m_ShowShadowMenu      = bool(value);
+        if (CheckLine("ShowCamMenu=%d\n"))         r->m_ShowCamMenu         = bool(value);
+        if (CheckLine("ShowMaterialMenu=%d\n"))    r->m_ShowMaterialMenu    = bool(value);
+        if (CheckLine("ShowSkyMenu=%d\n"))         r->m_ShowSkyMenu         = bool(value);
+        if (CheckLine("ShowMapMaterialMenu=%d\n")) r->m_ShowMapMaterialMenu = bool(value);
+    };
+
+    auto MyUserData_WriteAll = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
+    {
+        Renderer* r = (Renderer*)handler->UserData;
+
+        out_buf->appendf("[%s][State]\n", handler->TypeName);
+        out_buf->appendf("ShowTerrainMenu=%d\n", r->m_ShowTerrainMenu);
+        out_buf->appendf("ShowBackgroundMenu=%d\n", r->m_ShowBackgroundMenu);
+        out_buf->appendf("ShowLightMenu=%d\n", r->m_ShowLightMenu);
+        out_buf->appendf("ShowShadowMenu=%d\n", r->m_ShowShadowMenu);
+        out_buf->appendf("ShowCamMenu=%d\n", r->m_ShowCamMenu);
+        out_buf->appendf("ShowMaterialMenu=%d\n", r->m_ShowMaterialMenu);
+        out_buf->appendf("ShowSkyMenu=%d\n", r->m_ShowSkyMenu);
+        out_buf->appendf("ShowMapMaterialMenu=%d\n", r->m_ShowMapMaterialMenu);
+        out_buf->appendf("\n");
+    };
+
+    ImGuiSettingsHandler ini_handler;
+    ini_handler.TypeName = "UserData";
+    ini_handler.TypeHash = ImHashStr("UserData");
+    ini_handler.ReadOpenFn = MyUserData_ReadOpen;
+    ini_handler.ReadLineFn = MyUserData_ReadLine;
+    ini_handler.WriteAllFn = MyUserData_WriteAll;
+    ini_handler.UserData = this;
+
+    ImGui::AddSettingsHandler(&ini_handler);
 }

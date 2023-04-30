@@ -10,6 +10,8 @@
 
 #include "glad/glad.h"
 
+#include <map>
+
 class Renderer {
 public:
     Renderer(unsigned int width, unsigned int height);
@@ -23,6 +25,7 @@ public:
         int WrapType = GL_CLAMP_TO_BORDER;
     };
 
+    void InitImGuiIniHandler();
     void Init(StartSettings settings);
     void OnUpdate(float deltatime);
     void OnRender();
@@ -41,6 +44,8 @@ private:
     bool m_Wireframe = false;
 
     //Show menu window flags
+    //To-do: In practice using this is somewhat ugly, 
+    // may switch to map<string, bool> or something like that
     bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu  = false,
          m_ShowLightMenu   = true, m_ShowShadowMenu      = true,
          m_ShowCamMenu     = true, m_ShowMaterialMenu    = true,

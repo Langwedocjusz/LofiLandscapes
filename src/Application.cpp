@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
@@ -17,7 +18,7 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     //Initialize ImGui:
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-   
+
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -30,6 +31,9 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
 
     //Set ImGui Font:
     io.Fonts->AddFontFromFileTTF("res/fonts/OpenSans/OpenSans-Medium.ttf", 16);
+
+    //Setup handler for additional data in imgui.ini
+    m_Renderer.InitImGuiIniHandler();
 
     //Redirect window callbacks to application's on event function
     m_Window.setEventCallback(std::bind(&Application::OnEvent, this, std::placeholders::_1));
