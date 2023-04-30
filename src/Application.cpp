@@ -58,7 +58,7 @@ void Application::EndFrame() {
 }
 
 void Application::StartMenu() {
-    while (m_ShowStartMenu) {
+    while (!m_Window.ShouldClose() && m_ShowStartMenu) {
         StartFrame();
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
@@ -113,10 +113,9 @@ void Application::Run() {
         m_Timer.Update();
         m_Renderer.OnUpdate(m_Timer.getDeltaTime());
 
-        m_Renderer.OnRender();
-
         StartFrame();
 
+        m_Renderer.OnRender();
         if (m_ShowMenu) m_Renderer.OnImGuiRender();
 
         EndFrame();

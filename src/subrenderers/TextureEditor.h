@@ -194,7 +194,7 @@ private:
     bool m_PopupOpen = true;
 
     unsigned int m_InstanceID;
-    static unsigned int InstanceCount;
+    static unsigned int s_InstanceCount;
 };
 
 class TextureArrayEditor : public EditorBase {
@@ -214,5 +214,5 @@ private:
     bool m_PopupOpen = true;
 
     unsigned int m_InstanceID;
-    static unsigned int InstanceCount;
+    static unsigned int s_InstanceCount;
 };

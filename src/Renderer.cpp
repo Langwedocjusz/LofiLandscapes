@@ -50,10 +50,6 @@ void Renderer::Init(StartSettings settings) {
         m_Map.getScaleSettings().ScaleY,
         pos
     );
-
-    //Return to normal rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_WindowWidth, m_WindowHeight);
 }
 
 void Renderer::OnUpdate(float deltatime) {
@@ -104,7 +100,7 @@ void Renderer::OnRender() {
         m_Clipmap.BindAndDraw(m_Camera, scale_y);
 
         //Render Sky
-        m_SkyRenderer.Render(m_Camera.getFront(), m_Camera.getSettings().Fov, m_InvAspect);
+        m_SkyRenderer.Render(m_Camera.getFront(), m_Camera.getFov(), m_InvAspect);
     }
 }
 

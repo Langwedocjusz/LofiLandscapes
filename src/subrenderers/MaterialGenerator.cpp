@@ -14,34 +14,31 @@ MaterialGenerator::MaterialGenerator()
     , m_RoughnessEditor("Roughness", m_Layers)
 {
     //=====Initialize the textures:
-    TextureSpec height_spec = TextureSpec{
-        512, 512, GL_R16F, GL_RGBA, 
+
+    m_Height.Initialize(TextureSpec{
+        512, 512, GL_R16F, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
+    }, m_Layers);
 
-    TextureSpec normal_spec = TextureSpec{
+    m_Normal.Initialize(TextureSpec{
         512, 512, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.5f, 1.0f, 0.5f, 1.0f}
-    };
+    }, m_Layers);
 
-    TextureSpec albedo_spec = TextureSpec{
-        512, 512, GL_RGBA8, GL_RGBA, 
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
-        GL_REPEAT,
-        {0.0f, 0.0f, 0.0f, 0.7f}
-    };
-
-    m_Height.Initialize(height_spec, m_Layers);
-
-    m_Normal.Initialize(normal_spec, m_Layers);
     m_Normal.Bind();
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
-    m_Albedo.Initialize(albedo_spec, m_Layers);
+    m_Albedo.Initialize(TextureSpec{
+        512, 512, GL_RGBA8, GL_RGBA,
+        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
+        GL_REPEAT,
+        {0.0f, 0.0f, 0.0f, 0.7f}
+    }, m_Layers);
+
     m_Albedo.Bind();
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
@@ -74,15 +71,18 @@ MaterialGenerator::MaterialGenerator()
     m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     //Albedo
-    m_AlbedoEditor.RegisterShader("Color Ramp", "res/shaders/materials/color_ramp.glsl");
-    m_AlbedoEditor.AttachConstInt("Color Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
-    m_AlbedoEditor.AttachSliderFloat("Color Ramp", "uEdge1", "Edge 1",
+    m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");
+    m_AlbedoEditor.AttachColorEdit3("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
+
+    m_AlbedoEditor.RegisterShader("Albedo Ramp", "res/shaders/materials/albedo_ramp.glsl");
+    m_AlbedoEditor.AttachConstInt("Albedo Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
+    m_AlbedoEditor.AttachSliderFloat("Albedo Ramp", "uEdge1", "Edge 1",
                                      0.0f, 1.0f, 0.0f);
-    m_AlbedoEditor.AttachSliderFloat("Color Ramp", "uEdge2", "Edge 2",
+    m_AlbedoEditor.AttachSliderFloat("Albedo Ramp", "uEdge2", "Edge 2",
                                      0.0f, 1.0f, 1.0f);
-    m_AlbedoEditor.AttachColorEdit3("Color Ramp", "uCol1", "Color 1",
+    m_AlbedoEditor.AttachColorEdit3("Albedo Ramp", "uCol1", "Albedo 1",
                                     glm::vec3(0.0f));
-    m_AlbedoEditor.AttachColorEdit3("Color Ramp", "uCol2", "Color 2",
+    m_AlbedoEditor.AttachColorEdit3("Albedo Ramp", "uCol2", "Albedo 2",
                                     glm::vec3(1.0f));
 
     //Roughness
@@ -103,6 +103,7 @@ MaterialGenerator::MaterialGenerator()
     //Initial procedures
     for (int i = 0; i < m_Layers; i++) {
         m_HeightEditor.AddProcedureInstance(i, "Const Value");
+        m_AlbedoEditor.AddProcedureInstance(i, "Const Albedo");
         m_RoughnessEditor.AddProcedureInstance(i, "Const Roughness");
     }
 

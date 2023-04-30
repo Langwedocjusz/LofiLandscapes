@@ -5,8 +5,8 @@
 #include <iostream>
 
 Window::Window(const std::string& title, unsigned int width, unsigned int height) {
-    m_WindowData.Title = title;
-    m_WindowData.Width = width;
+    m_WindowData.Title  = title;
+    m_WindowData.Width  = width;
     m_WindowData.Height = height;
 
     //initialize GLFW:
@@ -33,8 +33,9 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
     //Opengl error callback:
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, 
-                GLenum severity, GLsizei length, const GLchar* message,
-                const void* userParam) {
+                              GLenum severity, GLsizei length, const GLchar* message,
+                              const void* userParam) 
+    {
         if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return ;
 
         std::cout << "GL CALLBACK: type = " << type 

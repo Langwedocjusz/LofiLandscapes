@@ -29,15 +29,6 @@ public:
     Plane Top, Bottom, Left, Right, Near, Far;
 };
 
-struct CameraSettings {
-    float Speed = 5.0f;
-    float Sensitivity = 100.0f;
-    float Fov = 45.0f;
-};
-
-bool operator==(const CameraSettings& lhs, const CameraSettings& rhs);
-bool operator!=(const CameraSettings& lhs, const CameraSettings& rhs);
-
 class Camera{
 public:
     Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f),
@@ -51,11 +42,12 @@ public:
     glm::vec3 getRight() const { return m_Right; }
     glm::vec3 getUp() const { return m_Up; }
 
+    float getFov() const { return m_Fov; }
+    float getSpeed() const { return m_Speed; }
+    float getSensitivity() const { return m_Sensitivity; }
+
     float getNearPlane() const { return m_NearPlane; }
     float getFarPlane() const { return m_FarPlane; }
-
-    CameraSettings getSettings() const {return m_Settings;}
-    void setSettings(CameraSettings x) {m_Settings = x;}
 
     void ProcessKeyboard(float deltatime);
     void ProcessMouse(float xoffset, float yoffset, float aspect);
@@ -77,12 +69,14 @@ protected:
     glm::vec3 m_Front, m_Up, m_Right, m_WorldUp;
     float m_Pitch, m_Yaw;
 
-    CameraSettings m_Settings; 
     int m_Movement = None;
 
-    //Won't be editable for now, so not included in settings
+    //Camera Settings
+    float m_Speed = 5.0f;
+    float m_Sensitivity = 100.0f;
+    float m_Fov = 45.0f;
     float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;
-
+    
     void updateVectors();
 
     Frustum m_Frustum;

@@ -27,8 +27,8 @@ public:
     bool ShouldClose();
     GLFWwindow* getGLFWPointer() {return m_Window;}
 
-    unsigned int getWidth() {return m_WindowData.Width;}
-    unsigned int getHeight() {return m_WindowData.Height;}
+    unsigned int getWidth()  const {return m_WindowData.Width;}
+    unsigned int getHeight() const {return m_WindowData.Height;}
 
     void setEventCallback(std::function<void(Event&)> callback);
 private:

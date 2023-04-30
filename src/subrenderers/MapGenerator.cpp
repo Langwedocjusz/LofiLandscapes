@@ -21,55 +21,47 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Initialize Textures
     //-----Heightmap
 
-    TextureSpec heightmap_spec = TextureSpec{
-        height_res, height_res, GL_R32F, GL_RGBA, 
+    m_Heightmap.Initialize(TextureSpec{
+        height_res, height_res, GL_R32F, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
+    });
 
-    m_Heightmap.Initialize(heightmap_spec);
-
-    //Generate mips for heightmap:
     m_Heightmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Normal map: 
-    TextureSpec normal_spec = TextureSpec{
-        height_res, height_res, GL_RGBA8, GL_RGBA, 
+    m_Normalmap.Initialize(TextureSpec{
+        height_res, height_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         //Pointing up (0,1,0), after compression -> (0.5, 1.0, 0.5):
         {0.5f, 1.0f, 0.5f, 1.0f}
-    };
+    });
 
-    m_Normalmap.Initialize(normal_spec);
     m_Normalmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Shadow map
-    TextureSpec shadow_spec = TextureSpec{
-        shadow_res, shadow_res, GL_R8, GL_RED, 
+    m_Shadowmap.Initialize(TextureSpec{
+        shadow_res, shadow_res, GL_R8, GL_RED,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 1.0f, 1.0f, 1.0f}
-    };
+    });
 
-    m_Shadowmap.Initialize(shadow_spec);
     m_Shadowmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //--Material map
-    const int material_res = height_res;
-
-    TextureSpec material_spec = TextureSpec{
-        material_res, material_res, GL_RGBA8, GL_RGBA,
+    m_Materialmap.Initialize(TextureSpec{
+        height_res, height_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 0.0f, 0.0f, 0.0f}
-    };
+    });
 
-    m_Materialmap.Initialize(material_spec);
     m_Materialmap.Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -118,14 +110,14 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_MaterialEditor.AttachSliderInt("One material", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select height", "res/shaders/terrain/select_height.glsl");
-    m_MaterialEditor.AttachConstInt("Select height", "uResolution", material_res);
+    m_MaterialEditor.AttachConstInt("Select height", "uResolution", height_res);
     m_MaterialEditor.AttachSliderFloat("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.AttachSliderFloat("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
     m_MaterialEditor.AttachSliderFloat("Select height", "uBlend", "Blending", 0.0, 0.1, 0.01);
     m_MaterialEditor.AttachSliderInt("Select height", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
-    m_MaterialEditor.AttachConstInt("Select slope", "uResolution", material_res);
+    m_MaterialEditor.AttachConstInt("Select slope", "uResolution", height_res);
     m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
     m_MaterialEditor.AttachSliderFloat("Select slope", "uBlend", "Blending", 0.0, 0.1, 0.01);
@@ -138,31 +130,30 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_UpdateFlags = Height | Normal | Shadow | Material;
 
     //-----Mipmap related things
-    //Check if heightmap resolution is a power of 2
-    int res = m_Heightmap.getSpec().ResolutionX;
+    
+    //Nice utilities:
+    //http://www.graphics.stanford.edu/~seander/bithacks.html
 
-    if ((res & (res - 1)) != 0) {
-        std::cerr << "Heightmap res is not a power of 2!" << '\n';
-        return;
-    }
-
-    //Do the same for shadowmap
-    int res_s = m_Shadowmap.getSpec().ResolutionX;
-
-    if ((res_s & (res_s - 1)) != 0) {
-        std::cerr << "Shadowmap res is not a power of 2!" << '\n';
-        return;
-    }
+    auto isPowerOf2 = [](int value) {
+        return (value & (value - 1)) == 0;
+    };
 
     auto log2 = [](int value) {
         int copy = value, result = 0;
         while (copy >>= 1) ++result;
         return result;
     };
+    
 
-    m_MipLevels = log2(res);
+    if (!isPowerOf2(height_res))
+        std::cerr << "Heightmap res is not a power of 2!" << '\n';
 
-    m_ShadowSettings.MipOffset = log2(res / res_s);
+    if (!isPowerOf2(shadow_res))
+        std::cerr << "Shadowmap res is not a power of 2!" << '\n';
+
+
+    m_MipLevels = log2(height_res);
+    m_ShadowSettings.MipOffset = log2(height_res / shadow_res);
 }
 
 void MapGenerator::UpdateHeight() { 

@@ -14,62 +14,53 @@ SkyRenderer::SkyRenderer()
     , m_AerialShader("res/shaders/sky/aerial.glsl")
     , m_FinalShader("res/shaders/sky/final.vert", "res/shaders/sky/final.frag")
 {
+    //Resolutions
+    const int trans_res = 256, multi_res = 32, sky_res = 128; //Regular square
+    const int irr_res = 32, pref_res = 128; //Cubemap
+    const int aerial_res = 32; //3d
+
     //Initialize LUT textures
-    const int trans_res = 256, multi_res = 32, sky_res = 128;
 
-    TextureSpec trans_spec = TextureSpec{
-        trans_res, trans_res, GL_RGBA16, GL_RGBA, 
+    m_TransLUT.Initialize(TextureSpec{
+        trans_res, trans_res, GL_RGBA16, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
+    });
 
-    TextureSpec multi_spec = TextureSpec{
-        multi_res, multi_res, GL_RGBA16, GL_RGBA, 
+    m_MultiLUT.Initialize(TextureSpec{
+        multi_res, multi_res, GL_RGBA16, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
+    });
 
-    TextureSpec sky_spec = TextureSpec{
-        sky_res, sky_res, GL_RGBA16, GL_RGBA, 
+    m_SkyLUT.Initialize(TextureSpec{
+        sky_res, sky_res, GL_RGBA16, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_MIRRORED_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
+    });
 
-    m_TransLUT.Initialize(trans_spec);
-    m_MultiLUT.Initialize(multi_spec);
-    m_SkyLUT.Initialize(sky_spec);
-
-    //Initialize Aerial LUT (3d)
-    const int aerial_res = 32;
-
-    Texture3dSpec aerial_spec = Texture3dSpec{
+    //Initialize Aerial LUT
+    m_AerialLUT.Initialize(Texture3dSpec{
         aerial_res, aerial_res, aerial_res,
         GL_RGBA16, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_CLAMP_TO_EDGE,
         {0.0f, 0.0f, 0.0f, 0.0f}
-    };
-
-    m_AerialLUT.Initialize(aerial_spec);
+    });
 
     //Initialize Cubemaps
-    const int irr_res = 32, pref_res = 128;
-
-    CubemapSpec irradinace_spec = CubemapSpec{
+    m_IrradianceMap.Initialize(CubemapSpec{
         irr_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR,
-    };
+    });
 
-    CubemapSpec prefiltered_spec = CubemapSpec{
+    m_PrefilteredMap.Initialize(CubemapSpec{
         pref_res, GL_RGBA16, GL_RGBA, GL_UNSIGNED_BYTE,
         GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
-    };
-
-    m_IrradianceMap.Initialize(irradinace_spec);
-    m_PrefilteredMap.Initialize(prefiltered_spec);
+    });
 
     m_PrefilteredMap.Bind();
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
@@ -196,7 +187,7 @@ void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
     m_AerialShader.setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader.setUniform3f("uSunDir", m_SunDir);
     m_AerialShader.setUniform1f("uFar", cam.getFarPlane());
-    m_AerialShader.setUniform1f("uFov", glm::radians(cam.getSettings().Fov));
+    m_AerialShader.setUniform1f("uFov", glm::radians(cam.getFov()));
     m_AerialShader.setUniform1f("uAspect", aspect);
     m_AerialShader.setUniform3f("uFront", cam.getFront());
     m_AerialShader.setUniform3f("uRight", cam.getRight());

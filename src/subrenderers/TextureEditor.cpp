@@ -517,7 +517,7 @@ bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
 #include <iostream>
 
 TextureEditor::TextureEditor(const std::string& name)
-    : m_Name(name), m_InstanceID(InstanceCount++) {}
+    : m_Name(name), m_InstanceID(s_InstanceCount++) {}
 
 void TextureEditor::AddProcedureInstance(const std::string& name) {
     AddProcedureInstanceImpl(m_Procedures, m_Instances, name);
@@ -534,12 +534,12 @@ bool TextureEditor::OnImGui() {
     return res;
 }
 
-unsigned int TextureEditor::InstanceCount = 0;
+unsigned int TextureEditor::s_InstanceCount = 0;
 
 //===========================================================================
 
 TextureArrayEditor::TextureArrayEditor(const std::string& name, int n)
-    : m_Name(name), m_InstanceID(InstanceCount++)
+    : m_Name(name), m_InstanceID(s_InstanceCount++)
 {
     for (int i = 0; i < n; i++)
         m_InstanceLists.push_back(std::vector<ProcedureInstance>());
@@ -566,4 +566,4 @@ bool TextureArrayEditor::OnImGui(int layer) {
     return res;
 }
 
-unsigned int TextureArrayEditor::InstanceCount = 0;
+unsigned int TextureArrayEditor::s_InstanceCount = 0;

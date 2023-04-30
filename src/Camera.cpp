@@ -42,7 +42,7 @@ glm::mat4 Camera::getViewMatrix() {
 }
 
 void Camera::ProcessKeyboard(float deltatime) {
-    float velocity = deltatime * m_Settings.Speed;
+    float velocity = deltatime * m_Speed;
 
     if ((m_Movement & Forward) != None)
         m_Pos += velocity * m_Front;
@@ -58,8 +58,8 @@ void Camera::ProcessKeyboard(float deltatime) {
 }
 
 void Camera::ProcessMouse(float xoffset, float yoffset, float aspect) {
-    m_Pitch += m_Settings.Sensitivity * yoffset;
-    m_Yaw += m_Settings.Sensitivity * xoffset;
+    m_Pitch += m_Sensitivity * yoffset;
+    m_Yaw   += m_Sensitivity * xoffset;
 
     if (m_Pitch > 89.0f) m_Pitch = 89.0f;
     if (m_Pitch < -89.0f) m_Pitch = -89.0f;
@@ -82,7 +82,7 @@ void Camera::updateFrustum(float aspect) {
     //Camera position in coordinate system tied to the grid:
     const glm::vec3 pos = glm::vec3(0.0f, m_Pos.y, 0.0f);
 
-    const float halfV = m_FarPlane * tanf(glm::radians(m_Settings.Fov));
+    const float halfV = m_FarPlane * tanf(glm::radians(m_Fov));
     const float halfH = aspect * halfV; //aspect = horizontal/vertical
 
     const glm::vec3 farFront = m_FarPlane * m_Front;
@@ -107,9 +107,9 @@ bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
 void Camera::OnImGui(bool& open) {
     ImGui::Begin("Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderFloat("Speed", &(m_Settings.Speed), 0.0, 10.0f);
-    ImGuiUtils::SliderFloat("Sensitivity", &(m_Settings.Sensitivity), 0.0f, 200.0f);
-    ImGuiUtils::SliderFloat("Fov", &(m_Settings.Fov), 0.0f, 90.0f);
+    ImGuiUtils::SliderFloat("Speed", &(m_Speed), 0.0, 10.0f);
+    ImGuiUtils::SliderFloat("Sensitivity", &(m_Sensitivity), 0.0f, 200.0f);
+    ImGuiUtils::SliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
     ImGui::Columns(1, "###col");
     ImGui::End();
 }
@@ -123,8 +123,7 @@ void FPCamera::Update(float deltatime) {
 
 glm::mat4 FPCamera::getProjMatrix(float aspect) {
     return glm::perspective(
-        glm::radians(m_Settings.Fov), 
-        aspect, m_NearPlane, m_FarPlane
+        glm::radians(m_Fov), aspect, m_NearPlane, m_FarPlane
     );
 }
 
@@ -198,15 +197,4 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
     ProcessMouse(xoffset, yoffset, aspect);
-}
-
-//Operator overloads:
-
-bool operator==(const CameraSettings& lhs, const CameraSettings& rhs) {
-    return (lhs.Speed == rhs.Speed) && (lhs.Sensitivity == rhs.Sensitivity)
-        && (lhs.Fov == rhs.Fov);
-}
-
-bool operator!=(const CameraSettings& lhs, const CameraSettings& rhs) {
-    return !(lhs == rhs);
 }
