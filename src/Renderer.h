@@ -7,10 +7,9 @@
 #include "subrenderers/SkyRenderer.h"
 
 #include "Camera.h"
+#include "Serializer.h"
 
 #include "glad/glad.h"
-
-#include <map>
 
 class Renderer {
 public:
@@ -64,4 +63,6 @@ private:
     MaterialGenerator m_Material;
     TerrainRenderer m_TerrainRenderer;
     SkyRenderer m_SkyRenderer;
+
+    Serializer m_Serializer;
 };

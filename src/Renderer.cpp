@@ -8,7 +8,6 @@
 #include "ImGuiUtils.h"
 
 #include <iostream>
-#include <functional>
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
     : m_WindowWidth(width), m_WindowHeight(height)
@@ -109,6 +108,20 @@ void Renderer::OnRender() {
 void Renderer::OnImGuiRender() {
     //-----Menu bar
     if (ImGui::BeginMainMenuBar()) {
+
+        if (ImGui::BeginMenu("File")) {
+
+            if (ImGui::MenuItem("Save")) {
+                m_Serializer.TriggerSave();
+            }
+
+            if (ImGui::MenuItem("Load")) {
+                m_Serializer.TriggerLoad();
+            }
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Shaded")) {
                 m_Wireframe = false;
@@ -141,6 +154,9 @@ void Renderer::OnImGuiRender() {
     //-----Dockspace
     ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspace_flags);
+
+    //Always called
+    m_Serializer.OnImGui();
 
     //-----Windows
     if (m_ShowBackgroundMenu) {
@@ -202,7 +218,7 @@ void Renderer::OnImGuiRender() {
             m_Map.getScaleSettings().ScaleY,
             pos
         );
-    }  
+    }
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {
