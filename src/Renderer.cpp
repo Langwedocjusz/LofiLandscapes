@@ -13,7 +13,9 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
-{}
+{
+    m_Serializer.RegisterSaveCallback("RENDERER", std::bind(&Renderer::OnSerialize, this, std::placeholders::_1));
+}
 
 Renderer::~Renderer() {}
 
@@ -302,4 +304,12 @@ void Renderer::InitImGuiIniHandler() {
     ini_handler.UserData = this;
 
     ImGui::AddSettingsHandler(&ini_handler);
+}
+
+void Renderer::OnSerialize(std::ofstream& output)
+{
+    const std::string wireframe_state = [&]() {if (m_Wireframe) return "true"; else return "false"; }();
+
+    output << ("Wireframe=" + wireframe_state + "\n");
+    output << ("ClearColor=") << m_ClearColor[0] << ", " << m_ClearColor[1] << ", " << m_ClearColor[2] << "\n";
 }

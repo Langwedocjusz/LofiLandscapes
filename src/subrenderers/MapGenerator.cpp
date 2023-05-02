@@ -69,34 +69,34 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
 
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/terrain/const_val.glsl");
-    m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/terrain/fbm.glsl");
-    m_HeightEditor.AttachConstInt("FBM", "uResolution", height_res);
-    m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
-    m_HeightEditor.AttachSliderFloat("FBM", "uScale", "Scale", 1.0, 64.0, 32.0);
-    m_HeightEditor.AttachSliderFloat("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
-    m_HeightEditor.AttachGLEnum("FBM", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<ConstIntTask>("FBM", "uResolution", height_res);
+    m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uScale", "Scale", 1.0, 64.0, 32.0);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
+    m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
-    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", height_res);
-    m_HeightEditor.AttachSliderFloat("Voronoi", "uScale", "Scale", 1.0, 64.0, 8.0);
-    m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<ConstIntTask>("Voronoi", "uResolution", height_res);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uScale", "Scale", 1.0, 64.0, 8.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
 
     std::vector<std::string> voro_types{ "F1", "F2", "F2_F1" };
-    m_HeightEditor.AttachGLEnum("Voronoi", "uVoronoiType", "Type", voro_types);
+    m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uVoronoiType", "Type", voro_types);
 
-    m_HeightEditor.AttachGLEnum("Voronoi", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     m_HeightEditor.RegisterShader("Curves", "res/shaders/terrain/curves.glsl");
-    m_HeightEditor.AttachSliderFloat("Curves", "uExponent", "Exponent", 0.1, 4.0, 1.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Curves", "uExponent", "Exponent", 0.1, 4.0, 1.0);
 
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
-    m_HeightEditor.AttachConstInt("Radial cutoff", "uResolution", height_res);
-    m_HeightEditor.AttachSliderFloat("Radial cutoff", "uBias", "Bias", 0.0, 1.0, 0.5);
-    m_HeightEditor.AttachSliderFloat("Radial cutoff", "uSlope", "Slope", 0.0, 10.0, 4.0);
+    m_HeightEditor.Attach<ConstIntTask>("Radial cutoff", "uResolution", height_res);
+    m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uBias", "Bias", 0.0, 1.0, 0.5);
+    m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uSlope", "Slope", 0.0, 10.0, 4.0);
 
     //Initial procedures:
     m_HeightEditor.AddProcedureInstance("Const Value");
@@ -107,21 +107,21 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     const int max_layer_id = 4;
 
     m_MaterialEditor.RegisterShader("One material", "res/shaders/terrain/one_material.glsl");
-    m_MaterialEditor.AttachSliderInt("One material", "uID", "Material id", 0, max_layer_id, 0);
+    m_MaterialEditor.Attach<SliderIntTask>("One material", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select height", "res/shaders/terrain/select_height.glsl");
-    m_MaterialEditor.AttachConstInt("Select height", "uResolution", height_res);
-    m_MaterialEditor.AttachSliderFloat("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
-    m_MaterialEditor.AttachSliderFloat("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
-    m_MaterialEditor.AttachSliderFloat("Select height", "uBlend", "Blending", 0.0, 0.1, 0.01);
-    m_MaterialEditor.AttachSliderInt("Select height", "uID", "Material id", 0, max_layer_id, 0);
+    m_MaterialEditor.Attach<ConstIntTask>("Select height", "uResolution", height_res);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uBlend", "Blending", 0.0, 0.1, 0.01);
+    m_MaterialEditor.Attach<SliderIntTask>("Select height", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
-    m_MaterialEditor.AttachConstInt("Select slope", "uResolution", height_res);
-    m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
-    m_MaterialEditor.AttachSliderFloat("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
-    m_MaterialEditor.AttachSliderFloat("Select slope", "uBlend", "Blending", 0.0, 0.1, 0.01);
-    m_MaterialEditor.AttachSliderInt("Select slope", "uID", "Material id", 0, max_layer_id, 0);
+    m_MaterialEditor.Attach<ConstIntTask>("Select slope", "uResolution", height_res);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uBlend", "Blending", 0.0, 0.1, 0.01);
+    m_MaterialEditor.Attach<SliderIntTask>("Select slope", "uID", "Material id", 0, max_layer_id, 0);
 
     //Initial procedures:
     m_MaterialEditor.AddProcedureInstance("One material");

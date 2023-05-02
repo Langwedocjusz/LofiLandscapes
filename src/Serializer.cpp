@@ -4,7 +4,6 @@
 #include "ImGuiUtils.h"
 
 #include <iostream>
-#include <fstream>
 
 Serializer::Serializer()
     : m_CurrentPath(std::filesystem::current_path())
@@ -12,7 +11,7 @@ Serializer::Serializer()
     , m_LoadToBeOpened(false), m_SaveToBeOpened(false)
     , m_Filename("Your_File_Name.world")
 {
-    m_Filename.reserve(m_MaxNameLength);
+    m_Filename.resize(m_MaxNameLength);
 }
 
 void Serializer::TriggerSave()
@@ -44,6 +43,14 @@ void Serializer::OnImGui()
 
     m_LoadDialogOpen = true;
     m_SaveDialogOpen = true;
+}
+
+void Serializer::RegisterSaveCallback(const std::string& token, std::function<void(std::ofstream&)> callback)
+{
+    if (m_SaveCallbacks.count(token) == 0)
+        m_SaveCallbacks.insert(std::make_pair(token, callback));
+    else
+        std::cerr << "Serializer Error: Save callback for token " << token << " already registered\n";
 }
 
 void Serializer::LoadPopup()
@@ -139,10 +146,11 @@ void Serializer::Serialize()
 
     std::ofstream output(path, std::ios::trunc);
 
-    output << "[SECTION HEADER]\n";
-    output << "bRandomValue1=true\n";
-    output << "iRandomValue2=1\n";
-    output << "fRandomValue3=1.0f\n";
+    for (const auto & [token, callback] : m_SaveCallbacks)
+    {
+        output << ("[" + token + "]\n");
+        callback(output);
+    }
 }
 
 void Serializer::Deserialize()

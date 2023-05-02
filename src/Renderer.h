@@ -26,6 +26,7 @@ public:
 
     void InitImGuiIniHandler();
     void Init(StartSettings settings);
+
     void OnUpdate(float deltatime);
     void OnRender();
     void OnImGuiRender();
@@ -37,6 +38,7 @@ public:
     void OnMousePressed(int button, int mods);
     void RestartMouse();
 private:
+    void OnSerialize(std::ofstream& output);
 
     float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
 

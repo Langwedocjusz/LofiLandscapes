@@ -11,8 +11,30 @@
 ConstIntTask::ConstIntTask(const std::string& uniform_name, int val) 
     : UniformName(uniform_name), Value(val) {}
 
+void ConstIntTask::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<int>(data);
+    shader.setUniform1i(UniformName, value);
+}
+
+void ConstIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(Value);
+}
+
 ConstFloatTask::ConstFloatTask(const std::string& uniform_name, float val) 
     : UniformName(uniform_name), Value(val) {}
+
+void ConstFloatTask::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<float>(data);
+    shader.setUniform1f(UniformName, value);
+}
+
+void ConstFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(Value);
+}
 
 SliderIntTask::SliderIntTask(const std::string& uniform_name,
                              const std::string& ui_name,
@@ -20,6 +42,29 @@ SliderIntTask::SliderIntTask(const std::string& uniform_name,
     : UniformName(uniform_name), UiName(ui_name), Min(min), Max(max), Def(def)
 {}
 
+void SliderIntTask::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<int>(data);
+    shader.setUniform1i(UniformName, value);
+}
+
+void SliderIntTask::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
+{
+    int* ptr = &std::get<int>(data);
+    int value = *ptr;
+
+    ImGuiUtils::SliderInt(UiName, &value, Min, Max, suffix);
+
+    if (value != *ptr) {
+        *ptr = value;
+        state = true;
+    }
+}
+
+void SliderIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(Def);
+}
 
 SliderFloatTask::SliderFloatTask(const std::string& uniform_name,
                                  const std::string& ui_name,
@@ -27,70 +72,94 @@ SliderFloatTask::SliderFloatTask(const std::string& uniform_name,
     : UniformName(uniform_name), UiName(ui_name), Min(min), Max(max), Def(def)
 {}
 
+void SliderFloatTask::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<float>(data);
+    shader.setUniform1f(UniformName, value);
+}
+
+void SliderFloatTask::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
+{
+    float* ptr = &std::get<float>(data);
+    float value = *ptr;
+
+    ImGuiUtils::SliderFloat(UiName, &value, Min, Max, suffix);
+
+    if (value != *ptr) {
+        *ptr = value;
+        state = true;
+    }
+}
+
+void SliderFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(Def);
+}
+
 ColorEdit3Task::ColorEdit3Task(const std::string& uniform_name,
                                const std::string& ui_name,
                                glm::vec3 def)
     : UniformName(uniform_name), UiName(ui_name), Def(def)
 {}
 
+void ColorEdit3Task::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<glm::vec3>(data);
+    shader.setUniform3f(UniformName, value);
+}
+
+void ColorEdit3Task::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
+{
+    glm::vec3* ptr = &std::get<glm::vec3>(data);
+    glm::vec3 value = *ptr;
+
+    ImGuiUtils::ColorEdit3(UiName, &value, suffix);
+
+    if (value != *ptr) {
+        *ptr = value;
+        state = true;
+    }
+}
+
+void ColorEdit3Task::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(Def);
+}
+
 GLEnumTask::GLEnumTask(const std::string& uniform_name,
                        const std::string& ui_name,
                        const std::vector<std::string>& labels)
-     : UniformName(uniform_name), UiName(ui_name), m_Labels(labels)
+     : UniformName(uniform_name), UiName(ui_name), Labels(labels)
 {}
+
+void GLEnumTask::OnDispatch(Shader& shader, const InstanceData& data)
+{
+    auto value = std::get<int>(data);
+    shader.setUniform1i(UniformName, value);
+}
+
+void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
+{
+    int* ptr = &std::get<int>(data);
+    int value = *ptr;
+
+    ImGuiUtils::Combo(UiName, Labels, value, suffix);
+
+    if (value != *ptr) {
+        *ptr = value;
+        state = true;
+    }
+}
+
+void GLEnumTask::ProvideDefaultData(std::vector<InstanceData>& data)
+{
+    data.push_back(0);
+}
 
 //===========================================================================
 
 void Procedure::CompileShader(const std::string& filepath) {
     m_Shader = std::unique_ptr<Shader>(new Shader(filepath));
-}
-
-void Procedure::AddConstInt(const std::string& uniform_name, int def_val) {
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new ConstIntTask(uniform_name, def_val)
-    ));
-}
-
-void Procedure::AddConstFloat(const std::string& uniform_name, float def_val) {
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new ConstFloatTask(uniform_name, def_val)
-    ));
-}
-
-void Procedure::AddSliderInt(const std::string& uniform_name, 
-                             const std::string& ui_name,
-                             int min_val, int max_val, int def_val)
-{
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new SliderIntTask(uniform_name, ui_name, min_val, max_val, def_val)
-    ));
-}
-
-void Procedure::AddSliderFloat(const std::string& uniform_name, 
-                               const std::string& ui_name,
-                               float min_val, float max_val, float def_val)
-{
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new SliderFloatTask(uniform_name, ui_name, min_val, max_val, def_val)
-    ));
-}
-
-void Procedure::AddColorEdit3(const std::string& uniform_name, 
-                              const std::string& ui_name,
-                              glm::vec3 def_val)
-{
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new ColorEdit3Task(uniform_name, ui_name, def_val)
-    ));
-}
-
-void Procedure::AddGLEnum(const std::string& uniform_name,
-                          const std::string& ui_name,
-                          const std::vector<std::string>& labels)
-{
-    m_Tasks.push_back(std::unique_ptr<EditorTask>(
-        new GLEnumTask(uniform_name, ui_name, labels)
-    ));
 }
 
 void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
@@ -99,68 +168,7 @@ void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
     unsigned int i = 0;
     
     for (auto& task : m_Tasks) {
-        auto type = task->getType();
-
-        switch(type) {
-            case TaskType::ConstInt:
-            {
-                ConstIntTask* typed_task =
-                    dynamic_cast<ConstIntTask*>(task.get());
-
-                auto value = std::get<int>(data[i]);
-                m_Shader -> setUniform1i(typed_task->UniformName, value);
-                break;
-            }
-            case TaskType::ConstFloat:
-            {
-                ConstFloatTask* typed_task =
-                    dynamic_cast<ConstFloatTask*>(task.get());
-
-                auto value = std::get<float>(data[i]);
-                m_Shader -> setUniform1f(typed_task->UniformName, value);
-                break;
-            }
-            case TaskType::SliderInt:
-            {
-                SliderIntTask* typed_task = 
-                    dynamic_cast<SliderIntTask*>(task.get());
-
-                auto value = std::get<int>(data[i]);
-                m_Shader -> setUniform1i(typed_task->UniformName, value);
-                break;
-            }
-            case TaskType::SliderFloat:
-            {
-                SliderFloatTask* typed_task = 
-                    dynamic_cast<SliderFloatTask*>(task.get());
-
-                auto value = std::get<float>(data[i]);
-                m_Shader -> setUniform1f(typed_task->UniformName, value);
-                break;
-            }
-            case TaskType::ColorEdit3:
-            {
-                ColorEdit3Task* typed_task = 
-                    dynamic_cast<ColorEdit3Task*>(task.get());
-
-                auto value = std::get<glm::vec3>(data[i]);
-                m_Shader -> setUniform3f(typed_task->UniformName, value);
-                break;
-            }
-            case TaskType::GLEnum:
-            {
-                GLEnumTask* typed_task =
-                    dynamic_cast<GLEnumTask*>(task.get());
-
-                auto value = std::get<int>(data[i]);
-                m_Shader->setUniform1i(typed_task->UniformName, value);
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
+        task->OnDispatch(*m_Shader.get(), data[i]);
 
         ++i;
     }
@@ -178,87 +186,7 @@ bool Procedure::OnImGui(std::vector<InstanceData>& data, unsigned int id) {
     unsigned int i = 0;
 
     for (auto& task : m_Tasks) {
-        auto type = task->getType();
-
-        switch(type) {
-            case TaskType::SliderInt:
-            {
-                SliderIntTask* typed_task = 
-                    dynamic_cast<SliderIntTask*>(task.get());
-
-                int* ptr = &std::get<int>(data[i]);
-                int value = *ptr;
-
-                ImGuiUtils::SliderInt((typed_task->UiName), &value, 
-                                       typed_task->Min, typed_task->Max, suffix);
-
-                if (value != *ptr) {
-                    *ptr = value;
-                    res = true;
-                }
-
-                break;
-            }
-            case TaskType::SliderFloat:
-            {
-                SliderFloatTask* typed_task = 
-                    dynamic_cast<SliderFloatTask*>(task.get());
-
-                float* ptr = &std::get<float>(data[i]);
-                float value = *ptr;
-
-                ImGuiUtils::SliderFloat((typed_task->UiName), &value, 
-                                         typed_task->Min, typed_task->Max, suffix);
-
-                if (value != *ptr) {
-                    *ptr = value;
-                    res = true;
-                }
-
-                break;
-            }
-            case TaskType::ColorEdit3:
-            {
-                ColorEdit3Task* typed_task = 
-                    dynamic_cast<ColorEdit3Task*>(task.get());
-
-                glm::vec3* ptr = &std::get<glm::vec3>(data[i]);
-                glm::vec3 value = *ptr;
-
-                ImGuiUtils::ColorEdit3((typed_task->UiName), &value, suffix);
-
-                if (value != *ptr) {
-                    *ptr = value;
-                    res = true;
-                }
-
-                break;
-            }
-            case TaskType::GLEnum:
-            {
-                GLEnumTask* typed_task =
-                    dynamic_cast<GLEnumTask*>(task.get());
-
-                int* ptr = &std::get<int>(data[i]);
-                int value = *ptr;
-
-                std::string& name = typed_task->UiName;
-                std::vector<std::string>& labels = typed_task->m_Labels;
-
-                ImGuiUtils::Combo(name, labels, value, suffix);
-
-                if (value != *ptr) {
-                    *ptr = value;
-                    res = true;
-                }
-
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
+        task->OnImGui(data[i], res, suffix);
 
         ++i;
     }
@@ -280,61 +208,6 @@ void EditorBase::RegisterShader(const std::string& name,
     m_Procedures[name].CompileShader(filepath);
 }
 
-void EditorBase::AttachConstInt(const std::string& name,
-                                    const std::string& uniform_name,
-                                    int def_val)
-{
-    if (m_Procedures.count(name))
-        m_Procedures[name].AddConstInt(uniform_name, def_val);
-}
-    
-void EditorBase::AttachConstFloat(const std::string& name,
-                                      const std::string& uniform_name,
-                                      float def_val)
-{
-    if (m_Procedures.count(name))
-        m_Procedures[name].AddConstFloat(uniform_name, def_val);
-}
-
-void EditorBase::AttachSliderInt(const std::string& name,
-                                     const std::string& uniform_name, 
-                                     const std::string& ui_name,
-                                     int min_val, int max_val, int def_val)
-{
-    if (m_Procedures.count(name))
-        m_Procedures[name].AddSliderInt(uniform_name, ui_name, 
-                                        min_val, max_val, def_val);
-}
-
-void EditorBase::AttachSliderFloat(const std::string& name,
-                                       const std::string& uniform_name, 
-                                       const std::string& ui_name,
-                                       float min_val, float max_val, 
-                                       float def_val)
-{
-    if (m_Procedures.count(name))
-        m_Procedures[name].AddSliderFloat(uniform_name, ui_name, 
-                                          min_val, max_val, def_val);
-}
-
-void EditorBase::AttachColorEdit3(const std::string& name,
-                                      const std::string& uniform_name, 
-                                      const std::string& ui_name,
-                                      glm::vec3 def_val) 
-{
-    if(m_Procedures.count(name))
-        m_Procedures[name].AddColorEdit3(uniform_name, ui_name, def_val);
-}
-
-void EditorBase::AttachGLEnum(const std::string& name,
-                                  const std::string& uniform_name,
-                                  const std::string& ui_name,
-                                  const std::vector <std::string>& labels)
-{
-    if (m_Procedures.count(name))
-        m_Procedures[name].AddGLEnum(uniform_name, ui_name, labels);
-}
-
 //===========================================================================
 
 void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
@@ -344,64 +217,10 @@ void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& proced
         instances.push_back(ProcedureInstance(name));
 
         auto& procedure = procedures[name];
+        auto& data = instances.back().Data;
 
         for (auto& task : procedure.m_Tasks) {
-            auto type = task->getType();
-
-            switch (type) {
-            case TaskType::ConstInt:
-            {
-                ConstIntTask* typed_task =
-                    dynamic_cast<ConstIntTask*>(task.get());
-
-                instances.back().Data.push_back(typed_task->Value);
-                break;
-            }
-            case TaskType::ConstFloat:
-            {
-                ConstFloatTask* typed_task =
-                    dynamic_cast<ConstFloatTask*>(task.get());
-
-                instances.back().Data.push_back(typed_task->Value);
-                break;
-            }
-            case TaskType::SliderInt:
-            {
-                SliderIntTask* typed_task =
-                    dynamic_cast<SliderIntTask*>(task.get());
-
-                instances.back().Data.push_back(typed_task->Def);
-                break;
-            }
-            case TaskType::SliderFloat:
-            {
-                SliderFloatTask* typed_task =
-                    dynamic_cast<SliderFloatTask*>(task.get());
-
-                instances.back().Data.push_back(typed_task->Def);
-                break;
-            }
-            case TaskType::ColorEdit3:
-            {
-                ColorEdit3Task* typed_task =
-                    dynamic_cast<ColorEdit3Task*>(task.get());
-
-                instances.back().Data.push_back(typed_task->Def);
-                break;
-            }
-            case TaskType::GLEnum:
-            {
-                GLEnumTask* typed_task =
-                    dynamic_cast<GLEnumTask*>(task.get());
-
-                instances.back().Data.push_back(0);
-                break;
-            }
-            default:
-            {
-                break;
-            }
-            }
+            task->ProvideDefaultData(data);
         }
     }
 }

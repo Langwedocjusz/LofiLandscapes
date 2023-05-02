@@ -47,58 +47,49 @@ MaterialGenerator::MaterialGenerator()
     
     //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
-    m_HeightEditor.AttachSliderFloat("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
-    m_HeightEditor.AttachConstInt("FBM", "uResolution", m_Height.getSpec().ResolutionX);
-    m_HeightEditor.AttachSliderInt("FBM", "uOctaves", "Octaves", 1, 16, 8);
-    m_HeightEditor.AttachSliderInt("FBM", "uScale", "Scale", 
-                                     0, 100, 1);
-    m_HeightEditor.AttachSliderFloat("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
-    m_HeightEditor.AttachGLEnum("FBM", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.AttachSliderFloat("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<ConstIntTask>("FBM", "uResolution", m_Height.getSpec().ResolutionX);
+    m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderIntTask>("FBM", "uScale", "Scale", 0, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
+    m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
-    m_HeightEditor.AttachConstInt("Voronoi", "uResolution", m_Height.getSpec().ResolutionX);
-    m_HeightEditor.AttachSliderInt("Voronoi", "uScale", "Scale", 0, 100, 1);
-    m_HeightEditor.AttachSliderFloat("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<ConstIntTask>("Voronoi", "uResolution", m_Height.getSpec().ResolutionX);
+    m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uScale", "Scale", 0, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
     
     std::vector<std::string> voro_types{"F1", "F2", "F2_F1"};
-    m_HeightEditor.AttachGLEnum("Voronoi", "uVoronoiType", "Type", voro_types);
+    m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uVoronoiType", "Type", voro_types);
     
-    m_HeightEditor.AttachGLEnum("Voronoi", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.AttachSliderFloat("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     //Albedo
     m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");
-    m_AlbedoEditor.AttachColorEdit3("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
+    m_AlbedoEditor.Attach<ColorEdit3Task>("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
 
     m_AlbedoEditor.RegisterShader("Albedo Ramp", "res/shaders/materials/albedo_ramp.glsl");
-    m_AlbedoEditor.AttachConstInt("Albedo Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
-    m_AlbedoEditor.AttachSliderFloat("Albedo Ramp", "uEdge1", "Edge 1",
-                                     0.0f, 1.0f, 0.0f);
-    m_AlbedoEditor.AttachSliderFloat("Albedo Ramp", "uEdge2", "Edge 2",
-                                     0.0f, 1.0f, 1.0f);
-    m_AlbedoEditor.AttachColorEdit3("Albedo Ramp", "uCol1", "Albedo 1",
-                                    glm::vec3(0.0f));
-    m_AlbedoEditor.AttachColorEdit3("Albedo Ramp", "uCol2", "Albedo 2",
-                                    glm::vec3(1.0f));
+    m_AlbedoEditor.Attach<ConstIntTask>("Albedo Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
+    m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo Ramp", "uCol1", "Albedo 1", glm::vec3(0.0f));
+    m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo Ramp", "uCol2", "Albedo 2", glm::vec3(1.0f));
 
     //Roughness
     m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
-    m_RoughnessEditor.AttachSliderFloat("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
 
     m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
-    m_RoughnessEditor.AttachConstInt("Roughness Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
-    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge1", "Edge 1",
-        0.0f, 1.0f, 0.0f);
-    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uEdge2", "Edge 2",
-        0.0f, 1.0f, 1.0f);
-    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uVal1", "Value 1",
-        0.003f, 1.0f, 0.003f);
-    m_RoughnessEditor.AttachSliderFloat("Roughness Ramp", "uVal2", "Value 2",
-        0.003f, 1.0f, 1.0f);
+    m_RoughnessEditor.Attach<ConstIntTask>("Roughness Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uVal1", "Value 1", 0.003f, 1.0f, 0.003f);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uVal2", "Value 2", 0.003f, 1.0f, 1.0f);
 
     //Initial procedures
     for (int i = 0; i < m_Layers; i++) {
