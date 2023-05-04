@@ -45,7 +45,7 @@ void Serializer::OnImGui()
     m_SaveDialogOpen = true;
 }
 
-void Serializer::RegisterSaveCallback(const std::string& token, std::function<void(std::ofstream&)> callback)
+void Serializer::RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::json&)> callback)
 {
     if (m_SaveCallbacks.count(token) == 0)
         m_SaveCallbacks.insert(std::make_pair(token, callback));
@@ -142,15 +142,20 @@ void Serializer::RenderFileBrowser()
 
 void Serializer::Serialize()
 {
+    nlohmann::json json;
+
+    for (const auto & [token, callback] : m_SaveCallbacks)
+    {
+        callback(json);
+    }
+
     auto path = m_CurrentPath / m_Filename;
 
     std::ofstream output(path, std::ios::trunc);
 
-    for (const auto & [token, callback] : m_SaveCallbacks)
-    {
-        output << ("[" + token + "]\n");
-        callback(output);
-    }
+    const int indent = 4;
+
+    output << json.dump(indent);
 }
 
 void Serializer::Deserialize()

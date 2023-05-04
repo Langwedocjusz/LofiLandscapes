@@ -7,6 +7,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include "nlohmann/json.hpp"
+
 typedef std::variant<int, float, glm::vec3> InstanceData;
 
 class EditorTask{
@@ -14,6 +16,7 @@ public:
 
     virtual void OnDispatch(Shader& shader, const InstanceData& data) = 0;
     virtual void OnImGui(InstanceData& data, bool& state, const std::string& suffix) {}
+    virtual void OnSerialize(nlohmann::json& output, InstanceData data) = 0;
 
     virtual void ProvideDefaultData(std::vector<InstanceData>& data) = 0;
 };
@@ -23,6 +26,7 @@ public:
     ConstIntTask(const std::string& uniform_name, int val);
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -35,6 +39,7 @@ public:
     ConstFloatTask(const std::string& uniform_name, float val);
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -50,6 +55,7 @@ public:
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
     void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -65,6 +71,7 @@ public:
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
     void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -80,6 +87,7 @@ public:
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
     void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -95,6 +103,7 @@ public:
 
     void OnDispatch(Shader& shader, const InstanceData& data) override;
     void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
+    void OnSerialize(nlohmann::json& output, InstanceData data) override;
 
     void ProvideDefaultData(std::vector<InstanceData>& data) override;
 
@@ -161,6 +170,8 @@ public:
 
     void OnDispatch(int res);
     bool OnImGui();
+
+    void OnSerialize(nlohmann::json& output);
 private:
     std::vector<ProcedureInstance> m_Instances;
     
@@ -180,6 +191,7 @@ public:
 
     void OnDispatch(int layer, int res);
     bool OnImGui(int layer);
+    void OnSerialize(nlohmann::json& output);
 private:
     std::vector<std::vector<ProcedureInstance>> m_InstanceLists;
 

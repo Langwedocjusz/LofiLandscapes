@@ -1,9 +1,12 @@
 #pragma once
 
-#include <filesystem>
 #include <fstream>
+#include <filesystem>
+
 #include <map>
 #include <functional>
+
+#include "nlohmann/json.hpp"
 
 class Serializer {
 public:
@@ -14,7 +17,7 @@ public:
 
 	void OnImGui();
 
-	void RegisterSaveCallback(const std::string& token, std::function<void(std::ofstream&)> callback);
+	void RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::json&)> callback);
 
 private:
 	void LoadPopup();
@@ -34,5 +37,5 @@ private:
 	const size_t m_MaxNameLength = 40;
 	std::string m_Filename;
 
-	std::map<std::string, std::function<void(std::ofstream&)>> m_SaveCallbacks;
+	std::map<std::string, std::function<void(nlohmann::json&)>> m_SaveCallbacks;
 };

@@ -17,6 +17,11 @@ void ConstIntTask::OnDispatch(Shader& shader, const InstanceData& data)
     shader.setUniform1i(UniformName, value);
 }
 
+void ConstIntTask::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    output["Value"] = std::get<int>(data);
+}
+
 void ConstIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Value);
@@ -29,6 +34,11 @@ void ConstFloatTask::OnDispatch(Shader& shader, const InstanceData& data)
 {
     auto value = std::get<float>(data);
     shader.setUniform1f(UniformName, value);
+}
+
+void ConstFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    output["Value"] = std::get<float>(data);
 }
 
 void ConstFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
@@ -46,6 +56,11 @@ void SliderIntTask::OnDispatch(Shader& shader, const InstanceData& data)
 {
     auto value = std::get<int>(data);
     shader.setUniform1i(UniformName, value);
+}
+
+void SliderIntTask::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    output[UiName] = std::get<int>(data);
 }
 
 void SliderIntTask::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
@@ -91,6 +106,11 @@ void SliderFloatTask::OnImGui(InstanceData& data, bool& state, const std::string
     }
 }
 
+void SliderFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    output[UiName] = std::get<float>(data);
+}
+
 void SliderFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Def);
@@ -121,6 +141,12 @@ void ColorEdit3Task::OnImGui(InstanceData& data, bool& state, const std::string&
     }
 }
 
+void ColorEdit3Task::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    glm::vec3& value = std::get<glm::vec3>(data);
+    output[UiName] = { value.x, value.y, value.z };
+}
+
 void ColorEdit3Task::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Def);
@@ -149,6 +175,11 @@ void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suf
         *ptr = value;
         state = true;
     }
+}
+
+void GLEnumTask::OnSerialize(nlohmann::json& output, InstanceData data)
+{
+    output[UiName] = std::get<int>(data);
 }
 
 void GLEnumTask::ProvideDefaultData(std::vector<InstanceData>& data)
@@ -353,6 +384,26 @@ bool TextureEditor::OnImGui() {
     return res;
 }
 
+void TextureEditor::OnSerialize(nlohmann::json& output) {
+    for (const auto& instance : m_Instances)
+    {
+        if (!m_Procedures.count(instance.Name))
+            continue;
+
+        const auto& procedure = m_Procedures[instance.Name];
+
+        size_t idx = 0;
+
+        for (auto& task : procedure.m_Tasks)
+        {
+            task->OnSerialize(output[m_Name][instance.Name], instance.Data[idx]);
+
+            idx++;
+        }
+
+    }
+}
+
 unsigned int TextureEditor::s_InstanceCount = 0;
 
 //===========================================================================
@@ -383,6 +434,29 @@ bool TextureArrayEditor::OnImGui(int layer) {
     res |= PopupImpl(m_Procedures, instances, m_Name, m_PopupOpen);
     
     return res;
+}
+
+void TextureArrayEditor::OnSerialize(nlohmann::json& output) {
+    for (size_t id = 0; id < m_InstanceLists.size(); id++)
+    {
+
+        for (const auto& instance : m_InstanceLists[id])
+        {
+            if (!m_Procedures.count(instance.Name))
+                continue;
+
+            const auto& procedure = m_Procedures[instance.Name];
+
+            size_t idx = 0;
+
+            for (auto& task : procedure.m_Tasks)
+            {
+                task->OnSerialize(output[m_Name][std::to_string(id)][instance.Name], instance.Data[idx]);
+
+                idx++;
+            }
+        }
+    }
 }
 
 unsigned int TextureArrayEditor::s_InstanceCount = 0;

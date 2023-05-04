@@ -382,6 +382,15 @@ bool MapGenerator::GeometryShouldUpdate() {
     return (m_UpdateFlags & Normal) != None;
 }
 
+void MapGenerator::OnSerialize(nlohmann::json& output)
+{
+    const std::string name{ "Terrain Editor" };
+
+    m_HeightEditor.OnSerialize(output[name]);
+
+    m_MaterialEditor.OnSerialize(output[name]);
+}
+
 //Settings structs operator overloads:
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs) {

@@ -228,3 +228,11 @@ void MaterialGenerator::BindAlbedo(int id) const {
 void MaterialGenerator::BindNormal(int id) const {
     m_Normal.Bind(id);
 }
+
+void MaterialGenerator::OnSerialize(nlohmann::json& output) {
+    const std::string name{ "Material Editor" };
+    
+    m_HeightEditor.OnSerialize(output[name]);
+    m_AlbedoEditor.OnSerialize(output[name]);
+    m_RoughnessEditor.OnSerialize(output[name]);
+}

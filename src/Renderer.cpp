@@ -306,10 +306,9 @@ void Renderer::InitImGuiIniHandler() {
     ImGui::AddSettingsHandler(&ini_handler);
 }
 
-void Renderer::OnSerialize(std::ofstream& output)
+void Renderer::OnSerialize(nlohmann::json& output)
 {
-    const std::string wireframe_state = [&]() {if (m_Wireframe) return "true"; else return "false"; }();
+    m_Map.OnSerialize(output);
 
-    output << ("Wireframe=" + wireframe_state + "\n");
-    output << ("ClearColor=") << m_ClearColor[0] << ", " << m_ClearColor[1] << ", " << m_ClearColor[2] << "\n";
+    m_Material.OnSerialize(output);
 }

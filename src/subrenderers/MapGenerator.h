@@ -4,6 +4,8 @@
 #include "GLUtils.h"
 #include "TextureEditor.h"
 
+#include "nlohmann/json.hpp"
+
 struct ScaleSettings{
     float ScaleXZ = 100.0f;
     float ScaleY = 20.0f;
@@ -47,8 +49,10 @@ public:
 
     ScaleSettings getScaleSettings() const {return m_ScaleSettings;}
 
-private:
+    void OnSerialize(nlohmann::json& output);
 
+private:
+   
     enum UpdateFlags {
         None     =  0,
         Height   = (1 << 0),
