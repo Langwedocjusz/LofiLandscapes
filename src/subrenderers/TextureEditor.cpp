@@ -543,6 +543,8 @@ void TextureArrayEditor::OnDeserialize(nlohmann::ordered_json& input) {
 
     for (auto& [layer, subinput] : input.items())
     {
+        m_InstanceLists.push_back(std::vector<ProcedureInstance>());
+
         for (auto& [key, value] : subinput.items())
         {
             const std::string name = key.substr(key.find_first_of("_") + 1);
