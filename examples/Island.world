@@ -1,5 +1,163 @@
 {
-    "Material Editor": null,
+    "Material Editor": {
+        "Height": {
+            "0": {
+                "0_Const Value": {
+                    "Value": 0.0
+                }
+            },
+            "1": {
+                "0_Const Value": {
+                    "Value": 0.0
+                },
+                "1_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 31,
+                    "Roughness": 0.24799999594688416,
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "2_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 1.0,
+                    "Blend Mode": 0,
+                    "Weight": 0.1469999998807907
+                }
+            },
+            "2": {
+                "0_Const Value": {
+                    "Value": 0.0
+                },
+                "1_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 65,
+                    "Roughness": 0.9049999713897705,
+                    "Blend Mode": 0,
+                    "Weight": 0.02500000037252903
+                }
+            },
+            "3": {
+                "0_Const Value": {
+                    "Value": 0.0
+                },
+                "1_Voronoi": {
+                    "Value": 512,
+                    "Scale": 20,
+                    "Randomness": 1.0,
+                    "Type": 0,
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "2_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 74,
+                    "Roughness": 0.5,
+                    "Blend Mode": 0,
+                    "Weight": 0.3440000116825104
+                }
+            },
+            "4": {
+                "0_Const Value": {
+                    "Value": 0.0
+                }
+            }
+        },
+        "Albedo": {
+            "0": {
+                "0_Const Albedo": {
+                    "Albedo": [
+                        0.004999999888241291,
+                        0.004999999888241291,
+                        0.004999999888241291
+                    ]
+                }
+            },
+            "1": {
+                "0_Albedo Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.0,
+                    "Edge 2": 1.0,
+                    "Albedo 1": [
+                        0.589179277420044,
+                        0.6202532052993774,
+                        0.2695615291595459
+                    ],
+                    "Albedo 2": [
+                        0.9910271167755127,
+                        1.0,
+                        0.7637130618095398
+                    ]
+                }
+            },
+            "2": {
+                "0_Const Albedo": {
+                    "Albedo": [
+                        0.19753478467464447,
+                        0.6624472141265869,
+                        0.15932276844978333
+                    ]
+                }
+            },
+            "3": {
+                "0_Albedo Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.0,
+                    "Edge 2": 0.45399999618530273,
+                    "Albedo 1": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            },
+            "4": {
+                "0_Const Albedo": {
+                    "Albedo": [
+                        0.004999999888241291,
+                        0.004999999888241291,
+                        0.004999999888241291
+                    ]
+                }
+            }
+        },
+        "Roughness": {
+            "0": {
+                "0_Const Roughness": {
+                    "Roughness": 0.08900000154972076
+                }
+            },
+            "1": {
+                "0_Const Roughness": {
+                    "Roughness": 0.8529999852180481
+                }
+            },
+            "2": {
+                "0_Const Roughness": {
+                    "Roughness": 0.9810000061988831
+                }
+            },
+            "3": {
+                "0_Const Roughness": {
+                    "Roughness": 0.699999988079071
+                }
+            },
+            "4": {
+                "0_Const Roughness": {
+                    "Roughness": 0.699999988079071
+                }
+            }
+        }
+    },
     "Terrain Editor": {
         "Scale XZ": 200.0,
         "Scale Y": 20.0,
