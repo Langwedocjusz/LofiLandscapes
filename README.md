@@ -1,6 +1,8 @@
 # LofiLandscapes
 
-![alt text](https://github.com/Langwedocjusz/LofiLandscapes/blob/main/img/we1.png?raw=true)
+Generation and rendering of procedural landscapes.
+
+![alt text](https://github.com/Langwedocjusz/LofiLandscapes/blob/main/img/banner1.png?raw=true)
 
 ### Cloning
 This repository contains submodules and should be cloned recursively:
