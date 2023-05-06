@@ -17,7 +17,7 @@ void ConstIntTask::OnDispatch(Shader& shader, const InstanceData& data)
     shader.setUniform1i(UniformName, value);
 }
 
-void ConstIntTask::OnSerialize(nlohmann::json& output, InstanceData data)
+void ConstIntTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     output["Value"] = std::get<int>(data);
 }
@@ -25,6 +25,11 @@ void ConstIntTask::OnSerialize(nlohmann::json& output, InstanceData data)
 void ConstIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Value);
+}
+
+void ConstIntTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+    data.push_back(input["Value"].get<int>());
 }
 
 ConstFloatTask::ConstFloatTask(const std::string& uniform_name, float val) 
@@ -36,7 +41,7 @@ void ConstFloatTask::OnDispatch(Shader& shader, const InstanceData& data)
     shader.setUniform1f(UniformName, value);
 }
 
-void ConstFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
+void ConstFloatTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     output["Value"] = std::get<float>(data);
 }
@@ -44,6 +49,11 @@ void ConstFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
 void ConstFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Value);
+}
+
+void ConstFloatTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+    data.push_back(input["Value"].get<float>());
 }
 
 SliderIntTask::SliderIntTask(const std::string& uniform_name,
@@ -58,7 +68,7 @@ void SliderIntTask::OnDispatch(Shader& shader, const InstanceData& data)
     shader.setUniform1i(UniformName, value);
 }
 
-void SliderIntTask::OnSerialize(nlohmann::json& output, InstanceData data)
+void SliderIntTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     output[UiName] = std::get<int>(data);
 }
@@ -79,6 +89,11 @@ void SliderIntTask::OnImGui(InstanceData& data, bool& state, const std::string& 
 void SliderIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Def);
+}
+
+void SliderIntTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+    data.push_back(input[UiName].get<int>());
 }
 
 SliderFloatTask::SliderFloatTask(const std::string& uniform_name,
@@ -106,7 +121,7 @@ void SliderFloatTask::OnImGui(InstanceData& data, bool& state, const std::string
     }
 }
 
-void SliderFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
+void SliderFloatTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     output[UiName] = std::get<float>(data);
 }
@@ -114,6 +129,11 @@ void SliderFloatTask::OnSerialize(nlohmann::json& output, InstanceData data)
 void SliderFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Def);
+}
+
+void SliderFloatTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+    data.push_back(input[UiName].get<float>());
 }
 
 ColorEdit3Task::ColorEdit3Task(const std::string& uniform_name,
@@ -141,7 +161,7 @@ void ColorEdit3Task::OnImGui(InstanceData& data, bool& state, const std::string&
     }
 }
 
-void ColorEdit3Task::OnSerialize(nlohmann::json& output, InstanceData data)
+void ColorEdit3Task::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     glm::vec3& value = std::get<glm::vec3>(data);
     output[UiName] = { value.x, value.y, value.z };
@@ -150,6 +170,12 @@ void ColorEdit3Task::OnSerialize(nlohmann::json& output, InstanceData data)
 void ColorEdit3Task::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(Def);
+}
+
+void ColorEdit3Task::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+   auto values = input[UiName].get<std::array<float, 3>>();
+    data.push_back(glm::vec3(values[0], values[1], values[2]));
 }
 
 GLEnumTask::GLEnumTask(const std::string& uniform_name,
@@ -177,7 +203,7 @@ void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suf
     }
 }
 
-void GLEnumTask::OnSerialize(nlohmann::json& output, InstanceData data)
+void GLEnumTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
     output[UiName] = std::get<int>(data);
 }
@@ -185,6 +211,11 @@ void GLEnumTask::OnSerialize(nlohmann::json& output, InstanceData data)
 void GLEnumTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
     data.push_back(0);
+}
+
+void GLEnumTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
+{
+    data.push_back(input[UiName].get<int>());
 }
 
 //===========================================================================
@@ -243,7 +274,8 @@ void EditorBase::RegisterShader(const std::string& name,
 
 void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
                               std::vector<ProcedureInstance>& instances,
-                              const std::string& name) {
+                              const std::string& name)
+{
     if (procedures.count(name)) {
         instances.push_back(ProcedureInstance(name));
 
@@ -252,6 +284,22 @@ void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& proced
 
         for (auto& task : procedure.m_Tasks) {
             task->ProvideDefaultData(data);
+        }
+    }
+}
+
+void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
+                              std::vector<ProcedureInstance>& instances, 
+                              const std::string& name, nlohmann::ordered_json& input) 
+{
+    if (procedures.count(name)) {
+        instances.push_back(ProcedureInstance(name));
+
+        auto& procedure = procedures[name];
+        auto& data = instances.back().Data;
+
+        for (auto& task : procedure.m_Tasks) {
+            task->ProvideData(data, input);
         }
     }
 }
@@ -373,6 +421,10 @@ void TextureEditor::AddProcedureInstance(const std::string& name) {
     AddProcedureInstanceImpl(m_Procedures, m_Instances, name);
 }
 
+void TextureEditor::AddProcedureInstance(const std::string& name, nlohmann::ordered_json& input) {
+    AddProcedureInstanceImpl(m_Procedures, m_Instances, name, input);
+}
+
 void TextureEditor::OnDispatch(int res) {
     OnDispatchImpl(m_Procedures, m_Instances, res);
 }
@@ -384,7 +436,9 @@ bool TextureEditor::OnImGui() {
     return res;
 }
 
-void TextureEditor::OnSerialize(nlohmann::json& output) {
+void TextureEditor::OnSerialize(nlohmann::ordered_json& output) {
+    size_t instance_idx = 0;
+
     for (const auto& instance : m_Instances)
     {
         if (!m_Procedures.count(instance.Name))
@@ -392,15 +446,27 @@ void TextureEditor::OnSerialize(nlohmann::json& output) {
 
         const auto& procedure = m_Procedures[instance.Name];
 
-        size_t idx = 0;
+        size_t task_idx = 0;
 
         for (auto& task : procedure.m_Tasks)
         {
-            task->OnSerialize(output[m_Name][instance.Name], instance.Data[idx]);
+            const std::string name = std::to_string(instance_idx) + "_" + instance.Name;
+            task->OnSerialize(output[m_Name][name], instance.Data[task_idx]);
 
-            idx++;
+            task_idx++;
         }
 
+        instance_idx++;
+    }
+}
+
+void TextureEditor::OnDeserialize(nlohmann::ordered_json& input) {
+    m_Instances.clear();
+    
+    for (auto& [key, value] : input.items())
+    {
+        const std::string name = key.substr(key.find_first_of("_") + 1);
+        AddProcedureInstance(name, value);
     }
 }
 
@@ -421,6 +487,12 @@ void TextureArrayEditor::AddProcedureInstance(int layer, const std::string& name
     AddProcedureInstanceImpl(m_Procedures, instances, name);
 }
 
+void TextureArrayEditor::AddProcedureInstance(int layer, const std::string& name, nlohmann::ordered_json& input) {
+    auto& instances = m_InstanceLists[layer];
+
+    AddProcedureInstanceImpl(m_Procedures, instances, name, input);
+}
+
 void TextureArrayEditor::OnDispatch(int layer, int res) {
     auto& instances = m_InstanceLists[layer];
 
@@ -436,9 +508,10 @@ bool TextureArrayEditor::OnImGui(int layer) {
     return res;
 }
 
-void TextureArrayEditor::OnSerialize(nlohmann::json& output) {
+void TextureArrayEditor::OnSerialize(nlohmann::ordered_json& output) {
     for (size_t id = 0; id < m_InstanceLists.size(); id++)
     {
+        size_t instance_idx = 0;
 
         for (const auto& instance : m_InstanceLists[id])
         {
@@ -447,15 +520,37 @@ void TextureArrayEditor::OnSerialize(nlohmann::json& output) {
 
             const auto& procedure = m_Procedures[instance.Name];
 
-            size_t idx = 0;
+            size_t task_idx = 0;
 
             for (auto& task : procedure.m_Tasks)
             {
-                task->OnSerialize(output[m_Name][std::to_string(id)][instance.Name], instance.Data[idx]);
+                const std::string name = std::to_string(instance_idx) + "_" + instance.Name;
 
-                idx++;
+                task->OnSerialize(output[m_Name][std::to_string(id)][name], instance.Data[task_idx]);
+
+                task_idx++;
             }
+
+            instance_idx++;
         }
+    }
+}
+
+void TextureArrayEditor::OnDeserialize(nlohmann::ordered_json& input) {
+    m_InstanceLists.clear();
+
+    size_t idx = 0;
+
+    for (auto& [layer, subinput] : input.items())
+    {
+        for (auto& [key, value] : subinput.items())
+        {
+            const std::string name = key.substr(key.find_first_of("_") + 1);
+
+            AddProcedureInstance(idx, name, value);
+        }
+
+        idx++;
     }
 }
 

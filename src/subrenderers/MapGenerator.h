@@ -49,7 +49,8 @@ public:
 
     ScaleSettings getScaleSettings() const {return m_ScaleSettings;}
 
-    void OnSerialize(nlohmann::json& output);
+    void OnSerialize(nlohmann::ordered_json& output);
+    void OnDeserialize(nlohmann::ordered_json& input);
 
 private:
    

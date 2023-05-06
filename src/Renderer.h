@@ -38,7 +38,6 @@ public:
     void OnMousePressed(int button, int mods);
     void RestartMouse();
 private:
-    void OnSerialize(nlohmann::json& output);
 
     float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
 

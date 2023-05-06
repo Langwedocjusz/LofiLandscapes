@@ -17,7 +17,8 @@ public:
 
 	void OnImGui();
 
-	void RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::json&)> callback);
+	void RegisterLoadCallback(const std::string& token, std::function<void(nlohmann::ordered_json&)> callback);
+	void RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::ordered_json&)> callback);
 
 private:
 	void LoadPopup();
@@ -37,5 +38,6 @@ private:
 	const size_t m_MaxNameLength = 40;
 	std::string m_Filename;
 
-	std::map<std::string, std::function<void(nlohmann::json&)>> m_SaveCallbacks;
+	std::map<std::string, std::function<void(nlohmann::ordered_json&)>> m_LoadCallbacks;
+	std::map<std::string, std::function<void(nlohmann::ordered_json&)>> m_SaveCallbacks;
 };

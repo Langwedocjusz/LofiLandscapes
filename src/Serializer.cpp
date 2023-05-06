@@ -45,7 +45,15 @@ void Serializer::OnImGui()
     m_SaveDialogOpen = true;
 }
 
-void Serializer::RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::json&)> callback)
+void Serializer::RegisterLoadCallback(const std::string& token, std::function<void(nlohmann::ordered_json&)> callback)
+{
+    if (m_LoadCallbacks.count(token) == 0)
+        m_LoadCallbacks.insert(std::make_pair(token, callback));
+    else
+        std::cerr << "Serializer Error: Load callback for token " << token << " already registered\n";
+}
+
+void Serializer::RegisterSaveCallback(const std::string& token, std::function<void(nlohmann::ordered_json&)> callback)
 {
     if (m_SaveCallbacks.count(token) == 0)
         m_SaveCallbacks.insert(std::make_pair(token, callback));
@@ -60,6 +68,15 @@ void Serializer::LoadPopup()
         RenderFileBrowser();
 
         ImGuiUtils::Separator();
+
+        //To-do: more 'rigorous' offset calculation
+        const float width = ImGui::GetContentRegionAvail().x - 45.0f;
+
+        ImGui::PushItemWidth(width);
+        ImGui::InputText("##load_filename", m_Filename.data(), m_MaxNameLength, ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
 
         if (ImGui::Button("Load"))
         {
@@ -142,11 +159,11 @@ void Serializer::RenderFileBrowser()
 
 void Serializer::Serialize()
 {
-    nlohmann::json json;
+    nlohmann::ordered_json json;
 
     for (const auto & [token, callback] : m_SaveCallbacks)
     {
-        callback(json);
+        callback(json[token]);
     }
 
     auto path = m_CurrentPath / m_Filename;
@@ -166,11 +183,12 @@ void Serializer::Deserialize()
 
     if (input)
     {
-        std::string line;
+        auto json = nlohmann::ordered_json::parse(input);
 
-        while (std::getline(input, line))
+        for (auto& [key, value] : json.items())
         {
-            std::cout << line << '\n';
+            if (m_LoadCallbacks.count(key))
+                m_LoadCallbacks[key](value); 
         }
     }
 

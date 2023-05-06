@@ -229,10 +229,23 @@ void MaterialGenerator::BindNormal(int id) const {
     m_Normal.Bind(id);
 }
 
-void MaterialGenerator::OnSerialize(nlohmann::json& output) {
-    const std::string name{ "Material Editor" };
-    
-    m_HeightEditor.OnSerialize(output[name]);
-    m_AlbedoEditor.OnSerialize(output[name]);
-    m_RoughnessEditor.OnSerialize(output[name]);
+void MaterialGenerator::OnSerialize(nlohmann::ordered_json& output) {
+    m_HeightEditor.OnSerialize(output);
+    m_AlbedoEditor.OnSerialize(output);
+    m_RoughnessEditor.OnSerialize(output);
+}
+
+void MaterialGenerator::OnDeserialize(nlohmann::ordered_json& input) {
+    m_HeightEditor.OnDeserialize(input[m_HeightEditor.getName()]);
+    m_AlbedoEditor.OnDeserialize(input[m_AlbedoEditor.getName()]);
+    m_RoughnessEditor.OnDeserialize(input[m_RoughnessEditor.getName()]);
+
+    for (int i = 0; i < m_Layers; i++)
+    {
+        m_UpdateFlags = Height | Normal | Albedo;
+        m_Current = i;
+        Update();
+    }
+
+    m_Current = 0;
 }

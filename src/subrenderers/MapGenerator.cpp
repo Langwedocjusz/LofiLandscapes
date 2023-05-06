@@ -382,13 +382,24 @@ bool MapGenerator::GeometryShouldUpdate() {
     return (m_UpdateFlags & Normal) != None;
 }
 
-void MapGenerator::OnSerialize(nlohmann::json& output)
+void MapGenerator::OnSerialize(nlohmann::ordered_json& output)
 {
-    const std::string name{ "Terrain Editor" };
+    output["Scale XZ"] = m_ScaleSettings.ScaleXZ;
+    output["Scale Y"] = m_ScaleSettings.ScaleY;
 
-    m_HeightEditor.OnSerialize(output[name]);
+    m_HeightEditor.OnSerialize(output);
+    m_MaterialEditor.OnSerialize(output);
+}
 
-    m_MaterialEditor.OnSerialize(output[name]);
+void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
+{
+    m_ScaleSettings.ScaleXZ = input["Scale XZ"];
+    m_ScaleSettings.ScaleY = input["Scale Y"];
+
+    m_HeightEditor.OnDeserialize(input[m_HeightEditor.getName()]);
+    m_MaterialEditor.OnDeserialize(input[m_MaterialEditor.getName()]);
+
+    m_UpdateFlags = Height | Normal | Shadow | Material;
 }
 
 //Settings structs operator overloads:

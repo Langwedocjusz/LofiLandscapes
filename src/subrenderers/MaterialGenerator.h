@@ -10,7 +10,8 @@ public:
 
     void Update();
     void OnImGui(bool& open);
-    void OnSerialize(nlohmann::json& output);
+    void OnSerialize(nlohmann::ordered_json& output);
+    void OnDeserialize(nlohmann::ordered_json& input);
 
     void BindAlbedo(int id=0) const;
     void BindNormal(int id=0) const;

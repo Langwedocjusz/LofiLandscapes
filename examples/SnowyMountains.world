@@ -1,0 +1,240 @@
+{
+    "Material Editor": {
+        "Height": {
+            "0": {
+                "0_Const Value": {
+                    "Value": 0.0
+                },
+                "1_Voronoi": {
+                    "Value": 512,
+                    "Scale": 7,
+                    "Randomness": 1.0,
+                    "Type": 0,
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "2_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 1,
+                    "Roughness": 0.5,
+                    "Blend Mode": 0,
+                    "Weight": 0.41100001335144043
+                },
+                "3_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 68,
+                    "Roughness": 0.5,
+                    "Blend Mode": 0,
+                    "Weight": 0.10300000011920929
+                }
+            },
+            "1": {
+                "0_Const Value": {
+                    "Value": 1.0
+                },
+                "1_Voronoi": {
+                    "Value": 512,
+                    "Scale": 19,
+                    "Randomness": 1.0,
+                    "Type": 0,
+                    "Blend Mode": 2,
+                    "Weight": 1.0
+                },
+                "2_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 85,
+                    "Roughness": 0.5,
+                    "Blend Mode": 0,
+                    "Weight": 0.4050000011920929
+                }
+            },
+            "2": {
+                "0_Const Value": {
+                    "Value": 0.0
+                },
+                "1_FBM": {
+                    "Value": 512,
+                    "Octaves": 8,
+                    "Scale": 1,
+                    "Roughness": 0.5,
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                }
+            },
+            "3": {
+                "0_Const Value": {
+                    "Value": 0.0
+                }
+            },
+            "4": {
+                "0_Const Value": {
+                    "Value": 0.0
+                }
+            }
+        },
+        "Albedo": {
+            "0": {
+                "0_Albedo Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.0,
+                    "Edge 2": 1.0,
+                    "Albedo 1": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Albedo 2": [
+                        0.49367088079452515,
+                        0.49367088079452515,
+                        0.49367088079452515
+                    ]
+                }
+            },
+            "1": {
+                "0_Albedo Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.37400001287460327,
+                    "Edge 2": 0.5770000219345093,
+                    "Albedo 1": [
+                        0.5358649492263794,
+                        0.9941249489784241,
+                        1.0
+                    ],
+                    "Albedo 2": [
+                        0.4514768123626709,
+                        0.4514768123626709,
+                        0.4514768123626709
+                    ]
+                }
+            },
+            "2": {
+                "0_Albedo Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.0,
+                    "Edge 2": 1.0,
+                    "Albedo 1": [
+                        0.5189872980117798,
+                        0.9695562124252319,
+                        1.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            },
+            "3": {
+                "0_Const Albedo": {
+                    "Albedo": [
+                        0.004999999888241291,
+                        0.004999999888241291,
+                        0.004999999888241291
+                    ]
+                }
+            },
+            "4": {
+                "0_Const Albedo": {
+                    "Albedo": [
+                        0.004999999888241291,
+                        0.004999999888241291,
+                        0.004999999888241291
+                    ]
+                }
+            }
+        },
+        "Roughness": {
+            "0": {
+                "0_Const Roughness": {
+                    "Roughness": 0.699999988079071
+                }
+            },
+            "1": {
+                "0_Roughness Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.37400001287460327,
+                    "Edge 2": 0.5770000219345093,
+                    "Value 1": 0.003000000026077032,
+                    "Value 2": 1.0
+                }
+            },
+            "2": {
+                "0_Roughness Ramp": {
+                    "Value": 512,
+                    "Edge 1": 0.0,
+                    "Edge 2": 1.0,
+                    "Value 1": 0.003000000026077032,
+                    "Value 2": 1.0
+                }
+            },
+            "3": {
+                "0_Const Roughness": {
+                    "Roughness": 0.699999988079071
+                }
+            },
+            "4": {
+                "0_Const Roughness": {
+                    "Roughness": 0.699999988079071
+                }
+            }
+        }
+    },
+    "Terrain Editor": {
+        "Scale XZ": 400.0,
+        "Scale Y": 20.0,
+        "Height": {
+            "0_Const Value": {
+                "Value": 0.0
+            },
+            "1_Voronoi": {
+                "Value": 4096,
+                "Scale": 14.956999778747559,
+                "Randomness": 1.0,
+                "Type": 0,
+                "Blend Mode": 0,
+                "Weight": 1.0
+            },
+            "2_FBM": {
+                "Value": 4096,
+                "Octaves": 8,
+                "Scale": 64.0,
+                "Roughness": 0.6230000257492065,
+                "Blend Mode": 0,
+                "Weight": 0.09799999743700027
+            },
+            "3_Curves": {
+                "Exponent": 2.8420000076293945
+            },
+            "4_FBM": {
+                "Value": 4096,
+                "Octaves": 8,
+                "Scale": 64.0,
+                "Roughness": 0.6380000114440918,
+                "Blend Mode": 1,
+                "Weight": 0.008999999612569809
+            }
+        },
+        "Material": {
+            "0_One material": {
+                "Material id": 0
+            },
+            "1_Select slope": {
+                "Value": 4096,
+                "Upper": 0.9629999995231628,
+                "Lower": 0.0,
+                "Blending": 0.009999999776482582,
+                "Material id": 1
+            },
+            "2_Select slope": {
+                "Value": 4096,
+                "Upper": 0.9449999928474426,
+                "Lower": 0.0,
+                "Blending": 0.009999999776482582,
+                "Material id": 2
+            }
+        }
+    }
+}

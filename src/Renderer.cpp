@@ -14,7 +14,22 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
 {
-    m_Serializer.RegisterSaveCallback("RENDERER", std::bind(&Renderer::OnSerialize, this, std::placeholders::_1));
+    m_Serializer.RegisterLoadCallback("Terrain Editor",
+        std::bind(&MapGenerator::OnDeserialize, &m_Map, std::placeholders::_1)
+    );
+
+    m_Serializer.RegisterLoadCallback("Material Editor",
+        std::bind(&MaterialGenerator::OnDeserialize, &m_Material, std::placeholders::_1)
+    );
+
+
+    m_Serializer.RegisterSaveCallback("Terrain Editor", 
+        std::bind(&MapGenerator::OnSerialize, &m_Map, std::placeholders::_1)
+    );
+
+    m_Serializer.RegisterSaveCallback("Material Editor", 
+        std::bind(&MaterialGenerator::OnSerialize, &m_Material, std::placeholders::_1)
+    );
 }
 
 Renderer::~Renderer() {}
@@ -304,11 +319,4 @@ void Renderer::InitImGuiIniHandler() {
     ini_handler.UserData = this;
 
     ImGui::AddSettingsHandler(&ini_handler);
-}
-
-void Renderer::OnSerialize(nlohmann::json& output)
-{
-    m_Map.OnSerialize(output);
-
-    m_Material.OnSerialize(output);
 }
