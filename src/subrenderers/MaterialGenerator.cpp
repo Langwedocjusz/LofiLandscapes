@@ -50,7 +50,6 @@ MaterialGenerator::MaterialGenerator()
     m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
-    m_HeightEditor.Attach<ConstIntTask>("FBM", "uResolution", m_Height.getSpec().ResolutionX);
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
@@ -59,7 +58,6 @@ MaterialGenerator::MaterialGenerator()
 
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
-    m_HeightEditor.Attach<ConstIntTask>("Voronoi", "uResolution", m_Height.getSpec().ResolutionX);
     m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
     
@@ -74,7 +72,6 @@ MaterialGenerator::MaterialGenerator()
     m_AlbedoEditor.Attach<ColorEdit3Task>("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
 
     m_AlbedoEditor.RegisterShader("Albedo Ramp", "res/shaders/materials/albedo_ramp.glsl");
-    m_AlbedoEditor.Attach<ConstIntTask>("Albedo Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
     m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
     m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
     m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo Ramp", "uCol1", "Albedo 1", glm::vec3(0.0f));
@@ -85,7 +82,6 @@ MaterialGenerator::MaterialGenerator()
     m_RoughnessEditor.Attach<SliderFloatTask>("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
 
     m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
-    m_RoughnessEditor.Attach<ConstIntTask>("Roughness Ramp", "uResolution", m_Albedo.getSpec().ResolutionX);
     m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
     m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
     m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uVal1", "Value 1", 0.003f, 1.0f, 0.003f);
@@ -133,7 +129,6 @@ void MaterialGenerator::Update() {
         m_Normal.BindImage(0, m_Current, 0);
 
         m_NormalShader.Bind();
-        m_NormalShader.setUniform1i("uResolution", res);
         m_NormalShader.setUniform1f("uAOStrength", 1.0f/m_AOStrength);
         m_NormalShader.setUniform1f("uAOSpread", m_AOSpread);
         m_NormalShader.setUniform1f("uAOContrast", m_AOContrast);

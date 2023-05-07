@@ -6,7 +6,6 @@ layout(rgba8, binding = 0) uniform image2D materialmap;
 
 uniform sampler2D heightmap;
 
-uniform int uResolution;
 uniform float uHeightUpper;
 uniform float uHeightLower;
 uniform float uBlend;
@@ -18,7 +17,7 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
     
     //Height
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = vec2(texelCoord)/imageSize(materialmap);
     float height = texture(heightmap, uv).r;
 
     //Mask

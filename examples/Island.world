@@ -11,7 +11,6 @@
                     "Value": 0.0
                 },
                 "1_FBM": {
-                    "Value": 512,
                     "Octaves": 8,
                     "Scale": 31,
                     "Roughness": 0.24799999594688416,
@@ -19,7 +18,6 @@
                     "Weight": 1.0
                 },
                 "2_FBM": {
-                    "Value": 512,
                     "Octaves": 8,
                     "Scale": 100,
                     "Roughness": 1.0,
@@ -32,7 +30,6 @@
                     "Value": 0.0
                 },
                 "1_FBM": {
-                    "Value": 512,
                     "Octaves": 8,
                     "Scale": 65,
                     "Roughness": 0.9049999713897705,
@@ -45,7 +42,6 @@
                     "Value": 0.0
                 },
                 "1_Voronoi": {
-                    "Value": 512,
                     "Scale": 20,
                     "Randomness": 1.0,
                     "Type": 0,
@@ -53,7 +49,6 @@
                     "Weight": 1.0
                 },
                 "2_FBM": {
-                    "Value": 512,
                     "Octaves": 8,
                     "Scale": 74,
                     "Roughness": 0.5,
@@ -79,7 +74,6 @@
             },
             "1": {
                 "0_Albedo Ramp": {
-                    "Value": 512,
                     "Edge 1": 0.0,
                     "Edge 2": 1.0,
                     "Albedo 1": [
@@ -105,7 +99,6 @@
             },
             "3": {
                 "0_Albedo Ramp": {
-                    "Value": 512,
                     "Edge 1": 0.0,
                     "Edge 2": 0.45399999618530273,
                     "Albedo 1": [
@@ -166,7 +159,6 @@
                 "Value": 0.0
             },
             "1_FBM": {
-                "Value": 4096,
                 "Octaves": 8,
                 "Scale": 44.755001068115234,
                 "Roughness": 0.5,
@@ -174,7 +166,6 @@
                 "Weight": 0.8899999856948853
             },
             "2_Radial cutoff": {
-                "Value": 4096,
                 "Bias": 0.5,
                 "Slope": 4.0
             },
@@ -187,21 +178,18 @@
                 "Material id": 0
             },
             "1_Select height": {
-                "Value": 4096,
                 "Upper": 1.0,
                 "Lower": 0.012000000104308128,
                 "Blending": 0.009999999776482582,
                 "Material id": 1
             },
             "2_Select height": {
-                "Value": 4096,
                 "Upper": 1.0,
                 "Lower": 0.03700000047683716,
                 "Blending": 0.02800000086426735,
                 "Material id": 2
             },
             "3_Select slope": {
-                "Value": 4096,
                 "Upper": 1.0,
                 "Lower": 0.9509999752044678,
                 "Blending": 0.035999998450279236,

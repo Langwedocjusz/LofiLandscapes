@@ -6,7 +6,6 @@ layout(rgba8, binding = 0) uniform image2D materialmap;
 
 uniform sampler2D heightmap;
 
-uniform int uResolution;
 uniform float uSlopeUpper;
 uniform float uSlopeLower;
 uniform float uBlend;
@@ -17,7 +16,7 @@ float getHeight(vec2 uv) {
 }
 
 vec3 getNorm(vec2 uv) {
-    vec2 h = vec2(0.0, 1.0/float(uResolution));
+    vec2 h = vec2(0.0, 1.0)/textureSize(heightmap, 0);
 
     return normalize(vec3(
         0.5*(getHeight(uv+h.yx) - getHeight(uv-h.yx))/h.y,
@@ -32,7 +31,7 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Slope
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = vec2(texelCoord)/imageSize(materialmap);
     vec3 norm = getNorm(uv);
     float slope = 1.0 - norm.y;
 

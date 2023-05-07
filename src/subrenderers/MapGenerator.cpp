@@ -72,7 +72,6 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/terrain/fbm.glsl");
-    m_HeightEditor.Attach<ConstIntTask>("FBM", "uResolution", height_res);
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uScale", "Scale", 1.0, 64.0, 32.0);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
@@ -80,7 +79,6 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
-    m_HeightEditor.Attach<ConstIntTask>("Voronoi", "uResolution", height_res);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uScale", "Scale", 1.0, 64.0, 8.0);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
 
@@ -94,7 +92,6 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.Attach<SliderFloatTask>("Curves", "uExponent", "Exponent", 0.1, 4.0, 1.0);
 
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
-    m_HeightEditor.Attach<ConstIntTask>("Radial cutoff", "uResolution", height_res);
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uBias", "Bias", 0.0, 1.0, 0.5);
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uSlope", "Slope", 0.0, 10.0, 4.0);
 
@@ -110,14 +107,12 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_MaterialEditor.Attach<SliderIntTask>("One material", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select height", "res/shaders/terrain/select_height.glsl");
-    m_MaterialEditor.Attach<ConstIntTask>("Select height", "uResolution", height_res);
     m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightLower", "Lower", 0.0, 1.0, 0.0);
     m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uBlend", "Blending", 0.0, 0.1, 0.01);
     m_MaterialEditor.Attach<SliderIntTask>("Select height", "uID", "Material id", 0, max_layer_id, 0);
 
     m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
-    m_MaterialEditor.Attach<ConstIntTask>("Select slope", "uResolution", height_res);
     m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeUpper", "Upper", 0.0, 1.0, 1.0);
     m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeLower", "Lower", 0.0, 1.0, 0.0);
     m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uBlend", "Blending", 0.0, 0.1, 0.01);
@@ -174,7 +169,6 @@ void MapGenerator::UpdateNormal() {
     m_Normalmap.BindImage(0, 0);
  
     m_NormalmapShader.Bind();
-    m_NormalmapShader.setUniform1i("uResolution", res);
     m_NormalmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
     m_NormalmapShader.setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
 

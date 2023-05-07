@@ -9,8 +9,6 @@ layout(rgba8, binding = 0) uniform image2D normalmap;
 
 uniform sampler2D heightmap;
 
-uniform int uResolution;
-
 uniform float uAOStrength;
 uniform float uAOSpread;
 uniform float uAOContrast;
@@ -20,7 +18,7 @@ float getHeight(vec2 uv) {
 }
 
 vec3 getNorm(vec2 uv) {
-    vec2 h = vec2(0.0, 1.0/float(uResolution));
+    vec2 h = vec2(0.0, 1.0)/textureSize(heightmap, 0);
 
     return normalize(vec3(
         0.5*(getHeight(uv+h.yx) - getHeight(uv-h.yx))/h.y,
@@ -30,7 +28,7 @@ vec3 getNorm(vec2 uv) {
 }
 
 float getAO(vec2 p) {
-    vec2 h = vec2(0.0, uAOSpread/float(uResolution));
+    vec2 h = vec2(0.0, uAOSpread)/imageSize(normalmap);
 
     float cx = max(getNorm(p+h.xy).z, 0.0) + max(-getNorm(p-h.yx).x, 0.0);
     float cz = max(getNorm(p+h.xy).z, 0.0) + max(-getNorm(p-h.xy).z, 0.0);
@@ -43,7 +41,7 @@ float getAO(vec2 p) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = vec2(texelCoord)/imageSize(normalmap);
     
     vec3 norm = getNorm(uv);
     norm = 0.5*getNorm(uv)+0.5;

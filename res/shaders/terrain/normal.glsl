@@ -7,8 +7,6 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba8, binding = 0) uniform image2D normalmap;
 
-uniform int uResolution;
-
 uniform sampler2D heightmap;
 
 uniform float uScaleXZ;
@@ -22,7 +20,7 @@ float getHeight(vec2 p) {
 }
 
 vec3 getNorm(vec2 p) {
-    vec2 h = vec2(0.0, 1.0/float(uResolution));
+    vec2 h = vec2(0.0, 1.0)/textureSize(heightmap, 0);
 
     return normalize(vec3(
         uScaleY*0.5*(getHeight(p+h.yx) - getHeight(p-h.yx))/h.y,
@@ -61,7 +59,7 @@ float getAO(vec2 p) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = vec2(texelCoord)/imageSize(normalmap);
     
     float ao = getAO(uv);
     vec3 norm = 0.5*getNorm(uv) + 0.5;

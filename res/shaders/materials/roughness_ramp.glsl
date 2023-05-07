@@ -8,8 +8,6 @@ layout(rgba8, binding = 0) uniform image2D albedo;
 
 uniform sampler2D heightmap;
 
-uniform int uResolution;
-
 uniform float uEdge1;
 uniform float uEdge2;
 
@@ -21,7 +19,7 @@ void main() {
 
     vec4 prev = imageLoad(albedo, texelCoord);
 
-    vec2 uv = vec2(texelCoord)/float(uResolution);
+    vec2 uv = vec2(texelCoord)/imageSize(albedo);
     
     float h = texture(heightmap, uv).r;
 

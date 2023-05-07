@@ -43,7 +43,9 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
         compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);
     }
     catch (std::string error_message) {
-        std::cerr << "Vertex Shader compilation failed: \n" << error_message << '\n';
+        std::cerr << "Vertex Shader compilation failed: \n" 
+                  << "filepath: " << vert_path << '\n' 
+                  << error_message << '\n';
         return;
     }
 
@@ -51,7 +53,9 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
         compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);
     }
     catch (std::string error_message) {
-        std::cerr << "Fragment Shader compilation failed: \n" << error_message << '\n';
+        std::cerr << "Fragment Shader compilation failed: \n" 
+                  << "filepath: " << frag_path << '\n' 
+                  << error_message << '\n';
         return;
     }
 
@@ -90,7 +94,9 @@ Shader::Shader(const std::string& compute_path) {
         compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);
     }
     catch (std::string error_message) {
-        std::cerr << "Compute Shader compilation failed: \n" << error_message << '\n';
+        std::cerr << "Compute Shader compilation failed: \n"
+                  << "filepath: " << compute_path << '\n'
+                  << error_message << '\n';
         return;
     }
 
