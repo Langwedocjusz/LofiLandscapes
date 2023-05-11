@@ -2,11 +2,11 @@
 
 #include "GLUtils.h"
 #include "TextureEditor.h"
+#include "ResourceManager.h"
 
 class MaterialGenerator{
 public:
-    MaterialGenerator();
-    ~MaterialGenerator();
+    MaterialGenerator(ResourceManager& manager);
 
     void Update();
     void OnImGui(bool& open);
@@ -25,20 +25,23 @@ private:
         Albedo = (1 << 2)
     };
 
-    TextureArray m_Height, m_Normal, m_Albedo;
+    int m_UpdateFlags = None;
 
     const int m_Layers = 5;
     int m_Current = 0;
 
+    TextureArray m_Height, m_Normal, m_Albedo;
+
     //Heightmap generation
     TextureArrayEditor m_HeightEditor;
     //Normalmap generation
-    Shader m_NormalShader;
+    std::shared_ptr<ComputeShader> m_NormalShader;
+
     float m_AOStrength = 1.0f, m_AOSpread = 1.0f, m_AOContrast = 1.0f;
     //Albedo generation:
     TextureArrayEditor m_AlbedoEditor;
     //Roughness generation:
     TextureArrayEditor m_RoughnessEditor;
 
-    int m_UpdateFlags = None;
+    ResourceManager& m_ResourceManager;
 };

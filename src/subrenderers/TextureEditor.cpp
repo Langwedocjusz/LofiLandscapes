@@ -220,8 +220,12 @@ void GLEnumTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_
 
 //===========================================================================
 
+Procedure::Procedure(ResourceManager& manager)
+    : m_ResourceManager(manager)
+{}
+
 void Procedure::CompileShader(const std::string& filepath) {
-    m_Shader = std::unique_ptr<Shader>(new Shader(filepath));
+    m_Shader = m_ResourceManager.RequestComputeShader(filepath);
 }
 
 void Procedure::OnDispatch(int res, const std::vector<InstanceData>& data) {
@@ -262,12 +266,17 @@ ProcedureInstance::ProcedureInstance(const std::string& name) : Name(name) {}
 
 //===========================================================================
 
+EditorBase::EditorBase(ResourceManager& manager)
+    : m_ResourceManager(manager)
+{}
+
 void EditorBase::RegisterShader(const std::string& name, 
-                                    const std::string& filepath)
+                                const std::string& filepath)
 {
     if (m_Procedures.count(name)) return;
 
-    m_Procedures[name].CompileShader(filepath);
+    m_Procedures.emplace(name, m_ResourceManager);
+    m_Procedures.at(name).CompileShader(filepath);
 }
 
 //===========================================================================
@@ -279,7 +288,7 @@ void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& proced
     if (procedures.count(name)) {
         instances.push_back(ProcedureInstance(name));
 
-        auto& procedure = procedures[name];
+        auto& procedure = procedures.at(name);
         auto& data = instances.back().Data;
 
         for (auto& task : procedure.m_Tasks) {
@@ -295,7 +304,7 @@ void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& proced
     if (procedures.count(name)) {
         instances.push_back(ProcedureInstance(name));
 
-        auto& procedure = procedures[name];
+        auto& procedure = procedures.at(name);
         auto& data = instances.back().Data;
 
         for (auto& task : procedure.m_Tasks) {
@@ -311,7 +320,7 @@ void OnDispatchImpl(std::unordered_map<std::string, Procedure>& procedures,
     for (auto& instance : instances) {
         auto& data = instance.Data;
 
-        procedures[instance.Name].OnDispatch(res, data);
+        procedures.at(instance.Name).OnDispatch(res, data);
     }
 }
 
@@ -353,7 +362,7 @@ bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
             ImGui::Columns(2, "###col");
             ImGui::PushID(i);
 
-            res = res || procedures[instance.Name].OnImGui(data, id);
+            res = res || procedures.at(instance.Name).OnImGui(data, id);
 
             ImGui::PopID();
             ImGui::Columns(1, "###col");
@@ -414,8 +423,9 @@ bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
 
 #include <iostream>
 
-TextureEditor::TextureEditor(const std::string& name)
-    : m_Name(name), m_InstanceID(s_InstanceCount++) {}
+TextureEditor::TextureEditor(ResourceManager& manager, const std::string& name)
+    : EditorBase(manager), m_Name(name), m_InstanceID(s_InstanceCount++) 
+{}
 
 void TextureEditor::AddProcedureInstance(const std::string& name) {
     AddProcedureInstanceImpl(m_Procedures, m_Instances, name);
@@ -444,7 +454,7 @@ void TextureEditor::OnSerialize(nlohmann::ordered_json& output) {
         if (!m_Procedures.count(instance.Name))
             continue;
 
-        const auto& procedure = m_Procedures[instance.Name];
+        const auto& procedure = m_Procedures.at(instance.Name);
 
         size_t task_idx = 0;
 
@@ -474,8 +484,8 @@ unsigned int TextureEditor::s_InstanceCount = 0;
 
 //===========================================================================
 
-TextureArrayEditor::TextureArrayEditor(const std::string& name, int n)
-    : m_Name(name), m_InstanceID(s_InstanceCount++)
+TextureArrayEditor::TextureArrayEditor(ResourceManager& manager, const std::string& name, int n)
+    : EditorBase(manager), m_Name(name), m_InstanceID(s_InstanceCount++)
 {
     for (int i = 0; i < n; i++)
         m_InstanceLists.push_back(std::vector<ProcedureInstance>());
@@ -518,7 +528,7 @@ void TextureArrayEditor::OnSerialize(nlohmann::ordered_json& output) {
             if (!m_Procedures.count(instance.Name))
                 continue;
 
-            const auto& procedure = m_Procedures[instance.Name];
+            const auto& procedure = m_Procedures.at(instance.Name);
 
             size_t task_idx = 0;
 

@@ -9,11 +9,9 @@
 
 class Shader{
 public:
-    Shader(const std::string& vert_path, const std::string& frag_path);
-    Shader(const std::string& compute_path);
-    ~Shader();
-
     void Bind();
+    
+    virtual void Reload() = 0;
 
     void setUniform1i(const std::string& name, int x);
     void setUniform1f(const std::string& name, float x);
@@ -22,9 +20,33 @@ public:
     void setUniform3f(const std::string& name, float x[3]);
     void setUniform4f(const std::string& name, float x[4]);
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
-private:
+protected:
     unsigned int m_ID = 0;
 
     unsigned int getUniformLocation(const std::string& name);
     std::vector<std::pair<std::string, unsigned int>> m_UniformCache;
+};
+
+class VertFragShader : public Shader {
+public:
+    VertFragShader(const std::string& vert_path, const std::string& frag_path);
+    ~VertFragShader();
+
+    void Reload() override;
+private:
+    void Build();
+
+    std::string m_VertPath, m_FragPath;
+};
+
+class ComputeShader : public Shader {
+public:
+    ComputeShader(const std::string& compute_path);
+    ~ComputeShader();
+
+    void Reload() override;
+private:
+    void Build();
+
+    std::string m_ComputePath;
 };

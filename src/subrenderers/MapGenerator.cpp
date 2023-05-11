@@ -7,15 +7,15 @@
 
 #include <iostream>
 
-MapGenerator::MapGenerator()
-    : m_NormalmapShader("res/shaders/terrain/normal.glsl")
-    , m_ShadowmapShader("res/shaders/terrain/shadow.glsl")
-    , m_MipShader("res/shaders/terrain/maximal_mip.glsl")
-    , m_HeightEditor("Height")
-    , m_MaterialEditor("Material")
-{}
-
-MapGenerator::~MapGenerator() {}
+MapGenerator::MapGenerator(ResourceManager& manager)
+    : m_ResourceManager(manager)
+    , m_HeightEditor(manager, "Height")
+    , m_MaterialEditor(manager, "Material")
+{
+    m_NormalmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/normal.glsl");
+    m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/shadow.glsl");
+    m_MipShader       = m_ResourceManager.RequestComputeShader("res/shaders/terrain/maximal_mip.glsl");
+}
 
 void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Initialize Textures
@@ -168,12 +168,12 @@ void MapGenerator::UpdateNormal() {
     m_Heightmap.Bind();
     m_Normalmap.BindImage(0, 0);
  
-    m_NormalmapShader.Bind();
-    m_NormalmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
-    m_NormalmapShader.setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
+    m_NormalmapShader->Bind();
+    m_NormalmapShader->setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
+    m_NormalmapShader->setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
 
-    m_NormalmapShader.setUniform1i("uAOSamples", m_AOSettings.Samples);
-    m_NormalmapShader.setUniform1f("uAOR", m_AOSettings.R);
+    m_NormalmapShader->setUniform1i("uAOSamples", m_AOSettings.Samples);
+    m_NormalmapShader->setUniform1f("uAOR", m_AOSettings.R);
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -188,19 +188,19 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     m_Heightmap.Bind();
     m_Shadowmap.BindImage(0, 0);
  
-    m_ShadowmapShader.Bind();
-    m_ShadowmapShader.setUniform1i("uResolution", res);
-    m_ShadowmapShader.setUniform3f("uSunDir", sun_dir);
-    m_ShadowmapShader.setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
-    m_ShadowmapShader.setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
+    m_ShadowmapShader->Bind();
+    m_ShadowmapShader->setUniform1i("uResolution", res);
+    m_ShadowmapShader->setUniform3f("uSunDir", sun_dir);
+    m_ShadowmapShader->setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
+    m_ShadowmapShader->setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
     
-    m_ShadowmapShader.setUniform1i("uMips", m_MipLevels);
-    m_ShadowmapShader.setUniform1i("uMipOffset", m_ShadowSettings.MipOffset);
-    m_ShadowmapShader.setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
-    m_ShadowmapShader.setUniform1i("uStartCell", m_ShadowSettings.StartCell);
-    m_ShadowmapShader.setUniform1f("uNudgeFactor", m_ShadowSettings.NudgeFac);
-    m_ShadowmapShader.setUniform1i("uSoftShadows", m_ShadowSettings.Soft);
-    m_ShadowmapShader.setUniform1f("uSharpness", m_ShadowSettings.Sharpness);
+    m_ShadowmapShader->setUniform1i("uMips", m_MipLevels);
+    m_ShadowmapShader->setUniform1i("uMipOffset", m_ShadowSettings.MipOffset);
+    m_ShadowmapShader->setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
+    m_ShadowmapShader->setUniform1i("uStartCell", m_ShadowSettings.StartCell);
+    m_ShadowmapShader->setUniform1f("uNudgeFactor", m_ShadowSettings.NudgeFac);
+    m_ShadowmapShader->setUniform1i("uSoftShadows", m_ShadowSettings.Soft);
+    m_ShadowmapShader->setUniform1f("uSharpness", m_ShadowSettings.Sharpness);
 
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -227,7 +227,7 @@ void MapGenerator::GenMaxMips() {
     const int res = m_Heightmap.getSpec().ResolutionX;
 
     for (int i = 0; i < m_MipLevels; i++) {
-        m_MipShader.Bind();
+        m_MipShader->Bind();
 
         //Higher res - read from this
         m_Heightmap.BindImage(1, i);

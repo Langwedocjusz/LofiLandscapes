@@ -6,6 +6,7 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "ResourceManager.h"
 
 class Drawable{
 public:
@@ -38,8 +39,7 @@ private:
 
 class Clipmap {
 public:
-    Clipmap();
-    ~Clipmap();
+    Clipmap(ResourceManager& manager);
 
     void Init(int subdivisions, int levels);
 
@@ -55,5 +55,7 @@ private:
     float m_L = 4.0f, m_BaseOffset = 1.0f;
 
     std::vector<ClipmapRing> m_LodLevels;
-    Shader m_DisplaceShader;
+    std::shared_ptr<ComputeShader> m_DisplaceShader;
+
+    ResourceManager& m_ResourceManager;
 };

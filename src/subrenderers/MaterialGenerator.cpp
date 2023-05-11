@@ -7,12 +7,14 @@
 
 #include <iostream>
 
-MaterialGenerator::MaterialGenerator()
-    : m_NormalShader("res/shaders/materials/normal.glsl")
-    , m_HeightEditor("Height", m_Layers)
-    , m_AlbedoEditor("Albedo", m_Layers)
-    , m_RoughnessEditor("Roughness", m_Layers)
+MaterialGenerator::MaterialGenerator(ResourceManager& manager)
+    : m_ResourceManager(manager)
+    , m_HeightEditor(manager, "Height", m_Layers)
+    , m_AlbedoEditor(manager, "Albedo", m_Layers)
+    , m_RoughnessEditor(manager, "Roughness", m_Layers)
 {
+    m_NormalShader = m_ResourceManager.RequestComputeShader("res/shaders/materials/normal.glsl");
+
     //=====Initialize the textures:
 
     m_Height.Initialize(TextureSpec{
@@ -105,10 +107,6 @@ MaterialGenerator::MaterialGenerator()
     m_Current = 0;
 }
 
-MaterialGenerator::~MaterialGenerator() {
-
-}
-
 void MaterialGenerator::Update() { 
 
     //Draw to heightmap:
@@ -128,10 +126,10 @@ void MaterialGenerator::Update() {
         
         m_Normal.BindImage(0, m_Current, 0);
 
-        m_NormalShader.Bind();
-        m_NormalShader.setUniform1f("uAOStrength", 1.0f/m_AOStrength);
-        m_NormalShader.setUniform1f("uAOSpread", m_AOSpread);
-        m_NormalShader.setUniform1f("uAOContrast", m_AOContrast);
+        m_NormalShader->Bind();
+        m_NormalShader->setUniform1f("uAOStrength", 1.0f/m_AOStrength);
+        m_NormalShader->setUniform1f("uAOSpread", m_AOSpread);
+        m_NormalShader->setUniform1f("uAOContrast", m_AOContrast);
 
         //Magic number "32" needs to be the same as local size
         //declared in the compute shader files

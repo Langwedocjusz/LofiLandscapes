@@ -9,6 +9,25 @@
 
 #include <iostream>
 
+void Shader::Bind() {
+    glUseProgram(m_ID);
+}
+
+unsigned int Shader::getUniformLocation(const std::string& name) {
+    auto search_res = std::find_if(
+        m_UniformCache.begin(), m_UniformCache.end(),
+        [&name](const std::pair<std::string, unsigned int> element){
+            return element.first == name;
+    });
+
+    if (search_res != m_UniformCache.end())
+        return search_res->second;
+
+    const unsigned int location = glGetUniformLocation(m_ID, name.c_str());
+    m_UniformCache.push_back(std::make_pair(name, location));
+    return location;
+}
+
 //Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
 void compileShaderCode(const std::string& source, unsigned int& id, int program_type) {
     const char* source_c = source.c_str();
@@ -27,35 +46,33 @@ void compileShaderCode(const std::string& source, unsigned int& id, int program_
         glGetShaderInfoLog(id, 512, NULL, info_log);
         glDeleteShader(id);
 
-        throw std::string(info_log); 
+        throw std::string(info_log);
     }
 }
 
-Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
+void VertFragShader::Build() {
     //Get source
-    std::string vert_code = Shadinclude::load(vert_path, "#include");
-    std::string frag_code = Shadinclude::load(frag_path, "#include");
+    std::string vert_code = Shadinclude::load(m_VertPath, "#include");
+    std::string frag_code = Shadinclude::load(m_FragPath, "#include");
 
     //Compile shaders
     unsigned int vert_id = 0, frag_id = 0;
 
-    try {
-        compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);
-    }
+    try {compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);}
+
     catch (std::string error_message) {
-        std::cerr << "Vertex Shader compilation failed: \n" 
-                  << "filepath: " << vert_path << '\n' 
-                  << error_message << '\n';
+        std::cerr << "Vertex Shader compilation failed: \n"
+            << "filepath: " << m_VertPath << '\n'
+            << error_message << '\n';
         return;
     }
 
-    try {
-        compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);
-    }
+    try {compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);}
+
     catch (std::string error_message) {
-        std::cerr << "Fragment Shader compilation failed: \n" 
-                  << "filepath: " << frag_path << '\n' 
-                  << error_message << '\n';
+        std::cerr << "Fragment Shader compilation failed: \n"
+            << "filepath: " << m_FragPath << '\n'
+            << error_message << '\n';
         return;
     }
 
@@ -73,8 +90,9 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
 
     if (!success) {
         glGetProgramInfoLog(m_ID, 512, NULL, info_log);
-        
+
         std::cerr << "Error: Shader program linking failed: \n"
+                  << "filepaths: " << m_VertPath << ", " << m_FragPath << '\n'
                   << info_log << '\n';
     }
 
@@ -82,21 +100,37 @@ Shader::Shader(const std::string& vert_path, const std::string& frag_path) {
     glDeleteShader(frag_id);
 }
 
+VertFragShader::VertFragShader(const std::string& vert_path, const std::string& frag_path) 
+    : m_VertPath(vert_path), m_FragPath(frag_path)
+{
+    Build();
+}
 
-Shader::Shader(const std::string& compute_path) {
+void VertFragShader::Reload() {
+    if(m_ID != 0) glDeleteProgram(m_ID);
+
+    m_ID = 0;
+
+    Build();
+}
+
+VertFragShader::~VertFragShader() {
+    glDeleteProgram(m_ID);
+}
+
+void ComputeShader::Build() {
     //Get source
-    std::string compute_code = Shadinclude::load(compute_path, "#include");
+    std::string compute_code = Shadinclude::load(m_ComputePath, "#include");
 
     //Compile shader
     unsigned int compute_id = 0;
 
-    try {
-        compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);
-    }
+    try {compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);}
+
     catch (std::string error_message) {
         std::cerr << "Compute Shader compilation failed: \n"
-                  << "filepath: " << compute_path << '\n'
-                  << error_message << '\n';
+            << "filepath: " << m_ComputePath << '\n'
+            << error_message << '\n';
         return;
     }
 
@@ -111,35 +145,31 @@ Shader::Shader(const std::string& compute_path) {
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(m_ID, 512, NULL, info_log);
-        std::cerr << "Error: Shader program linking failed: \n" 
+        std::cerr << "Error: Shader program linking failed: \n"
+                  << "filepath: " << m_ComputePath << '\n'
                   << info_log << '\n';
     }
 
     glDeleteShader(compute_id);
 }
 
-Shader::~Shader() {
+ComputeShader::ComputeShader(const std::string& compute_path) 
+    : m_ComputePath(compute_path)
+{
+    Build();
+}
+
+ComputeShader::~ComputeShader() {
     glDeleteProgram(m_ID);
 }
 
-void Shader::Bind() {
-    glUseProgram(m_ID);
+void ComputeShader::Reload() {
+    glDeleteProgram(m_ID);
+
+    Build();
 }
 
-unsigned int Shader::getUniformLocation(const std::string& name) {
-    auto search_res = std::find_if(
-            m_UniformCache.begin(), m_UniformCache.end(),
-            [&name](const std::pair<std::string, unsigned int> element){
-                return element.first == name;
-            });
-
-    if (search_res != m_UniformCache.end())
-        return search_res->second;
-
-    const unsigned int location = glGetUniformLocation(m_ID, name.c_str());
-    m_UniformCache.push_back(std::make_pair(name, location));
-    return location;
-}
+//=====Uniform setting==================================================
 
 void Shader::setUniform1i(const std::string& name, int x) {
     const unsigned int location = getUniformLocation(name.c_str());
@@ -151,7 +181,7 @@ void Shader::setUniform1f(const std::string& name, float x) {
     glUniform1f(location, x);
 }
 
-void Shader::setUniform2f(const std::string& name, float x, float y){
+void Shader::setUniform2f(const std::string& name, float x, float y) {
     const unsigned int location = getUniformLocation(name.c_str());
     glUniform2f(location, x, y);
 }

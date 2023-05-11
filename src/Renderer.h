@@ -8,6 +8,7 @@
 
 #include "Camera.h"
 #include "Serializer.h"
+#include "ResourceManager.h"
 
 #include "glad/glad.h"
 
@@ -56,14 +57,14 @@ private:
     
     FPCamera m_Camera;
     glm::vec3 m_LastPos = glm::vec3(0.0f);
-
     glm::mat4 m_MVP = glm::mat4(1.0f);
+
+    ResourceManager m_ResourceManager;
+    Serializer m_Serializer;
 
     Clipmap m_Clipmap;
     MapGenerator m_Map;
     MaterialGenerator m_Material;
     TerrainRenderer m_TerrainRenderer;
     SkyRenderer m_SkyRenderer;
-
-    Serializer m_Serializer;
 };

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 
-Drawable::Drawable() {}
+Drawable::Drawable(){}
 
 Drawable::~Drawable() {
     glDeleteVertexArrays(1, &VAO);
@@ -233,9 +233,11 @@ void ClipmapRing::Draw(const Camera& cam, float scale_y) {
     m_FillY.Draw();
 }
 
-Clipmap::Clipmap() 
-    : m_DisplaceShader("res/shaders/displace.glsl")
-{}
+Clipmap::Clipmap(ResourceManager& manager)
+    : m_ResourceManager(manager)
+{
+    m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
+}
 
 void Clipmap::Init(int subdivisions, int levels) {
     m_BaseOffset = m_L / float(subdivisions);
@@ -246,15 +248,13 @@ void Clipmap::Init(int subdivisions, int levels) {
         m_LodLevels.emplace_back(subdivisions + 1, m_L, i);
 }
 
-Clipmap::~Clipmap() {}
-
 void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
                                        glm::vec2 pos)
 {
-    m_DisplaceShader.Bind();
-    m_DisplaceShader.setUniform2f("uPos", pos.x, pos.y); //y would actually be z in 3d
-    m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
-    m_DisplaceShader.setUniform1f("uScaleY", scale_y);
+    m_DisplaceShader->Bind();
+    m_DisplaceShader->setUniform2f("uPos", pos.x, pos.y); //y would actually be z in 3d
+    m_DisplaceShader->setUniform1f("uScaleXZ", scale_xz);
+    m_DisplaceShader->setUniform1f("uScaleY", scale_y);
 
     for (int i = 0; i < m_LodLevels.size(); i++)
         m_LodLevels[i].DispatchCompute();
@@ -263,10 +263,10 @@ void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
 void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
                                        glm::vec2 curr, glm::vec2 prev) 
 {
-    m_DisplaceShader.Bind();
-    m_DisplaceShader.setUniform2f("uPos", curr.x, curr.y); //y would actually be z in 3d
-    m_DisplaceShader.setUniform1f("uScaleXZ", scale_xz);
-    m_DisplaceShader.setUniform1f("uScaleY", scale_y);
+    m_DisplaceShader->Bind();
+    m_DisplaceShader->setUniform2f("uPos", curr.x, curr.y); //y would actually be z in 3d
+    m_DisplaceShader->setUniform1f("uScaleXZ", scale_xz);
+    m_DisplaceShader->setUniform1f("uScaleY", scale_y);
 
     auto update = [curr, prev, this](int level) {
         float scale = std::pow(2, level) * m_BaseOffset;

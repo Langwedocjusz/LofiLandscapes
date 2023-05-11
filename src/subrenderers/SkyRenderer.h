@@ -2,13 +2,13 @@
 
 #include "Shader.h"
 #include "GLUtils.h"
+#include "ResourceManager.h"
 
 #include "Camera.h"
 
 class SkyRenderer {
 public:
-	SkyRenderer();
-	~SkyRenderer();
+	SkyRenderer(ResourceManager& manager);
 
 	void OnImGui(bool& open);
 	void Update(const Camera& cam, float aspect, bool aerial);
@@ -38,13 +38,15 @@ private:
 
 	Texture m_TransLUT, m_MultiLUT, m_SkyLUT;
 	Texture3d m_AerialLUT;
-	Shader m_TransShader, m_MultiShader, m_SkyShader, m_AerialShader;
+	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader, m_AerialShader;
 
 	Cubemap m_IrradianceMap, m_PrefilteredMap;
-	Shader m_IrradianceShader, m_PrefilteredShader;
+	std::shared_ptr<ComputeShader> m_IrradianceShader, m_PrefilteredShader;
 
 	Quad m_Quad;
-	Shader m_FinalShader;
+	std::shared_ptr<VertFragShader> m_FinalShader;
+
+	ResourceManager& m_ResourceManager;
 
 	//Atmosphere parameters
 	float m_Height = 300.0f; //in meters

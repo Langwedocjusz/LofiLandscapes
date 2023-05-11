@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "ResourceManager.h"
 
 #include <fstream>
 #include <variant>
@@ -120,13 +121,15 @@ public:
 
 class Procedure{
 public:
-     Procedure() = default;
+    Procedure(ResourceManager& manager);
 
     void CompileShader(const std::string& filepath);
 
     template<class T, typename ... Args>
     void Add(Args ... args) {
-        static_assert(std::is_base_of<EditorTask, T>::value, "Add template argument not derived from EditorTask");
+        static_assert(std::is_base_of<EditorTask, T>::value, 
+            "Add template argument not derived from EditorTask"
+        );
 
         m_Tasks.push_back(std::unique_ptr<EditorTask>(
             new T(args...)
@@ -136,8 +139,10 @@ public:
     void OnDispatch(int res, const std::vector<InstanceData>& data);
     bool OnImGui(std::vector<InstanceData>& data, unsigned int id);
 
-    std::unique_ptr<Shader> m_Shader;
+    std::shared_ptr<ComputeShader> m_Shader;
     std::vector<std::unique_ptr<EditorTask>> m_Tasks;
+
+    ResourceManager& m_ResourceManager;
 };
 
 class ProcedureInstance{
@@ -152,26 +157,30 @@ public:
 
 class EditorBase {
 public:
-    EditorBase() = default;
+    EditorBase(ResourceManager& manager);
 
     void RegisterShader(const std::string& name, const std::string& filepath);
 
     template<class T, typename ... Args>
     void Attach(const std::string& name, Args ... args)
     {
-        static_assert(std::is_base_of<EditorTask, T>::value, "Attach template argument not derived from EditorTask");
+        static_assert(std::is_base_of<EditorTask, T>::value, 
+            "Attach template argument not derived from EditorTask"
+        );
 
         if (m_Procedures.count(name))
-            m_Procedures[name].Add<T>(args...);
+            m_Procedures.at(name).Add<T>(args...);
     }
 
 protected:
     std::unordered_map<std::string, Procedure> m_Procedures;
+
+    ResourceManager& m_ResourceManager;
 };
 
 class TextureEditor : public EditorBase{
 public:
-     TextureEditor(const std::string& name);
+    TextureEditor(ResourceManager& manager, const std::string& name);
 
     void AddProcedureInstance(const std::string& name);
 
@@ -197,7 +206,7 @@ private:
 
 class TextureArrayEditor : public EditorBase {
 public:
-    TextureArrayEditor(const std::string& name, int n);
+    TextureArrayEditor(ResourceManager& manager, const std::string& name, int n);
 
     void AddProcedureInstance(int layer, const std::string& name);
 

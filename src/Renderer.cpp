@@ -13,18 +13,22 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
+    , m_TerrainRenderer(m_ResourceManager)
+    , m_Clipmap(m_ResourceManager)
+    , m_Map(m_ResourceManager)
+    , m_Material(m_ResourceManager)
+    , m_SkyRenderer(m_ResourceManager)
 {
     m_Serializer.RegisterLoadCallback("Terrain Editor",
         std::bind(&MapGenerator::OnDeserialize, &m_Map, std::placeholders::_1)
     );
 
-    m_Serializer.RegisterLoadCallback("Material Editor",
-        std::bind(&MaterialGenerator::OnDeserialize, &m_Material, std::placeholders::_1)
+    m_Serializer.RegisterSaveCallback("Terrain Editor",
+        std::bind(&MapGenerator::OnSerialize, &m_Map, std::placeholders::_1)
     );
 
-
-    m_Serializer.RegisterSaveCallback("Terrain Editor", 
-        std::bind(&MapGenerator::OnSerialize, &m_Map, std::placeholders::_1)
+    m_Serializer.RegisterLoadCallback("Material Editor",
+        std::bind(&MaterialGenerator::OnDeserialize, &m_Material, std::placeholders::_1)
     );
 
     m_Serializer.RegisterSaveCallback("Material Editor", 
@@ -71,6 +75,8 @@ void Renderer::Init(StartSettings settings) {
 }
 
 void Renderer::OnUpdate(float deltatime) {
+    m_ResourceManager.OnUpdate();
+
     //Update camera
     glm::vec3 prev_pos3 = m_Camera.getPos();
     glm::vec2 prev_pos2 = { prev_pos3.x, prev_pos3.z };
@@ -161,6 +167,14 @@ void Renderer::OnImGuiRender() {
             ImGui::MenuItem("Material",     NULL, &m_ShowMaterialMenu);
             ImGui::MenuItem("Material Map", NULL, &m_ShowMapMaterialMenu);
             ImGui::MenuItem("Sky",          NULL, &m_ShowSkyMenu);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Debug")) {
+
+            if (ImGui::MenuItem("Reload Shaders"))
+                m_ResourceManager.ReloadShaders();
 
             ImGui::EndMenu();
         }

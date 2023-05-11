@@ -8,9 +8,11 @@
 #include "MaterialGenerator.h"
 #include "SkyRenderer.h"
 
+#include "ResourceManager.h"
+
 class TerrainRenderer {
 public:
-    TerrainRenderer();
+    TerrainRenderer(ResourceManager& manager);
     ~TerrainRenderer();
 
     void PrepareWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map);
@@ -34,5 +36,6 @@ private:
     bool m_Materials = true, m_FixTiling = true;
     bool m_Fog = false;
 
-    Shader m_ShadedShader, m_WireframeShader;
+    std::shared_ptr<VertFragShader> m_ShadedShader, m_WireframeShader;
+    ResourceManager& m_ResourceManager;
 };

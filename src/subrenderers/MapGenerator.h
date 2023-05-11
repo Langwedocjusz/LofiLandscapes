@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "GLUtils.h"
 #include "TextureEditor.h"
+#include "ResourceManager.h"
 
 #include "nlohmann/json.hpp"
 
@@ -29,8 +30,7 @@ struct ShadowmapSettings{
 
 class MapGenerator {
 public:
-    MapGenerator();
-    ~MapGenerator();
+    MapGenerator(ResourceManager& manager);
 
     void Init(int height_res, int shadow_res, int wrap_type);
     void Update(const glm::vec3& sun_dir);
@@ -53,7 +53,13 @@ public:
     void OnDeserialize(nlohmann::ordered_json& input);
 
 private:
-   
+    void UpdateHeight();
+    void UpdateNormal();
+    void UpdateShadow(const glm::vec3& sun_dir);
+    void UpdateMaterial();
+
+    void GenMaxMips();
+
     enum UpdateFlags {
         None     =  0,
         Height   = (1 << 0),
@@ -64,9 +70,9 @@ private:
 
     Texture m_Heightmap, m_Normalmap, m_Shadowmap, m_Materialmap; 
     TextureEditor m_HeightEditor, m_MaterialEditor;
-    Shader m_NormalmapShader, m_ShadowmapShader;
 
-    Shader m_MipShader;
+    std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
+    std::shared_ptr<ComputeShader> m_MipShader;
     
     ScaleSettings     m_ScaleSettings;
     ShadowmapSettings m_ShadowSettings;
@@ -76,12 +82,7 @@ private:
 
     int m_MipLevels = 0;
     
-    void UpdateHeight();
-    void UpdateNormal();
-    void UpdateShadow(const glm::vec3& sun_dir);
-    void UpdateMaterial();
-
-    void GenMaxMips();
+    ResourceManager& m_ResourceManager;
 };
 
 bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs);
