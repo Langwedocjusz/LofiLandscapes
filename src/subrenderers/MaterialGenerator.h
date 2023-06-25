@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GLUtils.h"
+#include "Texture.h"
 #include "TextureEditor.h"
 #include "ResourceManager.h"
 
@@ -8,6 +8,7 @@ class MaterialGenerator{
 public:
     MaterialGenerator(ResourceManager& manager);
 
+    void Init();
     void Update();
     void OnImGui(bool& open);
     void OnSerialize(nlohmann::ordered_json& output);
@@ -30,7 +31,7 @@ private:
     const int m_Layers = 5;
     int m_Current = 0;
 
-    TextureArray m_Height, m_Normal, m_Albedo;
+    std::shared_ptr<TextureArray> m_Height, m_Normal, m_Albedo;
 
     //Heightmap generation
     TextureArrayEditor m_HeightEditor;

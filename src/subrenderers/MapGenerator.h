@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Shader.h"
-#include "GLUtils.h"
+#include "Texture.h"
 #include "TextureEditor.h"
 #include "ResourceManager.h"
 
@@ -68,8 +68,8 @@ private:
         Material = (1 << 3)
     };
 
-    Texture m_Heightmap, m_Normalmap, m_Shadowmap, m_Materialmap; 
     TextureEditor m_HeightEditor, m_MaterialEditor;
+    std::shared_ptr<Texture2D> m_Heightmap, m_Normalmap, m_Shadowmap, m_Materialmap;
 
     std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
     std::shared_ptr<ComputeShader> m_MipShader;
@@ -79,7 +79,6 @@ private:
     AOSettings        m_AOSettings;
 
     int m_UpdateFlags = None;
-
     int m_MipLevels = 0;
     
     ResourceManager& m_ResourceManager;

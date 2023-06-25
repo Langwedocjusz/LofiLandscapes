@@ -41,6 +41,7 @@ Renderer::~Renderer() {}
 void Renderer::Init(StartSettings settings) {
     m_Clipmap.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
+    m_Material.Init();
 
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)
@@ -176,6 +177,8 @@ void Renderer::OnImGuiRender() {
             if (ImGui::MenuItem("Reload Shaders"))
                 m_ResourceManager.ReloadShaders();
 
+            ImGui::MenuItem("Show Texture Browser", NULL, &m_ShowTexBrowser);
+
             ImGui::EndMenu();
         }
 
@@ -234,6 +237,9 @@ void Renderer::OnImGuiRender() {
         if (sun_dir != m_SkyRenderer.getSunDir() && m_TerrainRenderer.DoShadows())
             m_Map.RequestShadowUpdate();
     }
+
+    if (m_ShowTexBrowser)
+        m_ResourceManager.DrawTextureBrowser(m_ShowTexBrowser);
 
     //Update Maps
     m_Map.Update(m_SkyRenderer.getSunDir());

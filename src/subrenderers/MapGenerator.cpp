@@ -15,24 +15,29 @@ MapGenerator::MapGenerator(ResourceManager& manager)
     m_NormalmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/normal.glsl");
     m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/shadow.glsl");
     m_MipShader       = m_ResourceManager.RequestComputeShader("res/shaders/terrain/maximal_mip.glsl");
+
+    m_Heightmap   = m_ResourceManager.RequestTexture2D();
+    m_Normalmap   = m_ResourceManager.RequestTexture2D();
+    m_Shadowmap   = m_ResourceManager.RequestTexture2D();
+    m_Materialmap = m_ResourceManager.RequestTexture2D();
 }
 
 void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //-----Initialize Textures
     //-----Heightmap
 
-    m_Heightmap.Initialize(TextureSpec{
+    m_Heightmap->Initialize(Texture2DSpec{
         height_res, height_res, GL_R32F, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         wrap_type,
         {0.0f, 0.0f, 0.0f, 0.0f}
     });
 
-    m_Heightmap.Bind();
+    m_Heightmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Normal map: 
-    m_Normalmap.Initialize(TextureSpec{
+    m_Normalmap->Initialize(Texture2DSpec{
         height_res, height_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
@@ -40,29 +45,29 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
         {0.5f, 1.0f, 0.5f, 1.0f}
     });
 
-    m_Normalmap.Bind();
+    m_Normalmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Shadow map
-    m_Shadowmap.Initialize(TextureSpec{
+    m_Shadowmap->Initialize(Texture2DSpec{
         shadow_res, shadow_res, GL_R8, GL_RED,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 1.0f, 1.0f, 1.0f}
     });
 
-    m_Shadowmap.Bind();
+    m_Shadowmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //--Material map
-    m_Materialmap.Initialize(TextureSpec{
+    m_Materialmap->Initialize(Texture2DSpec{
         height_res, height_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         wrap_type,
         {1.0f, 0.0f, 0.0f, 0.0f}
     });
 
-    m_Materialmap.Bind();
+    m_Materialmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Setup heightmap editor:
@@ -152,21 +157,23 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
 }
 
 void MapGenerator::UpdateHeight() { 
-    const int res = m_Heightmap.getSpec().ResolutionX;
+    const int res = m_Heightmap->getSpec().ResolutionX;
 
-    m_Heightmap.BindImage(0, 0);
+    m_Heightmap->BindImage(0, 0);
     m_HeightEditor.OnDispatch(res);
 
-    m_Heightmap.Bind();
+    m_Heightmap->Bind();
 
     GenMaxMips();
+
+    m_ResourceManager.RequestPreviewUpdate(m_Heightmap);
 }
 
 void MapGenerator::UpdateNormal() {
-    const int res = m_Normalmap.getSpec().ResolutionX;
+    const int res = m_Normalmap->getSpec().ResolutionX;
 
-    m_Heightmap.Bind();
-    m_Normalmap.BindImage(0, 0);
+    m_Heightmap->Bind();
+    m_Normalmap->BindImage(0, 0);
  
     m_NormalmapShader->Bind();
     m_NormalmapShader->setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
@@ -178,15 +185,17 @@ void MapGenerator::UpdateNormal() {
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-    m_Normalmap.Bind();
+    m_Normalmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    m_ResourceManager.RequestPreviewUpdate(m_Normalmap);
 }
 
 void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
-    const int res = m_Shadowmap.getSpec().ResolutionX;
+    const int res = m_Shadowmap->getSpec().ResolutionX;
 
-    m_Heightmap.Bind();
-    m_Shadowmap.BindImage(0, 0);
+    m_Heightmap->Bind();
+    m_Shadowmap->BindImage(0, 0);
  
     m_ShadowmapShader->Bind();
     m_ShadowmapShader->setUniform1i("uResolution", res);
@@ -205,34 +214,38 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     glDispatchCompute(res/32, res/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-    m_Shadowmap.Bind();
+    m_Shadowmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    m_ResourceManager.RequestPreviewUpdate(m_Shadowmap);
 }
 
 void MapGenerator::UpdateMaterial() {
-    const int res = m_Materialmap.getSpec().ResolutionX;
+    const int res = m_Materialmap->getSpec().ResolutionX;
 
-    m_Heightmap.Bind();
+    m_Heightmap->Bind();
 
-    m_Materialmap.BindImage(0, 0);
+    m_Materialmap->BindImage(0, 0);
     m_MaterialEditor.OnDispatch(res);
 
-    m_Materialmap.Bind();
+    m_Materialmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    m_ResourceManager.RequestPreviewUpdate(m_Materialmap);
 }
 
 void MapGenerator::GenMaxMips() {
     if (m_MipLevels == 0) return;
 
-    const int res = m_Heightmap.getSpec().ResolutionX;
+    const int res = m_Heightmap->getSpec().ResolutionX;
 
     for (int i = 0; i < m_MipLevels; i++) {
         m_MipShader->Bind();
 
         //Higher res - read from this
-        m_Heightmap.BindImage(1, i);
+        m_Heightmap->BindImage(1, i);
         //Lower res - modify this
-        m_Heightmap.BindImage(0, i+1);
+        m_Heightmap->BindImage(0, i+1);
 
         //We don't set uniforms for binding ids since they are set in shader code
 
@@ -261,19 +274,19 @@ void MapGenerator::Update(const glm::vec3& sun_dir) {
 }
 
 void MapGenerator::BindHeightmap(int id) const {
-    m_Heightmap.Bind(id);
+    m_Heightmap->Bind(id);
 }
 
 void MapGenerator::BindNormalmap(int id) const {
-    m_Normalmap.Bind(id);
+    m_Normalmap->Bind(id);
 }
 
 void MapGenerator::BindShadowmap(int id) const {
-    m_Shadowmap.Bind(id);
+    m_Shadowmap->Bind(id);
 }
 
 void MapGenerator::BindMaterialmap(int id) const {
-    m_Materialmap.Bind(id);
+    m_Materialmap->Bind(id);
 }
 
 void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {

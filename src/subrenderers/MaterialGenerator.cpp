@@ -15,38 +15,44 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
 {
     m_NormalShader = m_ResourceManager.RequestComputeShader("res/shaders/materials/normal.glsl");
 
+    m_Height = m_ResourceManager.RequestTextureArray();
+    m_Normal = m_ResourceManager.RequestTextureArray();
+    m_Albedo = m_ResourceManager.RequestTextureArray();
+}
+
+void MaterialGenerator::Init() {
     //=====Initialize the textures:
 
-    m_Height.Initialize(TextureSpec{
+    m_Height->Initialize(Texture2DSpec{
         512, 512, GL_R16F, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     }, m_Layers);
 
-    m_Normal.Initialize(TextureSpec{
+    m_Normal->Initialize(Texture2DSpec{
         512, 512, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.5f, 1.0f, 0.5f, 1.0f}
     }, m_Layers);
 
-    m_Normal.Bind();
+    m_Normal->Bind();
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
-    m_Albedo.Initialize(TextureSpec{
+    m_Albedo->Initialize(Texture2DSpec{
         512, 512, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.7f}
     }, m_Layers);
 
-    m_Albedo.Bind();
+    m_Albedo->Bind();
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
     //=====Initialize material editors:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
-    
+
     //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
@@ -62,10 +68,10 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
     m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
-    
-    std::vector<std::string> voro_types{"F1", "F2", "F2_F1"};
+
+    std::vector<std::string> voro_types{ "F1", "F2", "F2_F1" };
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uVoronoiType", "Type", voro_types);
-    
+
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
 
@@ -112,19 +118,21 @@ void MaterialGenerator::Update() {
     //Draw to heightmap:
     if ((m_UpdateFlags & Height) != None)
     {
-        const int res = m_Height.getSpec().ResolutionX;
+        const int res = m_Height->getSpec().ResolutionX;
         
-        m_Height.BindImage(0, m_Current, 0);
+        m_Height->BindImage(0, m_Current, 0);
         m_HeightEditor.OnDispatch(m_Current, res);
+
+        m_ResourceManager.RequestPreviewUpdate(m_Height);
     }
 
     //Draw to normal:
     if ((m_UpdateFlags & Normal) != None)
     {
-        const int res = m_Normal.getSpec().ResolutionX;
-        m_Height.BindLayer(0, m_Current);
+        const int res = m_Normal->getSpec().ResolutionX;
+        m_Height->BindLayer(0, m_Current);
         
-        m_Normal.BindImage(0, m_Current, 0);
+        m_Normal->BindImage(0, m_Current, 0);
 
         m_NormalShader->Bind();
         m_NormalShader->setUniform1f("uAOStrength", 1.0f/m_AOStrength);
@@ -136,22 +144,26 @@ void MaterialGenerator::Update() {
         glDispatchCompute(res/32, res/32, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     
-        m_Normal.Bind();
+        m_Normal->Bind();
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+        m_ResourceManager.RequestPreviewUpdate(m_Normal);
     }
 
     //Draw to albedo/roughness:
     if ((m_UpdateFlags & Albedo) != None)
     {
-        const int res = m_Albedo.getSpec().ResolutionX;
-        m_Height.BindLayer(0, m_Current);
+        const int res = m_Albedo->getSpec().ResolutionX;
+        m_Height->BindLayer(0, m_Current);
 
-        m_Albedo.BindImage(0, m_Current, 0);
+        m_Albedo->BindImage(0, m_Current, 0);
         m_AlbedoEditor.OnDispatch(m_Current, res);
         m_RoughnessEditor.OnDispatch(m_Current, res);
     
-        m_Albedo.Bind();
+        m_Albedo->Bind();
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+        m_ResourceManager.RequestPreviewUpdate(m_Albedo);
     }
 
     m_UpdateFlags = None;
@@ -215,11 +227,11 @@ void MaterialGenerator::OnImGui(bool& open) {
 }
 
 void MaterialGenerator::BindAlbedo(int id) const {
-    m_Albedo.Bind(id);
+    m_Albedo->Bind(id);
 }
 
 void MaterialGenerator::BindNormal(int id) const {
-    m_Normal.Bind(id);
+    m_Normal->Bind(id);
 }
 
 void MaterialGenerator::OnSerialize(nlohmann::ordered_json& output) {

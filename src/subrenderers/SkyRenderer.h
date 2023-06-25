@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "Texture.h"
 #include "GLUtils.h"
 #include "ResourceManager.h"
 
@@ -21,6 +22,7 @@ public:
 
 	glm::vec3 getSunDir() const { return m_SunDir; }
 private:
+	void Init();
 
 	enum SkyUpdateFlags {
 		None          =  0,
@@ -36,11 +38,11 @@ private:
 
 	int m_UpdateFlags = None;
 
-	Texture m_TransLUT, m_MultiLUT, m_SkyLUT;
-	Texture3d m_AerialLUT;
+	std::shared_ptr<Texture2D> m_TransLUT, m_MultiLUT, m_SkyLUT;
+	std::shared_ptr<Texture3D> m_AerialLUT;
 	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader, m_AerialShader;
 
-	Cubemap m_IrradianceMap, m_PrefilteredMap;
+	std::shared_ptr<Cubemap> m_IrradianceMap, m_PrefilteredMap;
 	std::shared_ptr<ComputeShader> m_IrradianceShader, m_PrefilteredShader;
 
 	Quad m_Quad;
