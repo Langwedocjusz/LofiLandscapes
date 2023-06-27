@@ -40,6 +40,24 @@ void ImGuiUtils::SliderFloat(const std::string& label, float* value, float min, 
 	ImGui::NextColumn();
 }
 
+void ImGuiUtils::InputFloat(const std::string& label, float* value, float step, float step_fast, const std::string& suffix) {
+	ImGui::Text(label.c_str());
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(-1);
+	ImGui::InputFloat(("##" + label + suffix).c_str(), value, step, step_fast);
+	ImGui::PopItemWidth();
+	ImGui::NextColumn();
+}
+
+void ImGuiUtils::DragFloat2(const std::string& label, float* value, float speed, float v_min, float v_max, const std::string& suffix) {
+	ImGui::Text(label.c_str());
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(-1);
+	ImGui::DragFloat2(("##" + label + suffix).c_str(), value, speed, v_min, v_max);
+	ImGui::PopItemWidth();
+	ImGui::NextColumn();
+}
+
 void ImGuiUtils::ColorEdit3(const std::string& label, float* value, const std::string& suffix) {
 	ImGui::Text(label.c_str());
 	ImGui::NextColumn();

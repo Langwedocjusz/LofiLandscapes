@@ -57,6 +57,10 @@ private:
 	int m_PreviewLayer = 0, m_PreviewSide = 0, m_PreviewSlice = 0;
 	float m_PreviewDepth = 0.0f;
 
+	bool m_PreviewChannels[4] = { true, true, true, true };
+
+	glm::vec2 m_PreviewRange = glm::vec2(0.0f, 1.0f);
+
 	ComputeShader m_Tex2DPrevShader, m_CubePrevShader, m_3DPrevShader;
 	Texture2D m_PreviewTexture;
 };

@@ -68,6 +68,9 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	static int tex_id = 0, tex_arr_id = 0, cube_id = 0, tex3d_id = 0;
 	static int arr_layer = 0, cube_side = 0, slice_3d = 0;
 	static float depth_3d = 0.0f;
+	static float preview_scale = 1.0f;
+	static glm::vec2 preview_range = glm::vec2(0.0f, 1.0f);
+	static bool channel_flags[4]{ true, true, true, true };
 
 	std::vector<std::string> options{ "Texture", "Texture Array", "Cubemap", "Texture 3D" };
 	int tmp_id = static_cast<int>(m_PrevType);
@@ -103,8 +106,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 			int max_id = std::max(0, int(m_CubemapCache.size()) - 1);
 
 			ImGuiUtils::SliderInt("Texture ID", &cube_id, 0, max_id);
-			
-			std::vector<std::string> side_names{ 
+
+			std::vector<std::string> side_names{
 				"Positive X", "Negative X",
 				"Positive Y", "Negative Y",
 				"Positive Z", "Negative Z"
@@ -128,36 +131,60 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 	}
 
-	bool state_changed = (tmp_ptr != m_PreviewPtr);
+	ImGui::Separator();
 
-	state_changed |= (m_PreviewLayer != arr_layer);
-	state_changed |= (m_PreviewSide != cube_side);
-	//state_changed |= (m_PreviewSlice != slice_3d);
-	state_changed |= (m_PreviewDepth != depth_3d);
+	ImGuiUtils::InputFloat("Scale", &preview_scale, 0.1f, 0.1f);
+	ImGuiUtils::DragFloat2("Range", glm::value_ptr(preview_range), 0.01f);
 
-	if (state_changed)
-	{
-		m_PreviewPtr = tmp_ptr;
-		m_PreviewLayer = arr_layer;
-		m_PreviewSide = cube_side;
-		//m_PreviewSlice = slice_3d;
-		m_PreviewDepth = depth_3d;
-
-		m_UpdatePreview = true;
-	}
+	ImGui::Text("Active channels");
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(-1);
+	ImGui::Checkbox("R", &channel_flags[0]);
+	ImGui::SameLine();
+	ImGui::Checkbox("G", &channel_flags[1]);
+	ImGui::SameLine();
+	ImGui::Checkbox("B", &channel_flags[2]);
+	ImGui::SameLine();
+	ImGui::Checkbox("A", &channel_flags[3]);
+	ImGui::PopItemWidth();
+	ImGui::NextColumn();
 
 	ImGui::Columns(1, "###col");
 
-	ImGui::BeginChild("#Texture browser display", ImVec2(0.0f, 0.0f), true);
+	ImGui::BeginChild("#Texture browser display", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
 
 	const auto avail_region = ImGui::GetContentRegionAvail();
-	const float size = std::min(avail_region.x, avail_region.y);
+	const float size = preview_scale * std::min(avail_region.x, avail_region.y);
 	
 	m_PreviewTexture.DrawToImGui(size, size);
 
 	ImGui::EndChild();
 
 	ImGui::End();
+
+	bool state_changed = false;
+
+	auto CheckIfChanged = [](auto& prev_val, auto& curr_val, bool& state_changed) {
+		if (curr_val != prev_val)
+		{
+			prev_val = curr_val;
+			state_changed = true;
+		}
+	};
+
+	CheckIfChanged(m_PreviewPtr, tmp_ptr, state_changed);
+	CheckIfChanged(m_PreviewLayer, arr_layer, state_changed);
+	CheckIfChanged(m_PreviewSide, cube_side, state_changed);
+	CheckIfChanged(m_PreviewDepth, depth_3d, state_changed);
+	CheckIfChanged(m_PreviewRange, preview_range, state_changed);
+
+	for (int i=0; i<4; i++)
+		CheckIfChanged(m_PreviewChannels[i], channel_flags[i], state_changed);
+
+	if (state_changed)
+	{
+		m_UpdatePreview = true;
+	}
 }
 
 void ResourceManager::OnUpdate()
@@ -183,17 +210,29 @@ void ResourceManager::UpdatePreview()
 {
 	m_PreviewTexture.BindImage(0, 0);
 
+	auto vec4FromBoolArray = [](bool arr[4]) {
+		return glm::vec4(float(arr[0]), float(arr[1]), float(arr[2]), float(arr[3]));
+	};
+
+	const glm::vec4 channel_flags = vec4FromBoolArray(m_PreviewChannels);
+
 	switch (m_PrevType)
 	{
 		case PreviewType::Texture2D:
 		{
 			m_Tex2DPrevShader.Bind();
+			m_Tex2DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
+			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
+
 			std::dynamic_pointer_cast<Texture2D>(m_PreviewPtr)->Bind();
 			break;
 		}
 		case PreviewType::TextureArray:
 		{
 			m_Tex2DPrevShader.Bind();
+			m_Tex2DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
+			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
+
 			std::dynamic_pointer_cast<TextureArray>(m_PreviewPtr)->BindLayer(0, m_PreviewLayer);
 			break;
 		}
@@ -201,6 +240,8 @@ void ResourceManager::UpdatePreview()
 		{
 			m_CubePrevShader.Bind();
 			m_CubePrevShader.setUniform1i("uSide", m_PreviewSide);
+			m_CubePrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
+			m_CubePrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<Cubemap>(m_PreviewPtr)->Bind();
 			break;
@@ -209,6 +250,8 @@ void ResourceManager::UpdatePreview()
 		{
 			m_3DPrevShader.Bind();
 			m_3DPrevShader.setUniform1f("uDepth", m_PreviewDepth);
+			m_3DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
+			m_3DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<Texture3D>(m_PreviewPtr)->Bind();
 			break;

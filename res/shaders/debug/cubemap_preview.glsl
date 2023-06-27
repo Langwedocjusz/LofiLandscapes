@@ -15,6 +15,14 @@ uniform int uSide;
 #define POSITIVE_Z 4
 #define NEGATIVE_Z 5
 
+uniform vec2 uRange;
+
+vec4 RemapFrom(vec4 value, vec2 range) {
+    return (value - vec4(range.x))/(range.y - range.x);
+}
+
+uniform vec4 uChannelFlags;
+
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
@@ -56,6 +64,19 @@ void main() {
     }
 
     vec4 res = texture(source, coord);
+
+    res = RemapFrom(res, uRange);
+
+    res *= uChannelFlags;
+
+    if (uChannelFlags.a == 0.0)
+        res.a = 1.0;
+
+    else if (uChannelFlags.rgb == vec3(0.0))
+    {
+        res.rgb = vec3(res.a);
+        res.a = 1.0;
+    }
 
     imageStore(preview, texelCoord, res);
 }
