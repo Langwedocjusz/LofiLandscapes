@@ -61,6 +61,6 @@ private:
 	float m_IBLOversaturation = 1.4f;
 
 	//Aerial
-	float m_AerialBrightness = 1.0f;
-	float m_AerialDistscale = 1.0f;
+	float m_AerialBrightness = 47.0f;
+	float m_AerialDistscale = 10.0f;
 };

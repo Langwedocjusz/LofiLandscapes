@@ -30,11 +30,11 @@ private:
 
     float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
 
-    float m_TilingFactor = 32.0f, m_NormalStrength = 0.25f;
+    float m_TilingFactor = 128.0f, m_NormalStrength = 0.25f;
 
     bool m_Shadows = true;
     bool m_Materials = true, m_FixTiling = true;
-    bool m_Fog = false;
+    bool m_Fog = true;
 
     std::shared_ptr<VertFragShader> m_ShadedShader, m_WireframeShader;
     ResourceManager& m_ResourceManager;

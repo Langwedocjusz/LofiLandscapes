@@ -20,20 +20,18 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
     m_Albedo = m_ResourceManager.RequestTextureArray();
 }
 
-void MaterialGenerator::Init() {
+void MaterialGenerator::Init(int material_res) {
     //=====Initialize the textures:
 
-    const int res = 1024;
-
     m_Height->Initialize(Texture2DSpec{
-        res, res, GL_R16F, GL_RGBA,
+        material_res, material_res, GL_R16F, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.0f}
     }, m_Layers);
 
     m_Normal->Initialize(Texture2DSpec{
-        res, res, GL_RGBA8, GL_RGBA,
+        material_res, material_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.5f, 1.0f, 0.5f, 1.0f}
@@ -43,7 +41,7 @@ void MaterialGenerator::Init() {
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
     m_Albedo->Initialize(Texture2DSpec{
-        res, res, GL_RGBA8, GL_RGBA,
+        material_res, material_res, GL_RGBA8, GL_RGBA,
         GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
         GL_REPEAT,
         {0.0f, 0.0f, 0.0f, 0.7f}

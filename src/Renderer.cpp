@@ -41,7 +41,7 @@ Renderer::~Renderer() {}
 void Renderer::Init(StartSettings settings) {
     m_Clipmap.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
-    m_Material.Init();
+    m_Material.Init(settings.MaterialRes);
 
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)

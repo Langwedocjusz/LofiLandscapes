@@ -8,7 +8,7 @@ class MaterialGenerator{
 public:
     MaterialGenerator(ResourceManager& manager);
 
-    void Init();
+    void Init(int material_res);
     void Update();
     void OnImGui(bool& open);
     void OnSerialize(nlohmann::ordered_json& output);
