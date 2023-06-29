@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "ImGuiUtils.h"
 
+#include "Profiler.h"
+
 #include <iostream>
 
 Serializer::Serializer()
@@ -159,6 +161,8 @@ void Serializer::RenderFileBrowser()
 
 void Serializer::Serialize()
 {
+    ProfilerCPUEvent we("Serializer::Serialize");
+
     nlohmann::ordered_json json;
 
     for (const auto & [token, callback] : m_SaveCallbacks)
@@ -177,6 +181,8 @@ void Serializer::Serialize()
 
 void Serializer::Deserialize()
 {
+    ProfilerCPUEvent we("Serializer::Deserialize");
+
     auto path = m_CurrentPath / m_Filename;
 
     std::ifstream input(path);

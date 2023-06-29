@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "Keycodes.h"
+#include "Profiler.h"
 
 #include "glad/glad.h"
 
@@ -76,6 +77,8 @@ void Renderer::Init(StartSettings settings) {
 }
 
 void Renderer::OnUpdate(float deltatime) {
+    ProfilerCPUEvent we("Renderer::OnUpdate");
+
     m_ResourceManager.OnUpdate();
 
     //Update camera
@@ -107,6 +110,8 @@ void Renderer::OnUpdate(float deltatime) {
 }
 
 void Renderer::OnRender() {
+    ProfilerCPUEvent we("Renderer::OnRender");
+
     const float scale_y  = m_Map.getScaleSettings().ScaleY;
 
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
@@ -130,6 +135,8 @@ void Renderer::OnRender() {
 }
 
 void Renderer::OnImGuiRender() {
+    ProfilerCPUEvent we("Renderer::OnImGuiRender");
+
     //-----Menu bar
     if (ImGui::BeginMainMenuBar()) {
 
@@ -178,6 +185,8 @@ void Renderer::OnImGuiRender() {
                 m_ResourceManager.ReloadShaders();
 
             ImGui::MenuItem("Show Texture Browser", NULL, &m_ShowTexBrowser);
+
+            ImGui::MenuItem("Show Profiler", NULL, &m_ShowProfiler);
 
             ImGui::EndMenu();
         }
@@ -240,6 +249,9 @@ void Renderer::OnImGuiRender() {
 
     if (m_ShowTexBrowser)
         m_ResourceManager.DrawTextureBrowser(m_ShowTexBrowser);
+
+    if (m_ShowProfiler)
+        Profiler::OnImGui(m_ShowProfiler);
 
     //Update Maps
     m_Map.Update(m_SkyRenderer.getSunDir());

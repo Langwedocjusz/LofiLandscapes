@@ -53,7 +53,7 @@ private:
          m_ShowCamMenu     = true, m_ShowMaterialMenu    = true,
          m_ShowSkyMenu     = true, m_ShowMapMaterialMenu = true;
 
-    bool m_ShowTexBrowser = false;
+    bool m_ShowTexBrowser = false, m_ShowProfiler = false;
 
     unsigned int m_WindowWidth, m_WindowHeight;
     float m_Aspect, m_InvAspect;

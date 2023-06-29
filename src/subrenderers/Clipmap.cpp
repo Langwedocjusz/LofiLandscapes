@@ -1,4 +1,5 @@
 #include "Clipmap.h"
+#include "Profiler.h"
 
 #include "glad/glad.h"
 
@@ -251,6 +252,8 @@ void Clipmap::Init(int subdivisions, int levels) {
 void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
                                        glm::vec2 pos)
 {
+    //ProfilerCPUEvent we("Clipmap::DisplaceVertices");
+
     m_DisplaceShader->Bind();
     m_DisplaceShader->setUniform2f("uPos", pos.x, pos.y); //y would actually be z in 3d
     m_DisplaceShader->setUniform1f("uScaleXZ", scale_xz);

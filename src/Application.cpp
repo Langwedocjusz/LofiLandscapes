@@ -9,6 +9,7 @@
 #include "ImGuiUtils.h"
 
 #include "Keycodes.h"
+#include "Profiler.h"
 
 #include "glad/glad.h"
 
@@ -52,6 +53,8 @@ void Application::StartFrame() {
 }
 
 void Application::EndFrame() {
+    ProfilerCPUEvent we("Application::EndFrame");
+
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
 
@@ -125,6 +128,8 @@ void Application::InitRenderer() {
 
 void Application::Run() {
     while (!m_Window.ShouldClose()) {
+        Profiler::NextFrame();
+
         m_Timer.Update();
         m_Renderer.OnUpdate(m_Timer.getDeltaTime());
 
