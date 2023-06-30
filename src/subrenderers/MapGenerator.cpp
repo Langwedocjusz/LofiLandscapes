@@ -1,5 +1,7 @@
 #include "MapGenerator.h"
 
+#include "Profiler.h"
+
 #include "glad/glad.h"
 
 #include "imgui.h"
@@ -156,7 +158,9 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_ShadowSettings.MipOffset = log2(height_res / shadow_res);
 }
 
-void MapGenerator::UpdateHeight() { 
+void MapGenerator::UpdateHeight() {
+    ProfilerGPUEvent we("Map::UpdateHeight");
+
     const int res = m_Heightmap->getSpec().ResolutionX;
 
     m_Heightmap->BindImage(0, 0);
@@ -170,6 +174,8 @@ void MapGenerator::UpdateHeight() {
 }
 
 void MapGenerator::UpdateNormal() {
+    ProfilerGPUEvent we("Map::UpdateNormal");
+
     const int res = m_Normalmap->getSpec().ResolutionX;
 
     m_Heightmap->Bind();
@@ -192,6 +198,8 @@ void MapGenerator::UpdateNormal() {
 }
 
 void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
+    ProfilerGPUEvent we("Map::UpdateShadow");
+
     const int res = m_Shadowmap->getSpec().ResolutionX;
 
     m_Heightmap->Bind();
@@ -221,6 +229,8 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
 }
 
 void MapGenerator::UpdateMaterial() {
+    ProfilerGPUEvent we("Map::UpdateMaterial");
+
     const int res = m_Materialmap->getSpec().ResolutionX;
 
     m_Heightmap->Bind();

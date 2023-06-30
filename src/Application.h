@@ -10,7 +10,7 @@ public:
     ~Application();
 
     void StartMenu();
-    void InitRenderer();
+    void Init();
     void Run();
 
     void OnEvent(Event& e);

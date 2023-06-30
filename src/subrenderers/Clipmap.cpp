@@ -286,6 +286,7 @@ void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
 }
 
 void Clipmap::BindAndDraw(const Camera& cam, float scale_y) {
+    ProfilerGPUEvent we("Clipmap::Draw");
 
     for (int i = 0; i < m_LodLevels.size(); i++) {
         //std::cout << "Level " << i << ": ";

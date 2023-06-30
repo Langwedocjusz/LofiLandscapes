@@ -7,7 +7,7 @@ int main() {
         Application app("LofiLandscapes", 800, 600);
 
         app.StartMenu();
-        app.InitRenderer();
+        app.Init();
         app.Run();
     }
 

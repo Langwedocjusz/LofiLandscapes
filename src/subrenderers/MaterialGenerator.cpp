@@ -1,5 +1,7 @@
 #include "MaterialGenerator.h"
 
+#include "Profiler.h"
+
 #include "glad/glad.h"
 
 #include "imgui.h"
@@ -118,6 +120,8 @@ void MaterialGenerator::Update() {
     //Draw to heightmap:
     if ((m_UpdateFlags & Height) != None)
     {
+        ProfilerGPUEvent we("Material::UpdateHeight");
+
         const int res = m_Height->getSpec().ResolutionX;
         
         m_Height->BindImage(0, m_Current, 0);
@@ -129,6 +133,8 @@ void MaterialGenerator::Update() {
     //Draw to normal:
     if ((m_UpdateFlags & Normal) != None)
     {
+        ProfilerGPUEvent we("Material::UpdateNormal");
+
         const int res = m_Normal->getSpec().ResolutionX;
         m_Height->BindLayer(0, m_Current);
         
@@ -153,6 +159,8 @@ void MaterialGenerator::Update() {
     //Draw to albedo/roughness:
     if ((m_UpdateFlags & Albedo) != None)
     {
+        ProfilerGPUEvent we("Material::UpdateAlbedo");
+
         const int res = m_Albedo->getSpec().ResolutionX;
         m_Height->BindLayer(0, m_Current);
 

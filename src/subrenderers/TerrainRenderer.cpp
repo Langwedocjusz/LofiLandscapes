@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "ImGuiUtils.h"
 
+#include "Profiler.h"
+
 TerrainRenderer::TerrainRenderer(ResourceManager& manager)
     : m_ResourceManager(manager)
 {
@@ -13,6 +15,8 @@ TerrainRenderer::TerrainRenderer(ResourceManager& manager)
 TerrainRenderer::~TerrainRenderer() {}
 
 void TerrainRenderer::PrepareWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map) {
+    ProfilerGPUEvent we("Terrain::PrepareWireframe");
+
     m_WireframeShader->Bind();
     m_WireframeShader->setUniform1f("uL", map.getScaleSettings().ScaleXZ);
     m_WireframeShader->setUniform2f("uPos", cam.getPos().x, cam.getPos().z);
@@ -22,6 +26,8 @@ void TerrainRenderer::PrepareWireframe(const glm::mat4& mvp, const Camera& cam, 
 void TerrainRenderer::PrepareShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
                                     const MaterialGenerator& material, const SkyRenderer& sky)
 {
+    ProfilerGPUEvent we("Terrain::PrepareShaded");
+
     const float scale_xz = map.getScaleSettings().ScaleXZ;
 
     m_ShadedShader->Bind();

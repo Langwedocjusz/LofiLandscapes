@@ -122,7 +122,9 @@ void Application::StartMenu() {
     }
 }
 
-void Application::InitRenderer() {
+void Application::Init() {
+    Profiler::OnInit();
+
     m_Renderer.Init(m_StartSettings);
 }
 
@@ -139,6 +141,8 @@ void Application::Run() {
         if (m_ShowMenu) m_Renderer.OnImGuiRender();
 
         EndFrame();
+
+        Profiler::SwapBuffers();
     }
 }
 

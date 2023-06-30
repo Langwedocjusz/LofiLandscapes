@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "ImGuiUtils.h"
 
+#include "Profiler.h"
+
 SkyRenderer::SkyRenderer(ResourceManager& manager)
     : m_ResourceManager(manager)
 {
@@ -112,6 +114,8 @@ void SkyRenderer::Update(const Camera& cam, float aspect, bool aerial) {
 }
 
 void SkyRenderer::UpdateTrans() {
+    ProfilerGPUEvent we("Sky::UpdateTransLUT");
+
     const int res = m_TransLUT->getSpec().ResolutionX;
 
     m_TransLUT->BindImage(0, 0);
@@ -126,6 +130,8 @@ void SkyRenderer::UpdateTrans() {
 }
 
 void SkyRenderer::UpdateMulti() {
+    ProfilerGPUEvent we("Sky::UpdateMultiLUT");
+
     const int res = m_MultiLUT->getSpec().ResolutionX;
 
     m_TransLUT->Bind(0);
@@ -143,6 +149,8 @@ void SkyRenderer::UpdateMulti() {
 }
 
 void SkyRenderer::UpdateSky() {
+    ProfilerGPUEvent we("Sky::UpdateSkyLUT");
+
     //Update sky lut
     const int res = m_SkyLUT->getSpec().ResolutionX;
 
@@ -197,6 +205,8 @@ void SkyRenderer::UpdateSky() {
 
 void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
 {
+    ProfilerGPUEvent we("Sky::UpdateAerial");
+
     const int res = m_AerialLUT->getSpec().ResolutionZ;
 
     m_AerialLUT->BindImage(0, 0);
@@ -224,6 +234,8 @@ void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
 
 //Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
 void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
+    ProfilerGPUEvent we("Sky::Render");
+
     m_TransLUT->Bind(0);
     m_SkyLUT->Bind(1);
 
