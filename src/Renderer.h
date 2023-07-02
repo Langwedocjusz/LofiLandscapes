@@ -4,6 +4,7 @@
 #include "subrenderers/MapGenerator.h"
 #include "subrenderers/MaterialGenerator.h"
 #include "subrenderers/TerrainRenderer.h"
+#include "subrenderers/GrassRenderer.h"
 #include "subrenderers/SkyRenderer.h"
 
 #include "Camera.h"
@@ -48,10 +49,11 @@ private:
     //Show menu window flags
     //To-do: In practice using this is somewhat ugly, 
     // may switch to map<string, bool> or something like that
-    bool m_ShowTerrainMenu = true, m_ShowBackgroundMenu  = false,
-         m_ShowLightMenu   = true, m_ShowShadowMenu      = true,
-         m_ShowCamMenu     = true, m_ShowMaterialMenu    = true,
-         m_ShowSkyMenu     = true, m_ShowMapMaterialMenu = true;
+    bool m_ShowTerrainMenu = true,  m_ShowBackgroundMenu  = false,
+         m_ShowLightMenu   = true,  m_ShowShadowMenu      = true,
+         m_ShowCamMenu     = true,  m_ShowMaterialMenu    = true,
+         m_ShowSkyMenu     = true,  m_ShowMapMaterialMenu = true,
+         m_ShowGrassMenu   = false; 
 
     bool m_ShowTexBrowser = false, m_ShowProfiler = false;
 
@@ -69,5 +71,6 @@ private:
     MapGenerator m_Map;
     MaterialGenerator m_Material;
     TerrainRenderer m_TerrainRenderer;
+    GrassRenderer m_GrassRenderer;
     SkyRenderer m_SkyRenderer;
 };

@@ -7,6 +7,7 @@
 #include "MapGenerator.h"
 #include "MaterialGenerator.h"
 #include "SkyRenderer.h"
+#include "Clipmap.h"
 
 #include "ResourceManager.h"
 
@@ -15,9 +16,9 @@ public:
     TerrainRenderer(ResourceManager& manager);
     ~TerrainRenderer();
 
-    void PrepareWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map);
-    void PrepareShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, 
-                       const MaterialGenerator& material, const SkyRenderer& sky);
+    void RenderWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, const Clipmap& clipmap);
+    void RenderShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, 
+                       const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap);
 
     void OnImGui(bool& open);
 

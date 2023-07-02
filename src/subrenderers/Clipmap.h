@@ -15,7 +15,7 @@ public:
 
     void GenBuffers();
     void DispatchCompute();
-    void Draw();
+    void Draw() const;
 
     unsigned int VAO = 0, VBO = 0, EBO = 0;
     unsigned int ElementCount = 0;
@@ -29,7 +29,7 @@ public:
     ~ClipmapRing();
 
     void DispatchCompute();
-    void Draw(const Camera& cam, float scale_y);
+    void Draw(const Camera& cam, float scale_y) const;
 private:
     std::vector<Drawable> m_Grid;
     std::vector<AABB> m_Bounds;
@@ -49,7 +49,11 @@ public:
     void DisplaceVertices(float scale_xz, float scale_y,
                           glm::vec2 curr, glm::vec2 prev);
 
-    void BindAndDraw(const Camera& cam, float scale_y);
+    void BindAndDraw(const Camera& cam, float scale_y) const;
+
+    void BindAndDraw(const Camera& cam, float scale_y, int levels) const;
+
+    int getLevels() const { return m_LodLevels.size(); }
 
 private:
     float m_L = 4.0f, m_BaseOffset = 1.0f;

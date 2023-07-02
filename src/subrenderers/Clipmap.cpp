@@ -46,7 +46,8 @@ void Drawable::DispatchCompute() {
     glDispatchCompute(invocations, 1, 1);
 }
 
-void Drawable::Draw() {
+void Drawable::Draw() const
+{
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, ElementCount, GL_UNSIGNED_INT, 0);
@@ -219,7 +220,8 @@ void ClipmapRing::DispatchCompute() {
     m_FillY.DispatchCompute();
 }
 
-void ClipmapRing::Draw(const Camera& cam, float scale_y) {
+void ClipmapRing::Draw(const Camera& cam, float scale_y) const
+{
     for (int i = 0; i < m_Grid.size(); i++) {
         //Frustum culling
         if (cam.IsInFrustum(m_Bounds[i], scale_y)) {
@@ -285,12 +287,18 @@ void Clipmap::DisplaceVertices(float scale_xz, float scale_y,
     }
 }
 
-void Clipmap::BindAndDraw(const Camera& cam, float scale_y) {
-    ProfilerGPUEvent we("Clipmap::Draw");
-
+void Clipmap::BindAndDraw(const Camera& cam, float scale_y) const 
+{
     for (int i = 0; i < m_LodLevels.size(); i++) {
         //std::cout << "Level " << i << ": ";
         m_LodLevels[i].Draw(cam, scale_y);
         //std::cout << '\n';
     }   
+}
+
+void Clipmap::BindAndDraw(const Camera& cam, float scale_y, int levels) const
+{
+    for (int i = 0; i < levels; i++) {
+        m_LodLevels[i].Draw(cam, scale_y);
+    }
 }

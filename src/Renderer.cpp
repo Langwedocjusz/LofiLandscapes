@@ -15,6 +15,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
     , m_TerrainRenderer(m_ResourceManager)
+    , m_GrassRenderer(m_ResourceManager)
     , m_Clipmap(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
@@ -43,6 +44,8 @@ void Renderer::Init(StartSettings settings) {
     m_Clipmap.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
     m_Material.Init(settings.MaterialRes);
+
+    m_GrassRenderer.Init();
 
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)
@@ -81,6 +84,8 @@ void Renderer::OnUpdate(float deltatime) {
 
     m_ResourceManager.OnUpdate();
 
+    m_GrassRenderer.OnUpdate(deltatime);
+
     //Update camera
     glm::vec3 prev_pos3 = m_Camera.getPos();
     glm::vec2 prev_pos2 = { prev_pos3.x, prev_pos3.z };
@@ -117,19 +122,17 @@ void Renderer::OnRender() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (m_Wireframe) {
-        m_TerrainRenderer.PrepareWireframe(m_MVP, m_Camera, m_Map);
-
-        m_Clipmap.BindAndDraw(m_Camera, scale_y);
+    if (m_Wireframe) 
+    {
+        m_TerrainRenderer.RenderWireframe(m_MVP, m_Camera, m_Map, m_Clipmap);
     }
 
-    else {
-        //Render Clipmap (Terrain)
-        m_TerrainRenderer.PrepareShaded(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer);
+    else 
+    {
+        m_TerrainRenderer.RenderShaded(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer, m_Clipmap);
 
-        m_Clipmap.BindAndDraw(m_Camera, scale_y);
+        m_GrassRenderer.Render(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer, m_Clipmap);
 
-        //Render Sky
         m_SkyRenderer.Render(m_Camera.getFront(), m_Camera.getFov(), m_InvAspect);
     }
 }
@@ -168,6 +171,7 @@ void Renderer::OnImGuiRender() {
         if (ImGui::BeginMenu("Windows")) {
 
             ImGui::MenuItem("Terrain",      NULL, &m_ShowTerrainMenu);
+            ImGui::MenuItem("Grass",        NULL, &m_ShowGrassMenu);
             ImGui::MenuItem("Background",   NULL, &m_ShowBackgroundMenu);
             ImGui::MenuItem("Lighting",     NULL, &m_ShowLightMenu);
             ImGui::MenuItem("Shadows",      NULL, &m_ShowShadowMenu);
@@ -215,6 +219,9 @@ void Renderer::OnImGuiRender() {
     
     if (m_ShowTerrainMenu)
         m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_TerrainRenderer.DoShadows());
+
+    if (m_ShowGrassMenu)
+        m_GrassRenderer.OnImGui(m_ShowGrassMenu);
 
     if (m_ShowMapMaterialMenu)
         m_Map.ImGuiMaterials(m_ShowMapMaterialMenu);
