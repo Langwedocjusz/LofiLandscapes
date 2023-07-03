@@ -4,8 +4,8 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba16f, binding = 0) uniform image2D noisemap;
 
-uniform float uScale;
-uniform float uStrength;
+uniform int uScale;
+uniform int uOctaves;
 
 //High-quality hash function by nojima:
 //https://www.shadertoy.com/view/ttc3zr
@@ -60,9 +60,9 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = vec2(texelCoord)/imageSize(noisemap);
 
-    vec2 offset = uStrength * fbm(float(uScale)*uv, 1);
+    vec2 offset = fbm(float(uScale)*uv, uOctaves);
 
-    vec3 norm = vec3(offset.x, 1.0, offset.y);
+    vec3 norm = vec3(offset.x, 0.0, offset.y);
 
     vec4 res = vec4(norm, 1.0);
 

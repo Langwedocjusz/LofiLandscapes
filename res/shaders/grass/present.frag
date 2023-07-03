@@ -19,10 +19,12 @@ uniform int uShadow;
 
 uniform float uTilingFactor;
 uniform float uMaxDepth;
-//uniform vec3 uSlant;
+uniform float uStrength;
+uniform float uSway;
 uniform float uTime;
 uniform float uNoiseTiling;
 uniform vec2 uScrollVel;
+uniform float uAOFactor;
 
 uniform sampler3D raycast_res;
 uniform sampler2D noise;
@@ -141,20 +143,24 @@ vec3 diffuseOnly(vec3 norm, vec3 ldir, vec3 albedo)
 }
 
 void main() {
-    vec2 uv = frag_pos.xz;
-
-    uv = fract(uTilingFactor * uv);
     
     vec3 view = normalize(frag_pos - uPos);
 
     //Retrieve noise
-    vec3 uSlant = texture(noise, uNoiseTiling*frag_pos.xz + uTime*uScrollVel).rgb;
+    vec3 uSlant = uStrength * texture(noise, uNoiseTiling*frag_pos.xz + uTime*uScrollVel).rgb;
+    uSlant.y = 1.0;
+
+    vec2 uv = frag_pos.xz + uSway*uSlant.xz;
+    uv = fract(uTilingFactor * uv);
 
     //Consider slant
+    mat3 non_ortho = mat3(vec3(1,0,0), uSlant, vec3(0,0,1));
+    mat3 non_ortho_inv = inverse(non_ortho);
+
     mat3 transform = rotation(uSlant);
     mat3 inverted = inverse(transform);
 
-    vec3 tmp_view = transform * view;
+    vec3 tmp_view = non_ortho * view;
 
     //Retrieve data from precomputed raycast
     float angle = angleFromViewDir(tmp_view);
@@ -163,12 +169,12 @@ void main() {
 
     vec3 norm = res.rgb; float in_dist = res.w;
 
-    float cosa = dot(view, normalize(view*vec3(0,0,1)));
+    float cosa = dot(view, normalize(view*vec3(1,0,1)));
     float dist = in_dist / cosa;
 
     vec3 offset = dist * view;
 
-    offset *= inverted;
+    offset *= non_ortho_inv;
     norm *= inverted;
 
     //Discard fragments below max depth
@@ -197,6 +203,9 @@ void main() {
     vec3 color = shadow * sun_col * ShadePBR(view, norm, uLightDir, albedo, roughness);
     color += amb * IBL(norm, view, albedo, roughness);
     color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
+
+    float fake_amb = 1.0 - uAOFactor*max(h, 0.0);
+    color *= fake_amb;
 
     color = pow(color, vec3(1.0/2.2));
 

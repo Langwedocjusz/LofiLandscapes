@@ -27,14 +27,23 @@ private:
 	bool m_Shadows = true;
 	//===============================================================================
 
-	bool m_UpdateRaycast = true, m_RenderGrass = false;
+	enum UpdateFlags {
+		None    = 0,
+		Raycast = (1 << 0),
+		Noise   = (1 << 1)
+	};
+
+	int m_UpdateFlags = Raycast | Noise;
+
+	bool m_RenderGrass = false;
 
 	float m_GrassHeight = 0.5f, m_Tiling = 1.0f, m_MaxDepth = 1.0f, m_NoiseTiling = 1.0f;
 
 	int m_LodLevels = 2;
 
 	//glm::vec3 m_Slant = glm::vec3(0.0f, 1.0f, 0.0f);
-	float m_NoiseScale = 1.0f, m_NoiseStrength = 1.0f;
+	int m_NoiseScale = 1, m_Octaves = 3;
+	float m_NoiseStrength = 1.0f, m_Sway = 0.5f, m_AOFactor = 0.33f;
 
 	float m_Time = 0.0f;
 	glm::vec2 m_ScrollingVelocity = glm::vec2(1.0f, 0.0f);

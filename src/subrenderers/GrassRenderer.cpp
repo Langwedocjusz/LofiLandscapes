@@ -5,6 +5,8 @@
 #include "glad/glad.h"
 #include "imgui.h"
 
+#include "ImGuiUtils.h"
+
 GrassRenderer::GrassRenderer(ResourceManager& manager)
 	: m_ResourceManager(manager)
 {
@@ -33,7 +35,7 @@ void GrassRenderer::Init()
 	m_Noise->Initialize(Texture2DSpec{
 		256, 256,
 		GL_RGBA16F, GL_RGBA,
-		GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
+		GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
 		GL_REPEAT,
 		{0.0f, 0.0f, 0.0f, 0.0f}
 	});
@@ -43,7 +45,10 @@ void GrassRenderer::Init()
 
 void GrassRenderer::OnUpdate(float deltatime)
 {
-	if (m_UpdateRaycast)
+	m_Time += deltatime;
+	if (m_Time > 1e3) m_Time = 0.0f;
+
+	if ((m_UpdateFlags & Raycast) != None)
 	{
 		ProfilerGPUEvent we("Grass::Raycast");
 
@@ -58,28 +63,35 @@ void GrassRenderer::OnUpdate(float deltatime)
 		glDispatchCompute(res_x / 32, res_y / 32, res_z);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
+		//m_RaycastResult->Bind();
+		//glGenerateMipmap(GL_TEXTURE_3D);
+
 		m_ResourceManager.RequestPreviewUpdate(m_RaycastResult);
+	}
 
-		m_UpdateRaycast = false;
+	if ((m_UpdateFlags & Noise) != None)
+	{
+		ProfilerGPUEvent we("Grass::NoiseGen");
 
-		//Temporary: also update noise here
-		res_x = m_Noise->getSpec().ResolutionX;
-		res_y = m_Noise->getSpec().ResolutionY;
-		
+		auto res_x = m_Noise->getSpec().ResolutionX;
+		auto res_y = m_Noise->getSpec().ResolutionY;
+
 		m_Noise->BindImage(0, 0);
 
 		m_NoiseGenerator->Bind();
-		m_NoiseGenerator->setUniform1f("uScale", m_NoiseScale);
-		m_NoiseGenerator->setUniform1f("uStrength", m_NoiseStrength);
+		m_NoiseGenerator->setUniform1i("uScale", m_NoiseScale);
+		m_NoiseGenerator->setUniform1i("uOctaves", m_Octaves);
 
 		glDispatchCompute(res_x / 32, res_y / 32, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
+		m_Noise->Bind();
+		glGenerateMipmap(GL_TEXTURE_2D);
+
 		m_ResourceManager.RequestPreviewUpdate(m_Noise);
 	}
 
-	m_Time += deltatime;
-	if (m_Time > 1e3) m_Time = 0.0f;
+	m_UpdateFlags = None;
 }
 
 void GrassRenderer::OnImGui(bool& open)
@@ -89,25 +101,49 @@ void GrassRenderer::OnImGui(bool& open)
 	if (ImGui::CollapsingHeader("Precomputed raycast"))
 	{
 		if (ImGui::Button("Redraw"))
-			m_UpdateRaycast = true;
+			m_UpdateFlags |= Raycast;
 	}
 	
+	if (ImGui::CollapsingHeader("Noise"))
+	{
+		int tmp_scale = m_NoiseScale, tmp_octaves = m_Octaves;
+
+		ImGui::Columns(2, "###col");
+		ImGuiUtils::SliderInt("NoiseScale", &tmp_scale, 0, 10);
+		ImGuiUtils::SliderInt("Octaves", &tmp_octaves, 0, 10);
+		ImGui::Columns(1, "###col");
+
+		if (tmp_scale != m_NoiseScale || tmp_octaves != m_Octaves)
+		{
+			m_NoiseScale = tmp_scale;
+			m_Octaves = tmp_octaves;
+
+			m_UpdateFlags |= Noise;
+		}
+	}
+
 	if (ImGui::CollapsingHeader("Rendering"))
 	{
-		ImGui::Checkbox("Render noodles", &m_RenderGrass);
+		ImGui::Columns(2, "###col");
 
-		ImGui::SliderInt("Lod Levels", &m_LodLevels, 0, 5);
+		ImGuiUtils::Checkbox("Render noodles", &m_RenderGrass);
 
-		ImGui::SliderFloat("Height", &m_GrassHeight, 0.0f, 10.0f);
-		ImGui::SliderFloat("Tiling", &m_Tiling, 0.0f, 10.0f);
-		ImGui::SliderFloat("MaxDepth", &m_MaxDepth, 0.0f, 10.0f);
+		ImGuiUtils::SliderInt("Lod Levels", &m_LodLevels, 0, 5);
 
-		//ImGui::DragFloat3("Slant", glm::value_ptr(m_Slant), -1.0f, 1.0f);
-		ImGui::SliderFloat("NoiseTiling", &m_NoiseTiling, 0.0f, 10.0f);
-		ImGui::SliderFloat("NoiseScale", &m_NoiseScale, 0.0f, 10.0f);
-		ImGui::SliderFloat("NoiseStrength", &m_NoiseStrength, 0.0f, 10.0f);
+		ImGuiUtils::SliderFloat("Height", &m_GrassHeight, 0.0f, 10.0f);
+		ImGuiUtils::SliderFloat("Tiling", &m_Tiling, 0.0f, 20.0f);
+		ImGuiUtils::SliderFloat("MaxDepth", &m_MaxDepth, 0.0f, 10.0f);
 
-		ImGui::DragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
+		ImGuiUtils::SliderFloat("NoiseTiling", &m_NoiseTiling, 0.0f, 1.0f);
+
+		ImGuiUtils::SliderFloat("NoiseStrength", &m_NoiseStrength, 0.0f, 10.0f);
+		ImGuiUtils::SliderFloat("Sway", &m_Sway, 0.0f, 1.0f);
+
+		ImGuiUtils::DragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
+
+		ImGuiUtils::SliderFloat("AO Factor", &m_AOFactor, 0.0f, 1.0f);
+
+		ImGui::Columns(1, "###col");
 	}
 
 	ImGui::End();
@@ -141,7 +177,10 @@ void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGen
 		m_PresentShader->setUniform1f("uTime", m_Time);
 		m_PresentShader->setUniform2f("uScrollVel", m_ScrollingVelocity.x, m_ScrollingVelocity.y);
 		m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
-
+		m_PresentShader->setUniform1f("uStrength", m_NoiseStrength);
+		m_PresentShader->setUniform1f("uSway", m_Sway);
+		m_PresentShader->setUniform1f("uAOFactor", m_AOFactor);
+		
 		m_RaycastResult->Bind(0);
 		m_PresentShader->setUniform1i("raycast_res", 0);
 		m_Noise->Bind(1);

@@ -6,6 +6,8 @@ layout(rgba16f, binding = 0) uniform image3D raycast_result;
 
 #define PI 3.1415926536
 
+uniform float uTaper;
+
 float sdfSphere(vec2 p, float r) {
     return length(p) - r;
 }
@@ -54,9 +56,9 @@ void main() {
 
     ivec3 img_size = imageSize(raycast_result);
 
-    vec2 uv = vec2(texelCoord.xy) / img_size.xy;
+    vec2 uv = (vec2(texelCoord.xy) + 0.5)/ img_size.xy;
 
-    float angle = 2.0*PI*(float(texelCoord.z) / img_size.z);
+    float angle = 2.0*PI*(float(texelCoord.z) + 0.5)/img_size.z;
 
     vec2 dir = vec2(cos(angle), sin(angle));
 

@@ -324,6 +324,7 @@ void Renderer::InitImGuiIniHandler() {
         };
 
         if (CheckLine("ShowTerrainMenu=%d\n"))     r->m_ShowTerrainMenu     = bool(value);
+        if (CheckLine("ShowGrassMenu=%d\n"))       r->m_ShowGrassMenu       = bool(value);
         if (CheckLine("ShowBackgroundMenu=%d\n"))  r->m_ShowBackgroundMenu  = bool(value);
         if (CheckLine("ShowLightMenu=%d\n"))       r->m_ShowLightMenu       = bool(value);
         if (CheckLine("ShowShadowMenu=%d\n"))      r->m_ShowShadowMenu      = bool(value);
@@ -339,6 +340,7 @@ void Renderer::InitImGuiIniHandler() {
 
         out_buf->appendf("[%s][State]\n", handler->TypeName);
         out_buf->appendf("ShowTerrainMenu=%d\n", r->m_ShowTerrainMenu);
+        out_buf->appendf("ShowGrassMenu=%d\n", r->m_ShowGrassMenu);
         out_buf->appendf("ShowBackgroundMenu=%d\n", r->m_ShowBackgroundMenu);
         out_buf->appendf("ShowLightMenu=%d\n", r->m_ShowLightMenu);
         out_buf->appendf("ShowShadowMenu=%d\n", r->m_ShowShadowMenu);
