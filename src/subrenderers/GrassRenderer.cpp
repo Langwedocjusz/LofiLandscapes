@@ -59,6 +59,8 @@ void GrassRenderer::OnUpdate(float deltatime)
 		m_RaycastResult->BindImage(0, 0);
 
 		m_RaycastShader->Bind();
+		m_RaycastShader->setUniform1f("uConeAngle", m_ConeAngle);
+		m_RaycastShader->setUniform1f("uViewAngle", m_ViewAngle);
 
 		glDispatchCompute(res_x / 32, res_y / 32, res_z);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -102,6 +104,21 @@ void GrassRenderer::OnImGui(bool& open)
 	{
 		if (ImGui::Button("Redraw"))
 			m_UpdateFlags |= Raycast;
+
+		float tmp_cone = m_ConeAngle, tmp_view = m_ViewAngle;
+
+		ImGui::Columns(2, "###col");
+		ImGuiUtils::SliderFloat("Cone Angle", &tmp_cone, 0.0f, 1.0f);
+		ImGuiUtils::SliderFloat("View Angle", &tmp_view, 0.0f, 1.5f);
+		ImGui::Columns(1, "###col");
+
+		if (tmp_cone != m_ConeAngle || tmp_view != m_ViewAngle)
+		{
+			m_ConeAngle = tmp_cone;
+			m_ViewAngle = tmp_view;
+
+			m_UpdateFlags |= Raycast;
+		}
 	}
 	
 	if (ImGui::CollapsingHeader("Noise"))

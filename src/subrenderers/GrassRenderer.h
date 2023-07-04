@@ -48,6 +48,8 @@ private:
 	float m_Time = 0.0f;
 	glm::vec2 m_ScrollingVelocity = glm::vec2(1.0f, 0.0f);
 
+	float m_ConeAngle = 0.33f, m_ViewAngle = 0.0f;
+
 	std::shared_ptr<ComputeShader> m_RaycastShader;
 	std::shared_ptr<ComputeShader> m_NoiseGenerator;
 

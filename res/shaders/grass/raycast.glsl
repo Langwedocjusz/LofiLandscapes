@@ -6,27 +6,43 @@ layout(rgba16f, binding = 0) uniform image3D raycast_result;
 
 #define PI 3.1415926536
 
-uniform float uTaper;
+uniform float uConeAngle;
+uniform float uViewAngle;
 
 float sdfSphere(vec2 p, float r) {
     return length(p) - r;
 }
 
-float Map(vec2 p) {
-    vec2 q = fract(p);
-    return sdfSphere(q - vec2(0.5), 0.25);
-}
-
-vec3 Norm(vec2 p)
+//https://iquilezles.org/articles/distfunctions/
+float sdfCone( vec3 p, vec2 c )
 {
-    if (Map(p) < 0.0) return vec3(0.0, 1.0, 0.0);
-
-    vec2 n = normalize(fract(p) - vec2(0.5));
-
-    return vec3(n.x, 0.0, n.y);
+    // c is the sin/cos of the angle
+    vec2 q = vec2( length(p.xz), -p.y );
+    float d = length(q-c*max(dot(q,c), 0.0));
+    return d * ((q.x*c.y-q.y*c.x<0.0)?-1.0:1.0);
 }
 
-float Raymarch(vec2 org, vec2 dir) {
+float Map(vec3 p) {
+    vec3 q = p;
+    q.xz = fract(q.xz);
+
+    //return sdfSphere(q.xz - vec2(0.5), 0.25);
+    vec2 c = vec2(sin(uConeAngle), cos(uConeAngle));
+    return sdfCone(q - vec3(0.5, 0.0, 0.5), c);
+}
+
+vec3 Norm(vec3 p)
+{
+    vec2 h = vec2(0.0, 0.01);
+
+    return normalize(vec3(
+        Map(p + h.yxx) - Map(p - h.yxx),
+        Map(p + h.xyx) - Map(p - h.xyx),
+        Map(p + h.xxy) - Map(p - h.xxy)
+    ));
+}
+
+float Raymarch(vec3 org, vec3 dir) {
     const int max_march_steps = 64;
     const float min_dist = 0.01, max_dist = 100.0;
 
@@ -36,7 +52,7 @@ float Raymarch(vec2 org, vec2 dir) {
 
     for (int i=0; i<max_march_steps; i++)
     {   
-        vec2 p = org + dist*dir;
+        vec3 p = org + dist*dir;
 
         float sd = Map(p);
         if (abs(sd) < min_dist) break;
@@ -58,13 +74,20 @@ void main() {
 
     vec2 uv = (vec2(texelCoord.xy) + 0.5)/ img_size.xy;
 
-    float angle = 2.0*PI*(float(texelCoord.z) + 0.5)/img_size.z;
+    float c_v = cos(uViewAngle), s_v = sin(uViewAngle);
 
-    vec2 dir = vec2(cos(angle), sin(angle));
+    float angle = -2.0*PI*(float(texelCoord.z) + 0.5)/img_size.z;
+    float c = cos(angle), s = sin(angle);
+
+    //vec2 dir = vec2(cos(angle), sin(angle));
+    vec3 dir = vec3(1,0,0);
+    dir.xy = mat2(c_v, -c_v, c_v, c_v) * dir.xy;
+    dir.xz = mat2(c, -s, s, c) * dir.xz;
 
     vec4 res = vec4(0.0);
 
     #ifdef MULTISAMPLE
+
     float texel_third = 0.33/float(img_size.x); // Assuming xy has square dims
 
     vec2 offsets[9] = vec2[9](
@@ -75,21 +98,26 @@ void main() {
 
     for (int i = 0; i<9; i++)
     {
-        vec2 p = uv + texel_third * offsets[i];
+        vec2 org2 = uv + texel_third * offsets[i];
+        vec3 org3 = vec3(org2.x, 0.0, org2.y);
 
-        float dist = Raymarch(p, dir);
+        float dist = Raymarch(org3, dir);
 
-        res.rgb += Norm(p + dist*dir);
+        res.rgb += Norm(org3 + dist*dir);
         res.a   += dist;
     }
 
     res /= 9.0;
     
     #else
-    float dist = Raymarch(uv, dir);
 
-    res.rgb = Norm(uv + dist*dir);
+    vec3 org = vec3(uv.x, 0.0, uv.y);
+
+    float dist = Raymarch(org, dir);
+
+    res.rgb = Norm(org + dist*dir);
     res.a   = dist;
+
     #endif
 
     imageStore(raycast_result, texelCoord, res);
