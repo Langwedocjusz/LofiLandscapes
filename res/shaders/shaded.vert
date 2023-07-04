@@ -32,7 +32,7 @@ void main() {
     vec3 norm = 2.0*texture(normalmap, uv).rgb - 1.0;
     norm_rot = rotation(normalize(norm));
 
-    frag_pos = aPos.xyz;
+    frag_pos = aPos.xyz + vec3(hoffset.x, 0.0, hoffset.y);;
 
     vec4 pos = uMVP * vec4(aPos.xyz + vec3(hoffset.x, 0.0, hoffset.y), 1.0);
 
