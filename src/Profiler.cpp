@@ -6,6 +6,8 @@
 
 #include "ImGuiUtils.h"
 
+#include <algorithm>
+
 FrameData::FrameData()
 {
 	const int start_capacity = 10;
