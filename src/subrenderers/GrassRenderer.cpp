@@ -59,8 +59,9 @@ void GrassRenderer::OnUpdate(float deltatime)
 		m_RaycastResult->BindImage(0, 0);
 
 		m_RaycastShader->Bind();
-		m_RaycastShader->setUniform1f("uConeAngle", m_ConeAngle);
 		m_RaycastShader->setUniform1f("uViewAngle", m_ViewAngle);
+		m_RaycastShader->setUniform1f("uSlant", m_Slant);
+		m_RaycastShader->setUniform1f("uBaseWidth", m_BaseWidth);
 
 		glDispatchCompute(res_x / 32, res_y / 32, res_z);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -98,25 +99,18 @@ void GrassRenderer::OnUpdate(float deltatime)
 
 void GrassRenderer::OnImGui(bool& open)
 {
-	ImGui::Begin("Infinite noodles", &open);
+	ImGui::Begin("Grass", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
 	if (ImGui::CollapsingHeader("Precomputed raycast"))
 	{
-		if (ImGui::Button("Redraw"))
-			m_UpdateFlags |= Raycast;
-
-		float tmp_cone = m_ConeAngle, tmp_view = m_ViewAngle;
-
 		ImGui::Columns(2, "###col");
-		ImGuiUtils::SliderFloat("Cone Angle", &tmp_cone, 0.0f, 1.0f);
-		ImGuiUtils::SliderFloat("View Angle", &tmp_view, 0.0f, 1.5f);
+		ImGuiUtils::SliderFloat("Slant", &m_Slant, 0.5f, 1.5f);
+		ImGuiUtils::SliderFloat("Base Width", &m_BaseWidth, 0.01f, 0.1f);
+		ImGuiUtils::SliderFloat("View Angle", &m_ViewAngle, 0.0f, 1.5f);
 		ImGui::Columns(1, "###col");
 
-		if (tmp_cone != m_ConeAngle || tmp_view != m_ViewAngle)
+		if (ImGuiUtils::Button("Recalculate raycast"))
 		{
-			m_ConeAngle = tmp_cone;
-			m_ViewAngle = tmp_view;
-
 			m_UpdateFlags |= Raycast;
 		}
 	}
@@ -190,7 +184,6 @@ void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGen
 		m_PresentShader->setUniform1f("uGrassHeight", m_GrassHeight);
 		m_PresentShader->setUniform1f("uTilingFactor", m_Tiling);
 		m_PresentShader->setUniform1f("uMaxDepth", m_MaxDepth);
-		//m_PresentShader->setUniform3f("uSlant", m_Slant);
 		m_PresentShader->setUniform1f("uTime", m_Time);
 		m_PresentShader->setUniform2f("uScrollVel", m_ScrollingVelocity.x, m_ScrollingVelocity.y);
 		m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
