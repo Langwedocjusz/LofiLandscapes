@@ -24,9 +24,12 @@ uniform float uSway;
 uniform float uTime;
 uniform float uNoiseTiling;
 uniform vec2 uScrollVel;
-//uniform float uAOFactor;
 uniform float uAOMin;
 uniform float uAOMax;
+
+uniform vec3 uAlbedo;
+uniform float uRoughness;
+uniform float uTranslucent;
 
 uniform sampler3D raycast_res;
 uniform sampler2D noise;
@@ -197,11 +200,13 @@ void main() {
     vec3 sun_col = uSunStr * uSunCol;
     vec3 ref_col = uRefStr * uSunCol;
 
-    vec3 albedo = vec3(0.9); float roughness = 0.7;
+    //vec3 albedo = uAlbedo;//vec3(0.9); 
+    //float roughness = uRoughness;//0.7f;
 
-    vec3 color = shadow * sun_col * ShadePBR(view, norm, uLightDir, albedo, roughness);
-    color += amb * IBL(norm, view, albedo, roughness);
-    color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
+    vec3 color = shadow * sun_col * ShadePBR(view, norm, uLightDir, uAlbedo, uRoughness);
+    color += amb * IBL(norm, view, uAlbedo, uRoughness);
+    //color += amb * ref_col * diffuseOnly(norm, -uLightDir, uAlbedo);
+    color += uTranslucent * diffuseOnly(norm, -uLightDir, uAlbedo);
 
     //Generate fake ao, assumes max_depth = 1.0
     float fake_depth = 1.0 - clamp(0.577*in_dist, 0.0, 1.0);

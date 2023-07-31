@@ -10,6 +10,7 @@ uniform float uViewAngle;
 
 uniform float uBaseWidth;
 uniform float uSlant;
+uniform float uNumBlades;
 
 float sdEllipse(vec2 p, vec2 ab);
 float opSubtract(float d1, float d2);
@@ -21,7 +22,7 @@ mat2 rotate2d(float theta);
 //"grass field with blades" by MonterMan:
 //https://www.shadertoy.com/view/dd2cWh
 
-//My modification/generalization of his grass blade sdf is also available here;
+//My modification/generalization of his grass blade sdf is also available here:
 //https://www.shadertoy.com/view/DdlfR7
 
 float sdGrassBlade2d(vec2 p, float slant, float base_width)
@@ -75,7 +76,8 @@ float sdGrassBlade(vec3 p, float thickness)
 float Map(vec3 p)
 {
     vec2 grassId;
-    float repeatPeriod = 0.25;
+    float repeatPeriod = 1.0/uNumBlades;
+
     p.xz = opRepeat(p.xz, vec2(repeatPeriod), grassId);
     
     float dist = 100.0;
@@ -196,7 +198,7 @@ void main() {
 // hash function credit: https://www.shadertoy.com/view/4djSRW
 vec4 hash42(vec2 p)
 {
-    p = mod(p, vec2(4.0));
+    p = mod(p, vec2(uNumBlades));
 
 	vec4 p4 = fract(vec4(p.xyxy) * vec4(.1031, .1030, .0973, .1099));
     p4 += dot(p4, p4.wzxy+33.33);

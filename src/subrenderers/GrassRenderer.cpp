@@ -63,6 +63,7 @@ void GrassRenderer::OnUpdate(float deltatime)
 		m_RaycastShader->setUniform1f("uViewAngle", m_ViewAngle);
 		m_RaycastShader->setUniform1f("uSlant", m_Slant);
 		m_RaycastShader->setUniform1f("uBaseWidth", m_BaseWidth);
+		m_RaycastShader->setUniform1f("uNumBlades", static_cast<float>(m_NumBlades));
 
 		glDispatchCompute(res_x / 32, res_y / 32, res_z);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -108,6 +109,7 @@ void GrassRenderer::OnImGui(bool& open)
 		ImGuiUtils::SliderFloat("Slant", &m_Slant, 0.5f, 1.5f);
 		ImGuiUtils::SliderFloat("Base Width", &m_BaseWidth, 0.01f, 0.1f);
 		ImGuiUtils::SliderFloat("View Angle", &m_ViewAngle, 0.0f, 1.5f);
+		ImGuiUtils::SliderInt("Num Blades", &m_NumBlades, 0, 10);
 		ImGui::Columns(1, "###col");
 
 		if (ImGuiUtils::Button("Recalculate raycast"))
@@ -153,9 +155,20 @@ void GrassRenderer::OnImGui(bool& open)
 
 		ImGuiUtils::DragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
 
-		//ImGuiUtils::SliderFloat("AO Factor", &m_AOFactor, 0.0f, 1.0f);
 		ImGuiUtils::SliderFloat("AO Min", &m_AOMin, 0.0f, 1.0f);
 		ImGuiUtils::SliderFloat("AO Max", &m_AOMax, 0.0f, 1.0f);
+
+		ImGui::Columns(1, "###col");
+	}
+
+	if (ImGui::CollapsingHeader("Material"))
+	{
+		ImGui::Columns(2, "###col");
+
+		ImGuiUtils::ColorEdit3("Albedo", & m_Albedo);
+		ImGuiUtils::SliderFloat("Roughness", &m_Roughness, 0.0f, 1.0f);
+		ImGuiUtils::SliderFloat("Translucent", &m_Translucent, 0.0f, 3.0f);
+
 
 		ImGui::Columns(1, "###col");
 	}
@@ -192,10 +205,13 @@ void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGen
 		m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
 		m_PresentShader->setUniform1f("uStrength", m_NoiseStrength);
 		m_PresentShader->setUniform1f("uSway", m_Sway);
-		//m_PresentShader->setUniform1f("uAOFactor", m_AOFactor);
 		m_PresentShader->setUniform1f("uAOMin", m_AOMin);
 		m_PresentShader->setUniform1f("uAOMax", m_AOMax);
 		
+		m_PresentShader->setUniform3f("uAlbedo", m_Albedo);
+		m_PresentShader->setUniform1f("uRoughness", m_Roughness);
+		m_PresentShader->setUniform1f("uTranslucent", m_Translucent);
+
 		m_RaycastResult->Bind(0);
 		m_PresentShader->setUniform1i("raycast_res", 0);
 		m_Noise->Bind(1);

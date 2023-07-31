@@ -1,5 +1,10 @@
 #pragma once
 
+//Grass rendering based on a precomputed raycast
+//Implementation of an algorithm created by Alexander Sannikov and used in Path of Exile:
+//https://youtu.be/NoJykuiHuSY
+//https://gamedev.ru/code/articles/grass_raycast
+
 #include "ResourceManager.h"
 #include "Camera.h"
 #include "MapGenerator.h"
@@ -35,21 +40,33 @@ private:
 
 	int m_UpdateFlags = Raycast | Noise;
 
+	//Raycast parameters
+	float m_ViewAngle = 1.03f;
+	float m_BaseWidth = 0.08f, m_Slant = 0.96f;
+	
+	int m_NumBlades = 7;
+
+	//Noise parameters
+	int m_NoiseScale = 5, m_Octaves = 3;
+
+	//Rendering parameters
 	bool m_RenderGrass = false;
 
 	float m_GrassHeight = 0.5f, m_Tiling = 2.75f, m_MaxDepth = 1.0f, m_NoiseTiling = 0.31f;
 
 	int m_LodLevels = 2;
 
-	int m_NoiseScale = 5, m_Octaves = 3;
 	float m_NoiseStrength = 1.04f, m_Sway = 0.09f;
 	float m_AOMin = 0.12f, m_AOMax = 0.59f;
 
 	float m_Time = 0.0f;
 	glm::vec2 m_ScrollingVelocity = glm::vec2(0.2f, 0.2f);
 
-	float m_ViewAngle = 1.03f;
-	float m_BaseWidth = 0.08f, m_Slant = 0.96f;
+	//Material parameters
+	glm::vec3 m_Albedo = glm::vec3(39.0f, 255.0f, 28.0f)/255.0f;
+	float m_Roughness = 0.13f;
+	float m_Translucent = 2.53f;
+
 
 	std::shared_ptr<ComputeShader> m_RaycastShader;
 	std::shared_ptr<ComputeShader> m_NoiseGenerator;
