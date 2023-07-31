@@ -25,7 +25,7 @@ GrassRenderer::GrassRenderer(ResourceManager& manager)
 void GrassRenderer::Init()
 {
 	m_RaycastResult->Initialize(Texture3DSpec{
-		64, 64, 64,
+		128, 128, 16,
 		GL_RGBA16F, GL_RGBA,
 		GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
 		GL_REPEAT,
@@ -41,6 +41,7 @@ void GrassRenderer::Init()
 	});
 
 	OnUpdate(0.0f);
+	m_UpdateFlags = Noise;
 }
 
 void GrassRenderer::OnUpdate(float deltatime)
@@ -137,7 +138,7 @@ void GrassRenderer::OnImGui(bool& open)
 	{
 		ImGui::Columns(2, "###col");
 
-		ImGuiUtils::Checkbox("Render noodles", &m_RenderGrass);
+		ImGuiUtils::Checkbox("Render grass", &m_RenderGrass);
 
 		ImGuiUtils::SliderInt("Lod Levels", &m_LodLevels, 0, 5);
 
@@ -152,7 +153,9 @@ void GrassRenderer::OnImGui(bool& open)
 
 		ImGuiUtils::DragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
 
-		ImGuiUtils::SliderFloat("AO Factor", &m_AOFactor, 0.0f, 1.0f);
+		//ImGuiUtils::SliderFloat("AO Factor", &m_AOFactor, 0.0f, 1.0f);
+		ImGuiUtils::SliderFloat("AO Min", &m_AOMin, 0.0f, 1.0f);
+		ImGuiUtils::SliderFloat("AO Max", &m_AOMax, 0.0f, 1.0f);
 
 		ImGui::Columns(1, "###col");
 	}
@@ -189,7 +192,9 @@ void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGen
 		m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
 		m_PresentShader->setUniform1f("uStrength", m_NoiseStrength);
 		m_PresentShader->setUniform1f("uSway", m_Sway);
-		m_PresentShader->setUniform1f("uAOFactor", m_AOFactor);
+		//m_PresentShader->setUniform1f("uAOFactor", m_AOFactor);
+		m_PresentShader->setUniform1f("uAOMin", m_AOMin);
+		m_PresentShader->setUniform1f("uAOMax", m_AOMax);
 		
 		m_RaycastResult->Bind(0);
 		m_PresentShader->setUniform1i("raycast_res", 0);

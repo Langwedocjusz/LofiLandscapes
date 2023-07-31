@@ -24,7 +24,9 @@ uniform float uSway;
 uniform float uTime;
 uniform float uNoiseTiling;
 uniform vec2 uScrollVel;
-uniform float uAOFactor;
+//uniform float uAOFactor;
+uniform float uAOMin;
+uniform float uAOMax;
 
 uniform sampler3D raycast_res;
 uniform sampler2D noise;
@@ -169,6 +171,13 @@ void main() {
 
     vec3 norm = res.rgb; float in_dist = res.w;
 
+    //Discard fragments with negative depth 
+    //(raycast returns negative value if nothing was hit)
+    if (in_dist < 0.0)
+    {
+        discard;
+    }
+
     float cosa = dot(view, normalize(view*vec3(1,0,1)));
     float dist = in_dist / cosa;
 
@@ -177,19 +186,9 @@ void main() {
     offset *= non_ortho_inv;
     norm *= inverted;
 
-    //Discard fragments below max depth
-    float h = -offset.y;
-
-    if (h > uMaxDepth)
-    {
-       discard;
-    }
-
-    //Blend grass normals with world normals
+    //Read world normal and AO
     vec4 world_res = texture(normalmap, world_uv);
     vec3 world_norm = world_res.rgb; float amb = world_res.a;
-
-    //norm = normalize(0.66*norm + 0.33* world_norm);
 
     //Do pbr lighting
     float shadow = 1.0;
@@ -204,9 +203,13 @@ void main() {
     color += amb * IBL(norm, view, albedo, roughness);
     color += amb * ref_col * diffuseOnly(norm, -uLightDir, albedo);
 
-    float fake_amb = 1.0 - uAOFactor*max(h, 0.0);
+    //Generate fake ao, assumes max_depth = 1.0
+    float fake_depth = 1.0 - clamp(0.577*in_dist, 0.0, 1.0);
+    float fake_amb = clamp((fake_depth - uAOMin)/(uAOMax - uAOMin), 0.0, 1.0);
+
     color *= fake_amb;
 
+    //Color correction
     color = pow(color, vec3(1.0/2.2));
 
     frag_col = vec4(color, 1.0);

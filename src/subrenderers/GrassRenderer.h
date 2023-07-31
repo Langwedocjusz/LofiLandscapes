@@ -37,18 +37,19 @@ private:
 
 	bool m_RenderGrass = false;
 
-	float m_GrassHeight = 0.5f, m_Tiling = 1.0f, m_MaxDepth = 1.0f, m_NoiseTiling = 1.0f;
+	float m_GrassHeight = 0.5f, m_Tiling = 2.75f, m_MaxDepth = 1.0f, m_NoiseTiling = 0.31f;
 
 	int m_LodLevels = 2;
 
-	int m_NoiseScale = 1, m_Octaves = 3;
-	float m_NoiseStrength = 1.0f, m_Sway = 0.5f, m_AOFactor = 0.33f;
+	int m_NoiseScale = 5, m_Octaves = 3;
+	float m_NoiseStrength = 1.04f, m_Sway = 0.09f;
+	float m_AOMin = 0.12f, m_AOMax = 0.59f;
 
 	float m_Time = 0.0f;
-	glm::vec2 m_ScrollingVelocity = glm::vec2(1.0f, 0.0f);
+	glm::vec2 m_ScrollingVelocity = glm::vec2(0.2f, 0.2f);
 
-	float m_ViewAngle = 0.0f;
-	float m_BaseWidth = 0.03f, m_Slant = 0.5f;
+	float m_ViewAngle = 1.03f;
+	float m_BaseWidth = 0.08f, m_Slant = 0.96f;
 
 	std::shared_ptr<ComputeShader> m_RaycastShader;
 	std::shared_ptr<ComputeShader> m_NoiseGenerator;
