@@ -5,7 +5,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 void ImGuiUtils::Checkbox(const std::string& label, bool* value, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::Checkbox(("##" + label + suffix).c_str(), value);
@@ -14,7 +14,7 @@ void ImGuiUtils::Checkbox(const std::string& label, bool* value, const std::stri
 }
 
 void ImGuiUtils::SliderInt(const std::string& label, int* value, int min, int max, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::SliderInt(("##" + label + suffix).c_str(), value, min, max);
@@ -23,7 +23,7 @@ void ImGuiUtils::SliderInt(const std::string& label, int* value, int min, int ma
 }
 
 void ImGuiUtils::SliderIntLog(const std::string& label, int* value, int min, int max, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::SliderInt(("##" + label + suffix).c_str(), value, min, max, "%d", ImGuiSliderFlags_Logarithmic);
@@ -32,7 +32,7 @@ void ImGuiUtils::SliderIntLog(const std::string& label, int* value, int min, int
 }
 
 void ImGuiUtils::SliderFloat(const std::string& label, float* value, float min, float max, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::SliderFloat(("##" + label + suffix).c_str(), value, min, max);
@@ -41,7 +41,7 @@ void ImGuiUtils::SliderFloat(const std::string& label, float* value, float min, 
 }
 
 void ImGuiUtils::InputFloat(const std::string& label, float* value, float step, float step_fast, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::InputFloat(("##" + label + suffix).c_str(), value, step, step_fast);
@@ -50,7 +50,7 @@ void ImGuiUtils::InputFloat(const std::string& label, float* value, float step, 
 }
 
 void ImGuiUtils::DragFloat2(const std::string& label, float* value, float speed, float v_min, float v_max, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::DragFloat2(("##" + label + suffix).c_str(), value, speed, v_min, v_max);
@@ -59,7 +59,7 @@ void ImGuiUtils::DragFloat2(const std::string& label, float* value, float speed,
 }
 
 void ImGuiUtils::ColorEdit3(const std::string& label, float* value, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::ColorEdit3(("##" + label + suffix).c_str(), value);
@@ -68,7 +68,7 @@ void ImGuiUtils::ColorEdit3(const std::string& label, float* value, const std::s
 }
 
 void ImGuiUtils::ColorEdit3(const std::string& label, glm::vec3* value, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 	ImGui::ColorEdit3(("##" + label + suffix).c_str(), glm::value_ptr(*value));
@@ -78,7 +78,7 @@ void ImGuiUtils::ColorEdit3(const std::string& label, glm::vec3* value, const st
 
 void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string> options, 
 	                   int& selected_id, const std::string& suffix) {
-	ImGui::Text(label.c_str());
+	ImGui::TextUnformatted(label.c_str());
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 

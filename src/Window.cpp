@@ -9,46 +9,48 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
     m_WindowData.Width  = width;
     m_WindowData.Height = height;
 
-    //initialize GLFW:
+    //Initialize GLFW:
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    //Immediately set error callback:
+    glfwSetErrorCallback([](int code, const char* message) {
+        std::cerr << "Glfw Error: \n" << "Code: " << code
+            << "Message: " << message << '\n';
+        });
+
+    //Try to create a window
     m_Window = glfwCreateWindow(m_WindowData.Width, m_WindowData.Height,
                                 m_WindowData.Title.c_str(), NULL, NULL);
 
     if (m_Window == nullptr)
-        throw "Failed to initialize glfw!";
+        throw std::runtime_error("Failed to initialize glfw!");
 
     glfwMakeContextCurrent(m_Window);
 
-    //initialize GLAD:
+    //Initialize GLAD:
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        throw "Failed to initialize glad!";
+        throw std::runtime_error("Failed to initialize glad!");
 
-    //user pointer:
+    //Set user pointer:
     glfwSetWindowUserPointer(m_Window, &m_WindowData);
 
-    //Opengl error callback:
+    //Set OpenGL error callback:
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, 
                               GLenum severity, GLsizei length, const GLchar* message,
                               const void* userParam) 
     {
-        if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return ;
+        if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
         std::cout << "GL CALLBACK: type = " << type 
                   << ", severity = " << severity 
                   << ", message = " << message << '\n';
     }, 0);
 
-    //Glfw callbacks:
-    glfwSetErrorCallback([](int code, const char* message){
-        std::cerr << "Glfw Error: \n" << "Code: " << code
-                  << "Message: " << message << '\n';
-    });
-
+    //Set the rest of Glfw callbacks:
     glfwSetFramebufferSizeCallback(m_Window, 
         [](GLFWwindow* window, int width, int height)
         {

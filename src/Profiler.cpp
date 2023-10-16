@@ -185,7 +185,7 @@ void Profiler::DrawLegend(std::deque<FrameData>& frames, std::vector<std::string
 {
 	auto& frame = frames[s_SelectedFrame];
 
-	ImGui::Text(title.c_str());
+	ImGui::TextUnformatted(title.c_str());
 	ImGui::Separator();
 
 	for (size_t idx = 0; idx < frame.Timings.size(); idx++)
@@ -195,7 +195,9 @@ void Profiler::DrawLegend(std::deque<FrameData>& frames, std::vector<std::string
 		const ImU32 color = color_palette[id % palette_size];
 
 		ImGui::PushStyleColor(ImGuiCol_Text, color);
-		ImGui::Text(("[" + std::to_string(frame.Timings.at(idx)) + " ms] " + labels.at(id)).c_str());
+		ImGui::TextUnformatted(
+			("[" + std::to_string(frame.Timings.at(idx)) + " ms] " + labels.at(id)).c_str()
+		);
 		ImGui::PopStyleColor();
 	}
 }

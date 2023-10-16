@@ -11,8 +11,9 @@ int main() {
         app.Run();
     }
 
-    catch(std::string error_message) {
-        std::cerr << error_message << '\n';
+    catch(const std::exception &e) {
+        std::cerr << "Exception was thrown:\n";
+        std::cerr << e.what() << '\n';
         return -1;
     }
 
