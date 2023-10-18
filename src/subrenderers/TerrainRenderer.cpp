@@ -15,12 +15,21 @@ TerrainRenderer::TerrainRenderer(ResourceManager& manager)
 TerrainRenderer::~TerrainRenderer() {}
 
 void TerrainRenderer::RenderWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, const Clipmap& clipmap) {
-    ProfilerGPUEvent we("Terrain::PrepareWireframe");
+    {
+        ProfilerGPUEvent we("Terrain::PrepareWireframe");
 
-    m_WireframeShader->Bind();
-    m_WireframeShader->setUniform1f("uL", map.getScaleSettings().ScaleXZ);
-    m_WireframeShader->setUniform2f("uPos", cam.getPos().x, cam.getPos().z);
-    m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
+        m_WireframeShader->Bind();
+        m_WireframeShader->setUniform1f("uL", map.getScaleSettings().ScaleXZ);
+        m_WireframeShader->setUniform2f("uPos", cam.getPos().x, cam.getPos().z);
+        m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
+    }
+    
+    {
+        ProfilerGPUEvent we("Terrain::Draw");
+
+        auto scale_y = map.getScaleSettings().ScaleY;
+        clipmap.BindAndDraw(cam, scale_y);
+    }
 }
 
 void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
