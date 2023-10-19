@@ -65,7 +65,8 @@ void GrassRenderer::OnUpdate(float deltatime)
 		m_RaycastShader->setUniform1f("uBaseWidth", m_BaseWidth);
 		m_RaycastShader->setUniform1f("uNumBlades", static_cast<float>(m_NumBlades));
 
-		glDispatchCompute(res_x / 32, res_y / 32, res_z);
+		m_RaycastShader->Dispatch(res_x, res_y, res_z);
+		
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
 		//m_RaycastResult->Bind();
@@ -87,7 +88,8 @@ void GrassRenderer::OnUpdate(float deltatime)
 		m_NoiseGenerator->setUniform1i("uScale", m_NoiseScale);
 		m_NoiseGenerator->setUniform1i("uOctaves", m_Octaves);
 
-		glDispatchCompute(res_x / 32, res_y / 32, 1);
+		m_NoiseGenerator->Dispatch(res_x, res_y, 1);
+
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
 		m_Noise->Bind();

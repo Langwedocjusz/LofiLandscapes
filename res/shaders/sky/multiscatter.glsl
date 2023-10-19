@@ -15,7 +15,7 @@ uniform sampler2D transLUT;
 
 uniform vec3 uGroundAlbedo;
 
-#include common.glsl
+#include "common.glsl"
 
 //Scattering phase functions
 float MiePhase(float cosTheta) {

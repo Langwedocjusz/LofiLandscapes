@@ -1,10 +1,10 @@
 #include "Shader.h"
 
 #include "glad/glad.h"
-#include "Shadinclude.hpp"
 
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 #include <algorithm>
 
 #include <iostream>
@@ -69,11 +69,55 @@ void compileShaderCode(const std::string& source, unsigned int& id, int program_
     }
 }
 
+std::string loadSource(std::filesystem::path filepath, bool recursive_call = false)
+{
+    const std::string include_token{"#include"};
+
+    std::ifstream input{ filepath };
+
+    if (!input)
+    {
+        throw std::runtime_error(
+            "Could not open shader source file:\n" + filepath.string()
+        );
+    }
+
+    std::string full_source, current_line;
+
+    while (std::getline(input, current_line))
+    {
+        if (current_line.find(include_token) != std::string::npos)
+        {
+            auto start_id = current_line.find_first_of('\"') + 1;
+            auto end_id = current_line.find_last_of('\"');
+            auto length = end_id - start_id;
+
+            std::string filename = current_line.substr(start_id, length);
+
+            std::filesystem::path new_path = filepath.remove_filename() / filename;
+
+            full_source += loadSource(new_path, true);
+        }
+
+        else
+        {
+            full_source += current_line + "\n";
+        }
+    }
+
+    if (!recursive_call)
+        full_source += "\0";
+
+    return full_source;
+}
+
 void VertFragShader::Build()
 {
     //Get source
-    std::string vert_code = Shadinclude::load(m_VertPath, "#include");
-    std::string frag_code = Shadinclude::load(m_FragPath, "#include");
+    std::filesystem::path current_path{ std::filesystem::current_path() };
+
+    std::string vert_code = loadSource(current_path / m_VertPath);
+    std::string frag_code = loadSource(current_path / m_FragPath);
 
     //Compile shaders
     unsigned int vert_id = 0, frag_id = 0;
@@ -143,7 +187,11 @@ VertFragShader::~VertFragShader()
 void ComputeShader::Build() 
 {
     //Get source
-    std::string compute_code = Shadinclude::load(m_ComputePath, "#include");
+    std::filesystem::path current_path{ std::filesystem::current_path() };
+    std::string compute_code = loadSource(current_path / m_ComputePath);
+
+    //Initialize local sizes
+    RetrieveLocalSizes(compute_code);
 
     //Compile shader
     unsigned int compute_id = 0;
@@ -193,6 +241,66 @@ ComputeShader::~ComputeShader()
     glDeleteProgram(m_ID);
 }
 
+void ComputeShader::Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z)
+{
+    glDispatchCompute(size_x/m_LocalSizeX, size_y/m_LocalSizeY, size_z/m_LocalSizeZ);
+}
+
+void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
+{
+    auto retrieveInt = [source_code](const std::string& name) -> int
+    {
+        auto id = source_code.find(name);
+
+        if (id == std::string::npos)
+            throw std::runtime_error("Unable to find " + name);
+
+        //Id was before the beggining of the name, so shift it one past the end
+        id += name.size() + 2;
+
+        //Skip whitespaces
+        while (source_code[id] == ' ' || source_code[id] == '\n' || source_code[id] == '\t')
+        {
+            id++;
+        }
+
+        //Create a string
+        std::string value;
+
+        //Load all digits into the string
+        while (isdigit(source_code[id]))
+        {
+            value += source_code[id];
+            id++;
+        }
+
+        if (value.empty())
+            throw std::runtime_error("Unable to parse value of " + name);
+
+        return std::stoi(value);
+    };
+
+    auto setSize = [this, retrieveInt](uint32_t& value, const std::string& name) {
+        try
+        {
+            value = retrieveInt(name);
+        }
+
+        catch (const std::exception& e)
+        {
+            std::cerr << "Exception thrown when parsing: " << m_ComputePath << '\n';
+            std::cerr << e.what() << '\n';
+
+            //Default to setting sizes as 1 if something goes wrong 
+            value = 1;
+        }
+    };
+
+    setSize(m_LocalSizeX, "local_size_x");
+    setSize(m_LocalSizeY, "local_size_y");
+    setSize(m_LocalSizeZ, "local_size_z");
+}
+
 //=====Uniform setting==================================================
 
 void Shader::setUniform1i(const std::string& name, int x) {
@@ -240,7 +348,7 @@ void Shader::setUniformMatrix4fv(const std::string& name, float data[16]) {
     glUniformMatrix4fv(location, 1, GL_FALSE, data);
 }
 
-//=====GLM overrides======================a============================
+//=====GLM overrides===================================================
 
 void Shader::setUniform2i(const std::string& name, glm::ivec2 v) {
     const unsigned int location = getUniformLocation(name.c_str());

@@ -18,7 +18,7 @@ uniform vec3 uSunDir;
 
 uniform float uHeight;
 
-#include common.glsl
+#include "common.glsl"
 
 //Scattering phase functions
 float MiePhase(float cosTheta) {

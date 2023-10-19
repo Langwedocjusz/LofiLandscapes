@@ -12,7 +12,7 @@ layout(rgba16, binding = 0) uniform image3D aerialLUT;
 
 uniform sampler2D transLUT;
 
-#include common.glsl
+#include "common.glsl"
 
 uniform float uHeight;
 

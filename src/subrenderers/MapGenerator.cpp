@@ -188,7 +188,8 @@ void MapGenerator::UpdateNormal() {
     m_NormalmapShader->setUniform1i("uAOSamples", m_AOSettings.Samples);
     m_NormalmapShader->setUniform1f("uAOR", m_AOSettings.R);
 
-    glDispatchCompute(res/32, res/32, 1);
+    m_NormalmapShader->Dispatch(res, res, 1);
+    
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_Normalmap->Bind();
@@ -219,7 +220,8 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     m_ShadowmapShader->setUniform1i("uSoftShadows", m_ShadowSettings.Soft);
     m_ShadowmapShader->setUniform1f("uSharpness", m_ShadowSettings.Sharpness);
 
-    glDispatchCompute(res/32, res/32, 1);
+    m_ShadowmapShader->Dispatch(res, res, 1);
+    
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_Shadowmap->Bind();

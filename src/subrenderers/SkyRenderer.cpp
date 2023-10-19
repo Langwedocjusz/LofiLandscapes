@@ -123,7 +123,8 @@ void SkyRenderer::UpdateTrans() {
     m_TransShader->Bind();
     m_TransShader->setUniform1i("uResolution", res);
 
-    glDispatchCompute(res / 32, res / 32, 1);
+    m_TransShader->Dispatch(res, res, 1);
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_TransLUT);
@@ -142,7 +143,8 @@ void SkyRenderer::UpdateMulti() {
     m_MultiShader->setUniform1i("uResolution", res);
     m_MultiShader->setUniform3f("uGroundAlbedo", m_GroundAlbedo);
 
-    glDispatchCompute(res / 32, res / 32, 1);
+    m_MultiShader->Dispatch(res, res, 1);
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_MultiLUT);
@@ -165,12 +167,15 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader->setUniform3f("uSunDir", m_SunDir);
     m_SkyShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
-    glDispatchCompute(res / 32, res / 32, 1);
+    m_SkyShader->Dispatch(res, res, 1);
+    
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_SkyLUT);
 
     //Update cubemaps
+    const int irr_res = m_IrradianceMap->getSpec().Resolution;
+
     m_IrradianceMap->BindImage(0, 0);
     m_SkyLUT->Bind();
 
@@ -180,10 +185,13 @@ void SkyRenderer::UpdateSky() {
     m_IrradianceShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_IrradianceShader->setUniform1f("uIBLOversaturation", m_IBLOversaturation);
 
-    glDispatchCompute(1, 1, 6);
+    m_IrradianceShader->Dispatch(irr_res, irr_res, 6);
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_IrradianceMap);
+
+    const int pref_res = m_PrefilteredMap->getSpec().Resolution;
 
     m_PrefilteredMap->BindImage(0, 0);
     m_SkyLUT->Bind();
@@ -194,7 +202,8 @@ void SkyRenderer::UpdateSky() {
     m_PrefilteredShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_PrefilteredShader->setUniform1f("uIBLOversaturation", m_IBLOversaturation);
 
-    glDispatchCompute(4, 4, 6);
+    m_PrefilteredShader->Dispatch(pref_res, pref_res, 6);
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_PrefilteredMap->Bind();
@@ -207,14 +216,16 @@ void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
 {
     ProfilerGPUEvent we("Sky::UpdateAerial");
 
-    const int res = m_AerialLUT->getSpec().ResolutionZ;
+    const int res_x = m_AerialLUT->getSpec().ResolutionX;
+    const int res_y = m_AerialLUT->getSpec().ResolutionY;
+    const int res_z = m_AerialLUT->getSpec().ResolutionZ;
 
     m_AerialLUT->BindImage(0, 0);
 
     m_AerialShader->Bind();
     m_AerialShader->setUniform1i("transLUT", 0);
     m_AerialShader->setUniform1i("multiLUT", 1);
-    m_AerialShader->setUniform1i("uResolution", res);
+    m_AerialShader->setUniform1i("uResolution", res_z);
     m_AerialShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader->setUniform3f("uSunDir", m_SunDir);
     m_AerialShader->setUniform1f("uFar", cam.getFarPlane());
@@ -226,7 +237,8 @@ void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
     m_AerialShader->setUniform1f("uBrightness", m_AerialBrightness);
     m_AerialShader->setUniform1f("uDistScale", m_AerialDistscale);
 
-    glDispatchCompute(1, 1, res);
+    m_AerialShader->Dispatch(res_x, res_y, res_z);
+    
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_AerialLUT);

@@ -56,8 +56,15 @@ public:
     ComputeShader(const std::string& compute_path);
     ~ComputeShader();
 
+    //Parameters are numbers of invocations divided by the respective
+    //local group sizes that are defined in the shader source files
+    void Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z);
+
 private:
     void Build() override;
 
+    void RetrieveLocalSizes(const std::string& source_code);
+
     std::string m_ComputePath;
+    uint32_t m_LocalSizeX = 1, m_LocalSizeY = 1, m_LocalSizeZ = 1;
 };
