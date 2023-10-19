@@ -10,18 +10,30 @@
 class Shader{
 public:
     void Bind();
-    
-    virtual void Reload() = 0;
+    void Reload();
 
+    //Basic uniform setting functions
     void setUniform1i(const std::string& name, int x);
+    void setUniform2i(const std::string& name, int x, int y);
+    void setUniform3i(const std::string& name, int x, int y, int z);
+    void setUniform4i(const std::string& name, int x, int y, int z, int w);
     void setUniform1f(const std::string& name, float x);
     void setUniform2f(const std::string& name, float x, float y);
+    void setUniform3f(const std::string& name, float x, float y, float z);
+    void setUniform4f(const std::string& name, float x, float y, float z, float w);
+    void setUniformMatrix4fv(const std::string& name, float data[16]);
+
+    //Overrides using glm
+    void setUniform2i(const std::string& name, glm::ivec2 v);
+    void setUniform3i(const std::string& name, glm::ivec3 v);
+    void setUniform4i(const std::string& name, glm::ivec4 v);
+    void setUniform2f(const std::string& name, glm::vec2 v);
     void setUniform3f(const std::string& name, glm::vec3 v);
-    void setUniform3f(const std::string& name, float x[3]);
-    void setUniform4f(const std::string& name, float x[4]);
     void setUniform4f(const std::string& name, glm::vec4 v);
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
 protected:
+    virtual void Build() = 0;
+
     unsigned int m_ID = 0;
 
     unsigned int getUniformLocation(const std::string& name);
@@ -33,9 +45,8 @@ public:
     VertFragShader(const std::string& vert_path, const std::string& frag_path);
     ~VertFragShader();
 
-    void Reload() override;
 private:
-    void Build();
+    void Build() override;
 
     std::string m_VertPath, m_FragPath;
 };
@@ -45,9 +56,8 @@ public:
     ComputeShader(const std::string& compute_path);
     ~ComputeShader();
 
-    void Reload() override;
 private:
-    void Build();
+    void Build() override;
 
     std::string m_ComputePath;
 };

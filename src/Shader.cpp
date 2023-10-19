@@ -9,16 +9,33 @@
 
 #include <iostream>
 
-void Shader::Bind() {
+void Shader::Bind()
+{
     glUseProgram(m_ID);
 }
 
-unsigned int Shader::getUniformLocation(const std::string& name) {
+void Shader::Reload() 
+{
+    //Release GL handle
+    glDeleteProgram(m_ID);
+
+    //Reset member variables
+    m_ID = 0;
+    m_UniformCache.clear();
+
+    //Rebuild
+    Build();
+}
+
+unsigned int Shader::getUniformLocation(const std::string& name)
+{
     auto search_res = std::find_if(
         m_UniformCache.begin(), m_UniformCache.end(),
-        [&name](const std::pair<std::string, unsigned int> element){
+        [&name](const std::pair<std::string, unsigned int> element)
+        {
             return element.first == name;
-    });
+        }
+    );
 
     if (search_res != m_UniformCache.end())
         return search_res->second;
@@ -29,7 +46,8 @@ unsigned int Shader::getUniformLocation(const std::string& name) {
 }
 
 //Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
-void compileShaderCode(const std::string& source, unsigned int& id, int program_type) {
+void compileShaderCode(const std::string& source, unsigned int& id, int program_type)
+{
     const char* source_c = source.c_str();
 
     int success = 0;
@@ -42,15 +60,17 @@ void compileShaderCode(const std::string& source, unsigned int& id, int program_
 
     glGetShaderiv(id, GL_COMPILE_STATUS, &success);
 
-    if (!success) {
+    if (!success) 
+    {
         glGetShaderInfoLog(id, 512, NULL, info_log);
         glDeleteShader(id);
 
-        throw std::string(info_log);
+        throw std::runtime_error(info_log);
     }
 }
 
-void VertFragShader::Build() {
+void VertFragShader::Build()
+{
     //Get source
     std::string vert_code = Shadinclude::load(m_VertPath, "#include");
     std::string frag_code = Shadinclude::load(m_FragPath, "#include");
@@ -58,21 +78,29 @@ void VertFragShader::Build() {
     //Compile shaders
     unsigned int vert_id = 0, frag_id = 0;
 
-    try {compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);}
+    try 
+    {
+        compileShaderCode(vert_code, vert_id, GL_VERTEX_SHADER);
+    }
 
-    catch (std::string error_message) {
+    catch (const std::runtime_error& e) 
+    {
         std::cerr << "Vertex Shader compilation failed: \n"
-            << "filepath: " << m_VertPath << '\n'
-            << error_message << '\n';
+                  << "filepath: " << m_VertPath << '\n'
+                  << e.what() << '\n';
         return;
     }
 
-    try {compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);}
+    try 
+    {
+        compileShaderCode(frag_code, frag_id, GL_FRAGMENT_SHADER);
+    }
 
-    catch (std::string error_message) {
+    catch (const std::runtime_error& e) 
+    {
         std::cerr << "Fragment Shader compilation failed: \n"
-            << "filepath: " << m_FragPath << '\n'
-            << error_message << '\n';
+                  << "filepath: " << m_FragPath << '\n'
+                  << e.what() << '\n';
         return;
     }
 
@@ -88,7 +116,8 @@ void VertFragShader::Build() {
 
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
 
-    if (!success) {
+    if (!success) 
+    {
         glGetProgramInfoLog(m_ID, 512, NULL, info_log);
 
         std::cerr << "Error: Shader program linking failed: \n"
@@ -106,31 +135,29 @@ VertFragShader::VertFragShader(const std::string& vert_path, const std::string& 
     Build();
 }
 
-void VertFragShader::Reload() {
-    if(m_ID != 0) glDeleteProgram(m_ID);
-
-    m_ID = 0;
-
-    Build();
-}
-
-VertFragShader::~VertFragShader() {
+VertFragShader::~VertFragShader() 
+{
     glDeleteProgram(m_ID);
 }
 
-void ComputeShader::Build() {
+void ComputeShader::Build() 
+{
     //Get source
     std::string compute_code = Shadinclude::load(m_ComputePath, "#include");
 
     //Compile shader
     unsigned int compute_id = 0;
 
-    try {compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);}
+    try 
+    {
+        compileShaderCode(compute_code, compute_id, GL_COMPUTE_SHADER);
+    }
 
-    catch (std::string error_message) {
+    catch (const std::runtime_error& e) 
+    {
         std::cerr << "Compute Shader compilation failed: \n"
-            << "filepath: " << m_ComputePath << '\n'
-            << error_message << '\n';
+                  << "filepath: " << m_ComputePath << '\n'
+                  << e.what() << '\n';
         return;
     }
 
@@ -143,7 +170,9 @@ void ComputeShader::Build() {
     char info_log[512];
 
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
-    if (!success) {
+    
+    if (!success) 
+    {
         glGetProgramInfoLog(m_ID, 512, NULL, info_log);
         std::cerr << "Error: Shader program linking failed: \n"
                   << "filepath: " << m_ComputePath << '\n'
@@ -159,14 +188,9 @@ ComputeShader::ComputeShader(const std::string& compute_path)
     Build();
 }
 
-ComputeShader::~ComputeShader() {
+ComputeShader::~ComputeShader() 
+{
     glDeleteProgram(m_ID);
-}
-
-void ComputeShader::Reload() {
-    glDeleteProgram(m_ID);
-
-    Build();
 }
 
 //=====Uniform setting==================================================
@@ -174,6 +198,21 @@ void ComputeShader::Reload() {
 void Shader::setUniform1i(const std::string& name, int x) {
     const unsigned int location = getUniformLocation(name.c_str());
     glUniform1i(location, x);
+}
+
+void Shader::setUniform2i(const std::string& name, int x, int y) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform2i(location, x, y);
+}
+
+void Shader::setUniform3i(const std::string& name, int x, int y, int z) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform3i(location, x, y, z);
+}
+
+void Shader::setUniform4i(const std::string& name, int x, int y, int z, int w) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform4i(location, x, y, z, w);
 }
 
 void Shader::setUniform1f(const std::string& name, float x) {
@@ -186,19 +225,46 @@ void Shader::setUniform2f(const std::string& name, float x, float y) {
     glUniform2f(location, x, y);
 }
 
+void Shader::setUniform3f(const std::string& name, float x, float y, float z) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform3f(location, x, y, z);
+}
+
+void Shader::setUniform4f(const std::string& name, float x, float y, float z, float w) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform4f(location, x, y, z, w);
+}
+
+void Shader::setUniformMatrix4fv(const std::string& name, float data[16]) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, data);
+}
+
+//=====GLM overrides======================a============================
+
+void Shader::setUniform2i(const std::string& name, glm::ivec2 v) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform2i(location, v.x, v.y);
+}
+
+void Shader::setUniform3i(const std::string& name, glm::ivec3 v) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform3i(location, v.x, v.y, v.z);
+}
+
+void Shader::setUniform4i(const std::string& name, glm::ivec4 v) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform4i(location, v.x, v.y, v.z, v.w);
+}
+
+void Shader::setUniform2f(const std::string& name, glm::vec2 v) {
+    const unsigned int location = getUniformLocation(name.c_str());
+    glUniform2f(location, v.x, v.y);
+}
+
 void Shader::setUniform3f(const std::string& name, glm::vec3 v) {
     const unsigned int location = getUniformLocation(name.c_str());
     glUniform3f(location, v.x, v.y, v.z);
-}
-
-void Shader::setUniform3f(const std::string& name, float x[3]) {
-    const unsigned int location = getUniformLocation(name.c_str());
-    glUniform3f(location, x[0], x[1], x[2]);
-}
-
-void Shader::setUniform4f(const std::string& name, float x[4]) {
-    const unsigned int location = getUniformLocation(name.c_str());
-    glUniform4f(location, x[0], x[1], x[2], x[3]);
 }
 
 void Shader::setUniform4f(const std::string& name, glm::vec4 v) {

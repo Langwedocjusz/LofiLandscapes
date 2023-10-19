@@ -165,7 +165,7 @@ void GrassRenderer::OnImGui(bool& open)
 	{
 		ImGui::Columns(2, "###col");
 
-		ImGuiUtils::ColorEdit3("Albedo", & m_Albedo);
+		ImGuiUtils::ColorEdit3("Albedo", &m_Albedo);
 		ImGuiUtils::SliderFloat("Roughness", &m_Roughness, 0.0f, 1.0f);
 		ImGuiUtils::SliderFloat("Translucent", &m_Translucent, 0.0f, 3.0f);
 

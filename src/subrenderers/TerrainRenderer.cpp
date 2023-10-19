@@ -89,7 +89,7 @@ void TerrainRenderer::OnImGui(bool& open) {
     ImGui::Begin("Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
     ImGuiUtils::Checkbox("Shadows", &m_Shadows);
-    ImGuiUtils::ColorEdit3("Sun Color", m_SunCol);
+    ImGuiUtils::ColorEdit3("Sun Color", &m_SunCol);
     ImGuiUtils::SliderFloat("Sun", &m_SunStr, 0.0, 4.0);
     ImGuiUtils::SliderFloat("Sky Diffuse", &m_SkyDiff, 0.0, 1.0);
     ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);

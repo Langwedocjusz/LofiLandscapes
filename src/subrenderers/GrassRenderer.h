@@ -25,7 +25,7 @@ public:
 
 private:
 	//===Temporary - those values are doubled in TerrainRenderer=====================
-	float m_SunCol[3] = { 0.90f, 0.85f, 0.70f };
+	glm::vec3 m_SunCol{ 0.90f, 0.85f, 0.70f };
 
 	float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
 
