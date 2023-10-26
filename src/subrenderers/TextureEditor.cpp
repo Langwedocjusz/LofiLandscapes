@@ -78,7 +78,7 @@ void SliderIntTask::OnImGui(InstanceData& data, bool& state, const std::string& 
     int* ptr = &std::get<int>(data);
     int value = *ptr;
 
-    ImGuiUtils::SliderInt(UiName, &value, Min, Max, suffix);
+    ImGuiUtils::ColSliderInt(UiName, &value, Min, Max, suffix);
 
     if (value != *ptr) {
         *ptr = value;
@@ -113,7 +113,7 @@ void SliderFloatTask::OnImGui(InstanceData& data, bool& state, const std::string
     float* ptr = &std::get<float>(data);
     float value = *ptr;
 
-    ImGuiUtils::SliderFloat(UiName, &value, Min, Max, suffix);
+    ImGuiUtils::ColSliderFloat(UiName, &value, Min, Max, suffix);
 
     if (value != *ptr) {
         *ptr = value;
@@ -153,7 +153,7 @@ void ColorEdit3Task::OnImGui(InstanceData& data, bool& state, const std::string&
     glm::vec3* ptr = &std::get<glm::vec3>(data);
     glm::vec3 value = *ptr;
 
-    ImGuiUtils::ColorEdit3(UiName, &value, suffix);
+    ImGuiUtils::ColColorEdit3(UiName, &value, suffix);
 
     if (value != *ptr) {
         *ptr = value;
@@ -195,7 +195,7 @@ void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suf
     int* ptr = &std::get<int>(data);
     int value = *ptr;
 
-    ImGuiUtils::Combo(UiName, Labels, value, suffix);
+    ImGuiUtils::ColCombo(UiName, Labels, value, suffix);
 
     if (value != *ptr) {
         *ptr = value;
@@ -387,7 +387,7 @@ bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
 
     std::string name = "Choose procedure##" + editor_name;
 
-    if (ImGuiUtils::Button(("Add procedure##" + editor_name).c_str())) {
+    if (ImGuiUtils::ButtonCentered(("Add procedure##" + editor_name).c_str())) {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
 
         ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
@@ -402,7 +402,7 @@ bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
 
         for (auto& it : procedures)
         {
-            if (ImGuiUtils::Button(it.first.c_str()))
+            if (ImGuiUtils::ButtonCentered(it.first.c_str()))
             {
                 res = true;
                 AddProcedureInstanceImpl(procedures, instances, it.first);

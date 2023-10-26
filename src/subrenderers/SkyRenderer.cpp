@@ -4,6 +4,7 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include "Profiler.h"
 
@@ -265,16 +266,21 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
 }
 
 void SkyRenderer::OnImGui(bool& open) {
-    ImGui::Begin("Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_SKY "Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     float phi = m_Phi, theta = m_Theta;
     float height = m_Height;
 
+    ImGuiUtils::BeginGroupPanel("Sun position");
     ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderFloat("Phi", &phi, 0.0, 6.28);
+    ImGuiUtils::ColSliderFloat("Theta", &theta, 0.0, 0.5 * 3.14);
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
 
-    ImGuiUtils::SliderFloat("Phi", &phi, 0.0, 6.28);
-    ImGuiUtils::SliderFloat("Theta", &theta, 0.0, 0.5 * 3.14);
-    ImGuiUtils::SliderFloat("Height (m)", &height, 0.0f, 2000.0f);
+    ImGuiUtils::BeginGroupPanel("Planet/Atmosphere");
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderFloat("Height (m)", &height, 0.0f, 2000.0f);
 
     if (phi != m_Phi || theta != m_Theta || height != m_Height) {
         m_Phi = phi;
@@ -291,7 +297,7 @@ void SkyRenderer::OnImGui(bool& open) {
 
     glm::vec3 albedo = m_GroundAlbedo;
 
-    ImGuiUtils::ColorEdit3("Ground Albedo", &albedo);
+    ImGuiUtils::ColColorEdit3("Ground Albedo", &albedo);
 
     if (albedo != m_GroundAlbedo) {
         m_GroundAlbedo = albedo;
@@ -299,14 +305,17 @@ void SkyRenderer::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | MultiScatter;
     }
 
-    ImGuiUtils::SliderFloat("IBL Oversaturation", &m_IBLOversaturation, 1.0f, 3.0f);
-
-    ImGuiUtils::SliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
-
-    ImGuiUtils::SliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
-    ImGuiUtils::SliderFloat("Aerial distance", &m_AerialDistscale, 0.0f, 10.0f);
-
+    ImGuiUtils::ColSliderFloat("IBL Oversaturation", &m_IBLOversaturation, 1.0f, 3.0f);
+    ImGuiUtils::ColSliderFloat("Brightness", &m_Brightness, 0.0f, 10.0f);
     ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
+
+    ImGuiUtils::BeginGroupPanel("Fog");
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
+    ImGuiUtils::ColSliderFloat("Aerial distance", &m_AerialDistscale, 0.0f, 10.0f);
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
 
     ImGui::End();
 }

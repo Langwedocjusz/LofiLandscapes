@@ -26,6 +26,7 @@ public:
     bool DoFog() { return m_Fog; }
 
 private:
+    float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
 
     glm::vec3 m_SunCol{ 0.90f, 0.85f, 0.70f };
 

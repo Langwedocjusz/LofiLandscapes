@@ -4,6 +4,7 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 bool Plane::IsInFront(const AABB& aabb, float scale_y) const {
     const glm::vec3 scale = {1.0f, scale_y, 1.0f};
@@ -105,11 +106,11 @@ bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
 }
 
 void Camera::OnImGui(bool& open) {
-    ImGui::Begin("Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderFloat("Speed", &(m_Speed), 0.0, 10.0f);
-    ImGuiUtils::SliderFloat("Sensitivity", &(m_Sensitivity), 0.0f, 200.0f);
-    ImGuiUtils::SliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
+    ImGuiUtils::ColSliderFloat("Speed", &(m_Speed), 0.0, 10.0f);
+    ImGuiUtils::ColSliderFloat("Sensitivity", &(m_Sensitivity), 0.0f, 200.0f);
+    ImGuiUtils::ColSliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
     ImGui::Columns(1, "###col");
     ImGui::End();
 }

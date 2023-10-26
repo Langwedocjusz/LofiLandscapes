@@ -6,6 +6,7 @@
 #include "imgui.h"
 
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 GrassRenderer::GrassRenderer(ResourceManager& manager)
 	: m_ResourceManager(manager)
@@ -103,18 +104,18 @@ void GrassRenderer::OnUpdate(float deltatime)
 
 void GrassRenderer::OnImGui(bool& open)
 {
-	ImGui::Begin("Grass", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+	ImGui::Begin(LOFI_ICONS_GRASS "Grass", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
 	if (ImGui::CollapsingHeader("Precomputed raycast"))
 	{
 		ImGui::Columns(2, "###col");
-		ImGuiUtils::SliderFloat("Slant", &m_Slant, 0.5f, 1.5f);
-		ImGuiUtils::SliderFloat("Base Width", &m_BaseWidth, 0.01f, 0.1f);
-		ImGuiUtils::SliderFloat("View Angle", &m_ViewAngle, 0.0f, 1.5f);
-		ImGuiUtils::SliderInt("Num Blades", &m_NumBlades, 0, 10);
+		ImGuiUtils::ColSliderFloat("Slant", &m_Slant, 0.5f, 1.5f);
+		ImGuiUtils::ColSliderFloat("Base Width", &m_BaseWidth, 0.01f, 0.1f);
+		ImGuiUtils::ColSliderFloat("View Angle", &m_ViewAngle, 0.0f, 1.5f);
+		ImGuiUtils::ColSliderInt("Num Blades", &m_NumBlades, 0, 10);
 		ImGui::Columns(1, "###col");
 
-		if (ImGuiUtils::Button("Recalculate raycast"))
+		if (ImGuiUtils::ButtonCentered("Recalculate raycast"))
 		{
 			m_UpdateFlags |= Raycast;
 		}
@@ -125,8 +126,8 @@ void GrassRenderer::OnImGui(bool& open)
 		int tmp_scale = m_NoiseScale, tmp_octaves = m_Octaves;
 
 		ImGui::Columns(2, "###col");
-		ImGuiUtils::SliderInt("NoiseScale", &tmp_scale, 0, 10);
-		ImGuiUtils::SliderInt("Octaves", &tmp_octaves, 0, 10);
+		ImGuiUtils::ColSliderInt("NoiseScale", &tmp_scale, 0, 10);
+		ImGuiUtils::ColSliderInt("Octaves", &tmp_octaves, 0, 10);
 		ImGui::Columns(1, "###col");
 
 		if (tmp_scale != m_NoiseScale || tmp_octaves != m_Octaves)
@@ -142,23 +143,23 @@ void GrassRenderer::OnImGui(bool& open)
 	{
 		ImGui::Columns(2, "###col");
 
-		ImGuiUtils::Checkbox("Render grass", &m_RenderGrass);
+		ImGuiUtils::ColCheckbox("Render grass", &m_RenderGrass);
 
-		ImGuiUtils::SliderInt("Lod Levels", &m_LodLevels, 0, 5);
+		ImGuiUtils::ColSliderInt("Lod Levels", &m_LodLevels, 0, 5);
 
-		ImGuiUtils::SliderFloat("Height", &m_GrassHeight, 0.0f, 10.0f);
-		ImGuiUtils::SliderFloat("Tiling", &m_Tiling, 0.0f, 20.0f);
-		ImGuiUtils::SliderFloat("MaxDepth", &m_MaxDepth, 0.0f, 10.0f);
+		ImGuiUtils::ColSliderFloat("Height", &m_GrassHeight, 0.0f, 10.0f);
+		ImGuiUtils::ColSliderFloat("Tiling", &m_Tiling, 0.0f, 20.0f);
+		ImGuiUtils::ColSliderFloat("MaxDepth", &m_MaxDepth, 0.0f, 10.0f);
 
-		ImGuiUtils::SliderFloat("NoiseTiling", &m_NoiseTiling, 0.0f, 1.0f);
+		ImGuiUtils::ColSliderFloat("NoiseTiling", &m_NoiseTiling, 0.0f, 1.0f);
 
-		ImGuiUtils::SliderFloat("NoiseStrength", &m_NoiseStrength, 0.0f, 10.0f);
-		ImGuiUtils::SliderFloat("Sway", &m_Sway, 0.0f, 1.0f);
+		ImGuiUtils::ColSliderFloat("NoiseStrength", &m_NoiseStrength, 0.0f, 10.0f);
+		ImGuiUtils::ColSliderFloat("Sway", &m_Sway, 0.0f, 1.0f);
 
-		ImGuiUtils::DragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
+		ImGuiUtils::ColDragFloat2("Velocity", glm::value_ptr(m_ScrollingVelocity));
 
-		ImGuiUtils::SliderFloat("AO Min", &m_AOMin, 0.0f, 1.0f);
-		ImGuiUtils::SliderFloat("AO Max", &m_AOMax, 0.0f, 1.0f);
+		ImGuiUtils::ColSliderFloat("AO Min", &m_AOMin, 0.0f, 1.0f);
+		ImGuiUtils::ColSliderFloat("AO Max", &m_AOMax, 0.0f, 1.0f);
 
 		ImGui::Columns(1, "###col");
 	}
@@ -167,10 +168,9 @@ void GrassRenderer::OnImGui(bool& open)
 	{
 		ImGui::Columns(2, "###col");
 
-		ImGuiUtils::ColorEdit3("Albedo", &m_Albedo);
-		ImGuiUtils::SliderFloat("Roughness", &m_Roughness, 0.0f, 1.0f);
-		ImGuiUtils::SliderFloat("Translucent", &m_Translucent, 0.0f, 3.0f);
-
+		ImGuiUtils::ColColorEdit3("Albedo", &m_Albedo);
+		ImGuiUtils::ColSliderFloat("Roughness", &m_Roughness, 0.0f, 1.0f);
+		ImGuiUtils::ColSliderFloat("Translucent", &m_Translucent, 0.0f, 3.0f);
 
 		ImGui::Columns(1, "###col");
 	}

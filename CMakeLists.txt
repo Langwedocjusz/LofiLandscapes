@@ -33,10 +33,12 @@ target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources} ${imgui_impl})
 
 #Specify include directories
 target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_include_directories(${PROJECT_NAME} PUBLIC src/gui)
 
 #Directory structure for IDEs like Visual Studio
 source_group(src REGULAR_EXPRESSION "src/*")
 source_group(src/subrenderers REGULAR_EXPRESSION "src/subrenderers/*")
+source_group(src/gui REGULAR_EXPRESSION "src/gui/*")
 source_group(imgui_impl FILES ${imgui_impl})
 
 #Set current project as Visual Studio start project

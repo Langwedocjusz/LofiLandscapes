@@ -242,9 +242,9 @@ void Profiler::OnImGui(bool& open)
 	ImGui::EndChild();
 
 	ImGui::Columns(2, "###col");
-	ImGuiUtils::Checkbox("Stop Profiling", &s_StopProfiling);
-	ImGuiUtils::SliderInt("Selected Frame", &s_SelectedFrame, 0, s_NumFrames - 2);
-	ImGuiUtils::SliderFloat("Max Height [ms]", &s_MaxHeight, 1.0f, 34.0f);
+	ImGuiUtils::ColCheckbox("Stop Profiling", &s_StopProfiling);
+	ImGuiUtils::ColSliderInt("Selected Frame", &s_SelectedFrame, 0, s_NumFrames - 2);
+	ImGuiUtils::ColSliderFloat("Max Height [ms]", &s_MaxHeight, 1.0f, 34.0f);
 	ImGui::Columns(1, "###col");
 
 	ImGui::End();

@@ -2,8 +2,11 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include "Profiler.h"
+
+#include "glad/glad.h"
 
 TerrainRenderer::TerrainRenderer(ResourceManager& manager)
     : m_ResourceManager(manager)
@@ -15,6 +18,9 @@ TerrainRenderer::TerrainRenderer(ResourceManager& manager)
 TerrainRenderer::~TerrainRenderer() {}
 
 void TerrainRenderer::RenderWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, const Clipmap& clipmap) {
+    glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
     {
         ProfilerGPUEvent we("Terrain::PrepareWireframe");
 
@@ -35,6 +41,9 @@ void TerrainRenderer::RenderWireframe(const glm::mat4& mvp, const Camera& cam, c
 void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
                                     const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap)
 {
+    glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     {
         ProfilerGPUEvent we("Terrain::PrepareShaded");
 
@@ -86,26 +95,34 @@ void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, cons
 }
 
 void TerrainRenderer::OnImGui(bool& open) {
-    ImGui::Begin("Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
-    ImGui::Columns(2, "###col");
-    ImGuiUtils::Checkbox("Shadows", &m_Shadows);
-    ImGuiUtils::ColorEdit3("Sun Color", &m_SunCol);
-    ImGuiUtils::SliderFloat("Sun", &m_SunStr, 0.0, 4.0);
-    ImGuiUtils::SliderFloat("Sky Diffuse", &m_SkyDiff, 0.0, 1.0);
-    ImGuiUtils::SliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
-    ImGuiUtils::SliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
-    ImGuiUtils::Checkbox("Render fog", &m_Fog);
-    ImGui::Columns(1, "###col");
+    ImGui::Begin(LOFI_ICONS_LIGHTING "Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
-    ImGuiUtils::Separator();
-    ImGui::Text("Material params:");
-
+    ImGuiUtils::BeginGroupPanel("Lighting options:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::Checkbox("Materials", &m_Materials);
-    ImGuiUtils::Checkbox("Fix Tiling", &m_FixTiling);
-    ImGuiUtils::SliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
-    ImGuiUtils::SliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
+    ImGuiUtils::ColColorEdit3("Sun Color", &m_SunCol);
+    ImGuiUtils::ColSliderFloat("Sun", &m_SunStr, 0.0, 4.0);
+    ImGuiUtils::ColSliderFloat("Sky Diffuse", &m_SkyDiff, 0.0, 1.0);
+    ImGuiUtils::ColSliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
+    ImGuiUtils::ColSliderFloat("Reflected", &m_RefStr, 0.0, 1.0);
+    ImGuiUtils::ColCheckbox("Shadows", &m_Shadows);
+    ImGuiUtils::ColCheckbox("Materials", &m_Materials);
+    ImGuiUtils::ColCheckbox("Render fog", &m_Fog);
     ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
+
+    ImGuiUtils::BeginGroupPanel("Material options:");
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColCheckbox("Fix Tiling", &m_FixTiling);
+    ImGuiUtils::ColSliderFloat("Tiling Factor", &m_TilingFactor, 0.0, 128.0);
+    ImGuiUtils::ColSliderFloat("Normal Strength", &m_NormalStrength, 0.0, 1.0);
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
+
+    ImGuiUtils::BeginGroupPanel("Background:");
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColColorEdit3("ClearColor", m_ClearColor);
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
 
     ImGui::End();
 }

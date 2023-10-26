@@ -24,7 +24,7 @@ private:
 	void LoadPopup();
 	void SavePopup();
 
-	void RenderFileBrowser();
+	void RenderFileBrowser(float lower_margin);
 
 	void Serialize();
 	void Deserialize();

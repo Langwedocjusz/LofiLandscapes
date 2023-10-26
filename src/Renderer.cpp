@@ -6,7 +6,9 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include <iostream>
 
@@ -119,9 +121,6 @@ void Renderer::OnRender() {
 
     const float scale_y  = m_Map.getScaleSettings().ScaleY;
 
-    glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     if (m_Wireframe) 
     {
         m_TerrainRenderer.RenderWireframe(m_MVP, m_Camera, m_Map, m_Clipmap);
@@ -170,15 +169,14 @@ void Renderer::OnImGuiRender() {
 
         if (ImGui::BeginMenu("Windows")) {
 
-            ImGui::MenuItem("Terrain",      NULL, &m_ShowTerrainMenu);
-            ImGui::MenuItem("Grass",        NULL, &m_ShowGrassMenu);
-            ImGui::MenuItem("Background",   NULL, &m_ShowBackgroundMenu);
-            ImGui::MenuItem("Lighting",     NULL, &m_ShowLightMenu);
-            ImGui::MenuItem("Shadows",      NULL, &m_ShowShadowMenu);
-            ImGui::MenuItem("Camera",       NULL, &m_ShowCamMenu);
-            ImGui::MenuItem("Material",     NULL, &m_ShowMaterialMenu);
-            ImGui::MenuItem("Material Map", NULL, &m_ShowMapMaterialMenu);
-            ImGui::MenuItem("Sky",          NULL, &m_ShowSkyMenu);
+            ImGui::MenuItem(LOFI_ICONS_TERRAIN     "Terrain",      NULL, &m_ShowTerrainMenu);
+            ImGui::MenuItem(LOFI_ICONS_GRASS       "Grass",        NULL, &m_ShowGrassMenu);
+            ImGui::MenuItem(LOFI_ICONS_LIGHTING    "Lighting",     NULL, &m_ShowLightMenu);
+            ImGui::MenuItem(LOFI_ICONS_SHADOW      "Shadows",      NULL, &m_ShowShadowMenu);
+            ImGui::MenuItem(LOFI_ICONS_CAMERA      "Camera",       NULL, &m_ShowCamMenu);
+            ImGui::MenuItem(LOFI_ICONS_MATERIAL    "Material",     NULL, &m_ShowMaterialMenu);
+            ImGui::MenuItem(LOFI_ICONS_MATERIALMAP "Material Map", NULL, &m_ShowMapMaterialMenu);
+            ImGui::MenuItem(LOFI_ICONS_SKY         "Sky",          NULL, &m_ShowSkyMenu);
 
             ImGui::EndMenu();
         }
@@ -206,13 +204,6 @@ void Renderer::OnImGuiRender() {
     m_Serializer.OnImGui();
 
     //-----Windows
-    if (m_ShowBackgroundMenu) {
-        ImGui::Begin("Background", &m_ShowBackgroundMenu, ImGuiWindowFlags_NoFocusOnAppearing);
-        ImGui::Columns(2, "###col");
-        ImGuiUtils::ColorEdit3("ClearColor", m_ClearColor);
-        ImGui::Columns(1, "###col");
-        ImGui::End();
-    }
     
     if (m_ShowCamMenu)
         m_Camera.OnImGui(m_ShowCamMenu);
@@ -325,7 +316,6 @@ void Renderer::InitImGuiIniHandler() {
 
         if (CheckLine("ShowTerrainMenu=%d\n"))     r->m_ShowTerrainMenu     = bool(value);
         if (CheckLine("ShowGrassMenu=%d\n"))       r->m_ShowGrassMenu       = bool(value);
-        if (CheckLine("ShowBackgroundMenu=%d\n"))  r->m_ShowBackgroundMenu  = bool(value);
         if (CheckLine("ShowLightMenu=%d\n"))       r->m_ShowLightMenu       = bool(value);
         if (CheckLine("ShowShadowMenu=%d\n"))      r->m_ShowShadowMenu      = bool(value);
         if (CheckLine("ShowCamMenu=%d\n"))         r->m_ShowCamMenu         = bool(value);
@@ -341,7 +331,6 @@ void Renderer::InitImGuiIniHandler() {
         out_buf->appendf("[%s][State]\n", handler->TypeName);
         out_buf->appendf("ShowTerrainMenu=%d\n", r->m_ShowTerrainMenu);
         out_buf->appendf("ShowGrassMenu=%d\n", r->m_ShowGrassMenu);
-        out_buf->appendf("ShowBackgroundMenu=%d\n", r->m_ShowBackgroundMenu);
         out_buf->appendf("ShowLightMenu=%d\n", r->m_ShowLightMenu);
         out_buf->appendf("ShowShadowMenu=%d\n", r->m_ShowShadowMenu);
         out_buf->appendf("ShowCamMenu=%d\n", r->m_ShowCamMenu);

@@ -2,13 +2,14 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include "Profiler.h"
 
 #include <iostream>
 
 Serializer::Serializer()
-    : m_CurrentPath(std::filesystem::current_path())
+    : m_CurrentPath(std::filesystem::current_path()/"examples")
     , m_LoadDialogOpen(true), m_SaveDialogOpen(true)
     , m_LoadToBeOpened(false), m_SaveToBeOpened(false)
     , m_Filename("Your_File_Name.world")
@@ -67,20 +68,24 @@ void Serializer::LoadPopup()
 {
     if (ImGui::BeginPopupModal("Load...", &m_SaveDialogOpen)) {
 
-        RenderFileBrowser();
+        const std::string button_text{ "Load" };
 
-        ImGuiUtils::Separator();
+        ImGuiStyle& style = ImGui::GetStyle();
 
-        //To-do: more 'rigorous' offset calculation
-        const float width = ImGui::GetContentRegionAvail().x - 45.0f;
+        const float button_width  = ImGui::CalcTextSize(button_text.c_str()).x + 2.0f * style.FramePadding.x + style.ItemSpacing.x;
+        const float button_height = ImGui::CalcTextSize(button_text.c_str()).y + 2.0f * style.FramePadding.y + style.ItemSpacing.y;
 
-        ImGui::PushItemWidth(width);
+        RenderFileBrowser(button_height);
+
+        const float text_width = ImGui::GetContentRegionAvail().x - button_width;
+
+        ImGui::PushItemWidth(text_width);
         ImGui::InputText("##load_filename", m_Filename.data(), m_MaxNameLength, ImGuiInputTextFlags_ReadOnly);
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Load"))
+        if (ImGui::Button(button_text.c_str()))
         {
             Deserialize();
             ImGui::CloseCurrentPopup();
@@ -93,21 +98,25 @@ void Serializer::LoadPopup()
 void Serializer::SavePopup()
 {
     if (ImGui::BeginPopupModal("Save...", &m_SaveDialogOpen)) {
+       
+        const std::string button_text{ "Save" };
 
-        RenderFileBrowser();
-        
-        ImGuiUtils::Separator();
+        ImGuiStyle& style = ImGui::GetStyle();
 
-        //To-do: more 'rigorous' offset calculation
-        const float width = ImGui::GetContentRegionAvail().x - 45.0f;
+        const float button_width  = ImGui::CalcTextSize(button_text.c_str()).x + 2.0f * style.FramePadding.x + style.ItemSpacing.x;
+        const float button_height = ImGui::CalcTextSize(button_text.c_str()).y + 2.0f * style.FramePadding.y + style.ItemSpacing.y;
 
-        ImGui::PushItemWidth(width);
+        RenderFileBrowser(button_height);
+
+        const float text_width = ImGui::GetContentRegionAvail().x - button_width;
+
+        ImGui::PushItemWidth(text_width);
         ImGui::InputText("##save_filename", m_Filename.data(), m_MaxNameLength);
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Save"))
+        if (ImGui::Button(button_text.c_str()))
         {
             Serialize();
             ImGui::CloseCurrentPopup();
@@ -117,17 +126,29 @@ void Serializer::SavePopup()
     }
 }
 
-void Serializer::RenderFileBrowser()
+void Serializer::RenderFileBrowser(float lower_margin)
 {
-    //To-do: more 'rigorous' offset calculation
-    const float height = ImGui::GetContentRegionAvail().y - 60.0f;
-
-    ImGui::BeginChild("#Filesystem browser", ImVec2(0.0f, height), true);
-
-    if (ImGui::Selectable("..", true))
+    //Parent Directory button
+    if (ImGui::Button(LOFI_ICONS_PARENTDIR))
     {
         m_CurrentPath = m_CurrentPath.parent_path();
     }
+
+    ImGui::SameLine();
+
+    //Current filepath display
+    const float text_width = ImGui::GetContentRegionAvail().x;
+    ImGui::PushItemWidth(text_width);
+
+    std::string filepath = m_CurrentPath.string();
+    ImGui::InputText("##current_directory", filepath.data(), filepath.size(), ImGuiInputTextFlags_ReadOnly);
+
+    ImGui::PopItemWidth();
+
+    //List of subdirectories/files
+    const float height = ImGui::GetContentRegionAvail().y - lower_margin;
+
+    ImGui::BeginChild("#Filesystem browser", ImVec2(0.0f, height), true);
 
     std::vector<std::filesystem::path> directories, files;
 
@@ -142,15 +163,20 @@ void Serializer::RenderFileBrowser()
 
     for (const auto& path : directories)
     {
-        if (ImGui::Selectable(path.string().c_str(), true))
+        const std::string text = LOFI_ICONS_FOLDER + path.filename().string();
+
+        if (ImGui::Selectable(text.c_str()))
             m_CurrentPath = path;
     }
 
     for (const auto& path : files)
     {
+        //To-do: maybe use some style color for this
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(192, 192, 192, 255));
 
-        if (ImGui::Selectable(path.string().c_str(), false))
+        const std::string text = LOFI_ICONS_FILE + path.filename().string();
+
+        if (ImGui::Selectable(text.c_str()))
             m_Filename = path.filename().string();
 
         ImGui::PopStyleColor();

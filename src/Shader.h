@@ -56,8 +56,8 @@ public:
     ComputeShader(const std::string& compute_path);
     ~ComputeShader();
 
-    //Parameters are numbers of invocations divided by the respective
-    //local group sizes that are defined in the shader source files
+    //Parameters are total numbers of invocations needed.
+    //They will be automatically divided by local group sizes defined in the shader source
     void Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z);
 
 private:

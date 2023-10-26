@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include <iostream>
 
@@ -304,12 +305,12 @@ void MapGenerator::BindMaterialmap(int id) const {
 void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     ScaleSettings temp_s = m_ScaleSettings;
 
-    ImGui::Begin("Terrain editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_TERRAIN "Terrain editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGui::Text("Scale:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
-    ImGuiUtils::SliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
+    ImGuiUtils::ColSliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
+    ImGuiUtils::ColSliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::Separator();
 
@@ -342,26 +343,30 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
-    ImGui::Begin("Shadow/AO settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_SHADOW "Shadow/AO settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
-    ImGui::Text("Shadowmap Settings:");
-    ImGui::Spacing();
+    //ImGui::Text("Shadowmap Settings:");
+    //ImGui::Spacing();
 
+    ImGuiUtils::BeginGroupPanel("Shadowmap settings:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderInt("Min level", &temp.MinLevel, 0, 12);
-    ImGuiUtils::SliderFloat("Nudge fac", &temp.NudgeFac, 1.005, 1.1);
-    ImGuiUtils::Checkbox("Soft Shadows", &temp.Soft);
-    ImGuiUtils::SliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
+    ImGuiUtils::ColSliderInt("Min level", &temp.MinLevel, 0, 12);
+    ImGuiUtils::ColSliderFloat("Nudge fac", &temp.NudgeFac, 1.005, 1.1);
+    ImGuiUtils::ColCheckbox("Soft Shadows", &temp.Soft);
+    ImGuiUtils::ColSliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
     ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
 
-    ImGuiUtils::Separator();
-    ImGui::Text("AO Settings:");
-    ImGui::Spacing();
+    //ImGuiUtils::Separator();
+    //ImGui::Text("AO Settings:");
+    //ImGui::Spacing();
 
+    ImGuiUtils::BeginGroupPanel("AO settings:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderInt("AO Samples", &temp2.Samples, 1, 64);
-    ImGuiUtils::SliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
+    ImGuiUtils::ColSliderInt("AO Samples", &temp2.Samples, 1, 64);
+    ImGuiUtils::ColSliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
     ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
 
     ImGui::End();
 
@@ -381,7 +386,7 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
 }
 
 void MapGenerator::ImGuiMaterials(bool& open) {
-    ImGui::Begin("Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_MATERIALMAP "Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     bool material_changed = m_MaterialEditor.OnImGui();
 

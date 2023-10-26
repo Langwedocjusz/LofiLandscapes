@@ -42,14 +42,12 @@ public:
     void RestartMouse();
 private:
 
-    float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
-
     bool m_Wireframe = false;
 
     //Show menu window flags
     //To-do: In practice using this is somewhat ugly, 
     // may switch to map<string, bool> or something like that
-    bool m_ShowTerrainMenu = true,  m_ShowBackgroundMenu  = false,
+    bool m_ShowTerrainMenu = true,
          m_ShowLightMenu   = true,  m_ShowShadowMenu      = true,
          m_ShowCamMenu     = true,  m_ShowMaterialMenu    = true,
          m_ShowSkyMenu     = true,  m_ShowMapMaterialMenu = true,

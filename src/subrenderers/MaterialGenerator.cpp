@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include <iostream>
 
@@ -178,10 +179,10 @@ void MaterialGenerator::Update() {
 
 void MaterialGenerator::OnImGui(bool& open) {
 
-    ImGui::Begin("Material editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Begin(LOFI_ICONS_MATERIAL "Material editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderInt("Currently editing", &m_Current, 0, m_Layers-1);
+    ImGuiUtils::ColSliderInt("Currently editing", &m_Current, 0, m_Layers-1);
     ImGui::Columns(1, "###col");
 
     ImGui::Text("Heightmap procedures:");
@@ -199,9 +200,9 @@ void MaterialGenerator::OnImGui(bool& open) {
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
     ImGui::Columns(2, "###col");
-    ImGuiUtils::SliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
-    ImGuiUtils::SliderFloat("AO Spread"  , &tmp_spr, 1.00, 10.0);
-    ImGuiUtils::SliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
+    ImGuiUtils::ColSliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
+    ImGuiUtils::ColSliderFloat("AO Spread"  , &tmp_spr, 1.00, 10.0);
+    ImGuiUtils::ColSliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
     ImGui::Columns(1, "###col");
 
     if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {

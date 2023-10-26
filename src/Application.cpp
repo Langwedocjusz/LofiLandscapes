@@ -7,11 +7,14 @@
 
 #include "ImGuiStyles.h"
 #include "ImGuiUtils.h"
+#include "ImGuiIcons.h"
 
 #include "Keycodes.h"
 #include "Profiler.h"
 
 #include "glad/glad.h"
+
+#include <iostream>
 
 Application::Application(const std::string& title, unsigned int width, unsigned int height) 
     : m_Window(title, width, height), m_Renderer(width, height) 
@@ -31,7 +34,21 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     ImGuiStyles::OverShiftedDarkMode();
 
     //Set ImGui Font:
-    io.Fonts->AddFontFromFileTTF("res/fonts/OpenSans/OpenSans-Medium.ttf", 16);
+    const int font_size = 16;
+    const float font_size_f = static_cast<float>(font_size);
+
+    io.Fonts->AddFontFromFileTTF("res/fonts/OpenSans/OpenSans-Medium.ttf", font_size);
+
+    //Merge icons from separate file with current font:
+    ImFontConfig config;
+    config.MergeMode = true;
+    //Use if you want to make the icon monospaced:
+    config.GlyphMinAdvanceX = font_size_f;
+    //Empirical vertical offset for currently used icons:
+    config.GlyphOffset.y = 3.0f;
+
+    static const ImWchar icon_ranges[] = { LOFI_ICONS_MIN, LOFI_ICONS_MAX, 0 };
+    io.Fonts->AddFontFromFileTTF("res/fonts/Icons/LofiIcons.ttf", font_size_f, &config, icon_ranges);
 
     //Setup handler for additional data in imgui.ini
     m_Renderer.InitImGuiIniHandler();
@@ -76,14 +93,14 @@ void Application::StartMenu() {
         ImGui::BeginChild("#Settings", ImVec2(0.0f, 0.9f*ImGui::GetContentRegionAvail().y), true);
         ImGui::Columns(2, "###col");
 
-        ImGuiUtils::SliderInt("Grid subdivisions", &m_StartSettings.Subdivisions, 16, 96);
-        ImGuiUtils::SliderInt("Lod levels", &m_StartSettings.LodLevels, 1, 10);
+        ImGuiUtils::ColSliderInt("Grid subdivisions", &m_StartSettings.Subdivisions, 16, 96);
+        ImGuiUtils::ColSliderInt("Lod levels", &m_StartSettings.LodLevels, 1, 10);
 
         ImGui::Spacing(); ImGui::NextColumn(); ImGui::Spacing(); ImGui::NextColumn();
 
-        ImGuiUtils::SliderIntLog("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
-        ImGuiUtils::SliderIntLog("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
-        ImGuiUtils::SliderIntLog("Material resolution", &m_StartSettings.MaterialRes, 256, 4096);
+        ImGuiUtils::ColSliderIntLog("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
+        ImGuiUtils::ColSliderIntLog("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
+        ImGuiUtils::ColSliderIntLog("Material resolution", &m_StartSettings.MaterialRes, 256, 4096);
 
         ImGui::Spacing(); ImGui::NextColumn(); ImGui::Spacing(); ImGui::NextColumn();
 
@@ -99,7 +116,7 @@ void Application::StartMenu() {
         static int selected_id = 1;
 
         ImGui::Columns(2, "###col");
-        ImGuiUtils::Combo("World type", options, selected_id);
+        ImGuiUtils::ColCombo("World type", options, selected_id);
 
         if (selected_id == 0)
             m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
@@ -113,7 +130,7 @@ void Application::StartMenu() {
 
         ImGui::Spacing();
 
-        if (ImGuiUtils::Button("Start"))
+        if (ImGuiUtils::ButtonCentered("Start"))
             m_ShowStartMenu = false;
 
         ImGui::End();

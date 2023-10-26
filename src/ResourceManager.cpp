@@ -76,7 +76,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	int tmp_id = static_cast<int>(m_PrevType);
 
 	ImGui::Columns(2, "###col");
-	ImGuiUtils::Combo("Currently previewing", options, tmp_id);
+	ImGuiUtils::ColCombo("Currently previewing", options, tmp_id);
 
 	m_PrevType = static_cast<PreviewType>(tmp_id);
 
@@ -86,7 +86,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		{
 			int max_id = std::max(0, int(m_Texture2DCache.size()) - 1);
 
-			ImGuiUtils::SliderInt("Texture ID", &tex_id, 0, max_id);
+			ImGuiUtils::ColSliderInt("Texture ID", &tex_id, 0, max_id);
 
 			tmp_ptr = m_Texture2DCache.at(tex_id);
 			break;
@@ -95,8 +95,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		{
 			int max_id = std::max(0, int(m_TextureArrayCache.size()) - 1);
 
-			ImGuiUtils::SliderInt("Texture ID", &tex_arr_id, 0, max_id);
-			ImGuiUtils::SliderInt("Texture layer", &arr_layer, 0, 8);
+			ImGuiUtils::ColSliderInt("Texture ID", &tex_arr_id, 0, max_id);
+			ImGuiUtils::ColSliderInt("Texture layer", &arr_layer, 0, 8);
 
 			tmp_ptr = m_TextureArrayCache.at(tex_arr_id);
 			break;
@@ -105,7 +105,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		{
 			int max_id = std::max(0, int(m_CubemapCache.size()) - 1);
 
-			ImGuiUtils::SliderInt("Texture ID", &cube_id, 0, max_id);
+			ImGuiUtils::ColSliderInt("Texture ID", &cube_id, 0, max_id);
 
 			std::vector<std::string> side_names{
 				"Positive X", "Negative X",
@@ -122,9 +122,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		{
 			int max_id = std::max(0, int(m_Texture3DCache.size()) - 1);
 
-			ImGuiUtils::SliderInt("Texture ID", &tex3d_id, 0, max_id);
-			//ImGuiUtils::SliderInt("Slice", &slice_3d, 0, 32);
-			ImGuiUtils::SliderFloat("Depth", &depth_3d, 0.0, 1.0);
+			ImGuiUtils::ColSliderInt("Texture ID", &tex3d_id, 0, max_id);
+			ImGuiUtils::ColSliderFloat("Depth", &depth_3d, 0.0, 1.0);
 
 			tmp_ptr = m_Texture3DCache.at(tex3d_id);
 			break;
@@ -133,8 +132,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	ImGui::Separator();
 
-	ImGuiUtils::InputFloat("Scale", &preview_scale, 0.1f, 0.1f);
-	ImGuiUtils::DragFloat2("Range", glm::value_ptr(preview_range), 0.01f);
+	ImGuiUtils::ColInputFloat("Scale", &preview_scale, 0.1f, 0.1f);
+	ImGuiUtils::ColDragFloat2("Range", glm::value_ptr(preview_range), 0.01f);
 
 	ImGui::Text("Active channels");
 	ImGui::NextColumn();
@@ -210,11 +209,13 @@ void ResourceManager::UpdatePreview()
 {
 	m_PreviewTexture.BindImage(0, 0);
 
-	auto vec4FromBoolArray = [](bool arr[4]) {
-		return glm::vec4(float(arr[0]), float(arr[1]), float(arr[2]), float(arr[3]));
+	const glm::vec4 channel_flags{ 
+		float(m_PreviewChannels[0]), float(m_PreviewChannels[1]), 
+		float(m_PreviewChannels[2]), float(m_PreviewChannels[3])
 	};
 
-	const glm::vec4 channel_flags = vec4FromBoolArray(m_PreviewChannels);
+	//Assumes square texture
+	const auto res = m_PreviewTexture.getSpec().ResolutionX;
 
 	switch (m_PrevType)
 	{
@@ -225,6 +226,8 @@ void ResourceManager::UpdatePreview()
 			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<Texture2D>(m_PreviewPtr)->Bind();
+
+			m_Tex2DPrevShader.Dispatch(res, res, 1);
 			break;
 		}
 		case PreviewType::TextureArray:
@@ -234,6 +237,8 @@ void ResourceManager::UpdatePreview()
 			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<TextureArray>(m_PreviewPtr)->BindLayer(0, m_PreviewLayer);
+
+			m_Tex2DPrevShader.Dispatch(res, res, 1);
 			break;
 		}
 		case PreviewType::Cubemap:
@@ -244,6 +249,8 @@ void ResourceManager::UpdatePreview()
 			m_CubePrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<Cubemap>(m_PreviewPtr)->Bind();
+
+			m_CubePrevShader.Dispatch(res, res, 1);
 			break;
 		}
 		case PreviewType::Texture3D:
@@ -254,13 +261,11 @@ void ResourceManager::UpdatePreview()
 			m_3DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
 			std::dynamic_pointer_cast<Texture3D>(m_PreviewPtr)->Bind();
+
+			m_3DPrevShader.Dispatch(res, res, 1);
 			break;
 		}
 	}
 
-	//Assumes square texture
-	const auto res = m_PreviewTexture.getSpec().ResolutionX;
-
-	glDispatchCompute(res / 32, res / 32, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
