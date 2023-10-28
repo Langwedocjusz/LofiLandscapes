@@ -29,6 +29,15 @@ public:
     Plane Top, Bottom, Left, Right, Near, Far;
 };
 
+//Meant to represent most extremal view directions that still fit
+//inside the camera frustum.
+struct FrustumExtents {
+    glm::vec3 BottomLeft;
+    glm::vec3 BottomRight;
+    glm::vec3 TopLeft;
+    glm::vec3 TopRight;
+};
+
 //Actual camera classes:
 
 class Camera{
@@ -79,6 +88,8 @@ public:
     float getAspect() const { return m_Aspect; }
     //Inverse aspect is assumed to be y/x
     float getInvAspect() const { return m_InvAspect; }
+
+    FrustumExtents getFrustumExtents() const;
 
     //Aspect is assumed to be x/y
     void setAspect(float aspect);

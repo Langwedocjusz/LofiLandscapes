@@ -250,6 +250,8 @@ void SkyRenderer::UpdateAerial()
 void SkyRenderer::Render() {
     ProfilerGPUEvent we("Sky::Render");
 
+    const FrustumExtents extents = m_Camera.getFrustumExtents();
+
     m_TransLUT->Bind(0);
     m_SkyLUT->Bind(1);
 
@@ -257,9 +259,11 @@ void SkyRenderer::Render() {
     m_FinalShader->setUniform1i("transLUT", 0);
     m_FinalShader->setUniform1i("skyLUT", 1);
     m_FinalShader->setUniform3f("uSunDir", m_SunDir);
-    m_FinalShader->setUniform3f("uCamDir", m_Camera.getFront());
-    m_FinalShader->setUniform1f("uCamFov", glm::radians(m_Camera.getFov()));
-    m_FinalShader->setUniform1f("uAspectRatio", m_Camera.getInvAspect());
+
+    m_FinalShader->setUniform3f("uBotLeft", extents.BottomLeft);
+    m_FinalShader->setUniform3f("uBotRight", extents.BottomRight);
+    m_FinalShader->setUniform3f("uTopLeft", extents.TopLeft);
+    m_FinalShader->setUniform3f("uTopRight", extents.TopRight);
     m_FinalShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_FinalShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 

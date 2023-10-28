@@ -77,6 +77,22 @@ glm::mat4 PerspectiveCamera::getViewProjMatrix() const
     return getProjMatrix() * getViewMatrix();
 }
 
+FrustumExtents PerspectiveCamera::getFrustumExtents() const
+{
+    const glm::mat4 view_proj = getProjMatrix() * getViewMatrix();
+    const glm::mat4 view_proj_inv = glm::inverse(view_proj);
+
+    glm::vec4 bot_left = view_proj_inv * glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f);
+    glm::vec4 bot_right = view_proj_inv * glm::vec4(1.0f, -1.0f, 1.0f, 1.0f);
+    glm::vec4 top_left = view_proj_inv * glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f);
+    glm::vec4 top_right = view_proj_inv * glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    return FrustumExtents{
+        glm::normalize(bot_left), glm::normalize(bot_right),
+        glm::normalize(top_left), glm::normalize(top_right)
+    };
+}
+
 void PerspectiveCamera::setAspect(float aspect)
 {
     m_Aspect = aspect;

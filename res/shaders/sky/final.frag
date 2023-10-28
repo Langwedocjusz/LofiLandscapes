@@ -19,9 +19,10 @@ uniform sampler2D skyLUT;
 
 uniform vec3 uSunDir;
 
-uniform vec3 uCamDir;
-uniform float uCamFov;
-uniform float uAspectRatio; //assumed y/x
+uniform vec3 uBotLeft;
+uniform vec3 uBotRight;
+uniform vec3 uTopLeft;
+uniform vec3 uTopRight;
 
 uniform float uSkyBrightness;
 
@@ -88,14 +89,8 @@ vec3 getSunColor(vec3 dir)
 }
 
 void main() {
-    float camWidthScale = 2.0*tan(uCamFov/2.0);
-    float camHeightScale = camWidthScale*uAspectRatio;
-    
-    vec3 camRight = normalize(cross(uCamDir, vec3(0.0, 1.0, 0.0)));
-    vec3 camUp = normalize(cross(camRight, uCamDir));
-    
-    vec2 xy = 2.0 * uv - 1.0;
-    vec3 rayDir = normalize(uCamDir + camRight*xy.x*camWidthScale + camUp*xy.y*camHeightScale);
+    vec3 rayDir = mix(mix(uBotLeft, uBotRight, uv.x), mix(uTopLeft, uTopRight, uv.x), uv.y);
+    rayDir = normalize(rayDir);
     
     vec3 color = getValFromSkyLUT(rayDir);
 
