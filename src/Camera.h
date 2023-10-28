@@ -29,75 +29,109 @@ public:
     Plane Top, Bottom, Left, Right, Near, Far;
 };
 
+//Actual camera classes:
+
 class Camera{
 public:
     Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f),
            glm::vec3 wup = glm::vec3(0.0f, 1.0f, 0.0f),
            float pitch = 0.0f, float yaw = -90.0f);
 
-    glm::mat4 getViewMatrix();
+    virtual glm::mat4 getViewMatrix() const;
+    virtual glm::mat4 getProjMatrix() const = 0;
+    virtual glm::mat4 getViewProjMatrix() const = 0;
 
     glm::vec3 getPos() const {return m_Pos;}
     glm::vec3 getFront() const {return m_Front;}
     glm::vec3 getRight() const { return m_Right; }
     glm::vec3 getUp() const { return m_Up; }
 
-    float getFov() const { return m_Fov; }
-    float getSpeed() const { return m_Speed; }
-    float getSensitivity() const { return m_Sensitivity; }
-
     float getNearPlane() const { return m_NearPlane; }
     float getFarPlane() const { return m_FarPlane; }
 
-    void ProcessKeyboard(float deltatime);
-    void ProcessMouse(float xoffset, float yoffset, float aspect);
-
+    //This is the same for all cameras as only construction of
+    //frustum planes is assumed to differ (this is definitely the case for ortho and perspective)
     bool IsInFrustum(const AABB& aabb, float scale_y) const;
 
-    void OnImGui(bool& open);
+    virtual void OnImGui(bool& open) = 0;
+
 protected:
-
-    enum CameraMovement {
-        None     =  0,
-        Forward  = (1 << 0),
-        Backward = (1 << 1),
-        Left     = (1 << 2),
-        Right    = (1 << 3)
-    };
-
     glm::vec3 m_Pos;
     glm::vec3 m_Front, m_Up, m_Right, m_WorldUp;
     float m_Pitch, m_Yaw;
 
-    int m_Movement = None;
-
-    //Camera Settings
-    float m_Speed = 5.0f;
-    float m_Sensitivity = 100.0f;
-    float m_Fov = 45.0f;
-    float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;
+   float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;
     
     void updateVectors();
 
     Frustum m_Frustum;
-    void updateFrustum(float aspect);
+    virtual void updateFrustum(float aspect) = 0; //Frustum construction depends on projection type
 };
 
-class FPCamera : public Camera {
+//Camera class implementing perspective projection
+class PerspectiveCamera : public Camera {
+public:
+    glm::mat4 getProjMatrix() const override;
+    glm::mat4 getViewProjMatrix() const override;
+
+    float getFov() const { return m_Fov; }
+
+    //Aspect is assumed to be x/y
+    float setAspect(float aspect) { m_Aspect = aspect; }
+
+    void OnImGui(bool& open) override;
+protected:
+    //Aspect is assumed to be x/y
+    virtual void updateFrustum(float aspect) override;
+
+    float m_Fov = 45.0f;
+    float m_Aspect = 1.0;
+};
+
+//In principle we could also have orthographic or some more exotic projections here...
+
+//First person camera - a perspective camera with keyboard/mouse movement implemented
+class FPCamera : public PerspectiveCamera {
 public:
     FPCamera();
     ~FPCamera();
 
-    void Update(float deltatime);
-
-    glm::mat4 getProjMatrix(float aspect);
+    //Aspect is assumed to be x/y
+    void Update(float aspect, float deltatime);
     
+    glm::mat4 getViewMatrix() const override { return m_View; }
+    glm::mat4 getProjMatrix() const override { return m_Proj; }
+    glm::mat4 getViewProjMatrix() const override { return m_ViewProj; }
+
+    float getSpeed() const { return m_Speed; }
+    float getSensitivity() const { return m_Sensitivity; }
+
+    void setMouseInit(bool p) { m_MouseInit = p; }
+
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
     void OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect);
 
-    void setMouseInit(bool p) {m_MouseInit = p;}
+    void OnImGui(bool& open) override;
 private:
+    void ProcessKeyboard(float deltatime);
+    void ProcessMouse(float xoffset, float yoffset, float aspect);
+
+    enum CameraMovement {
+        None = 0,
+        Forward = (1 << 0),
+        Backward = (1 << 1),
+        Left = (1 << 2),
+        Right = (1 << 3)
+    };
+
+    int m_Movement = None;
+
+    float m_Speed = 5.0f;
+    float m_Sensitivity = 100.0f;
+
     bool m_MouseInit = true;
     float m_MouseLastX = 0.0f, m_MouseLastY = 0.0f;
+
+    glm::mat4 m_Proj, m_View, m_ViewProj;
 };

@@ -90,7 +90,7 @@ void SkyRenderer::Init() {
     m_UpdateFlags = Transmittance;
 }
 
-void SkyRenderer::Update(const Camera& cam, float aspect, bool aerial) {
+void SkyRenderer::Update(const PerspectiveCamera& cam, float aspect, bool aerial) {
 
     if ((m_UpdateFlags & Transmittance) != None)
     {
@@ -213,7 +213,7 @@ void SkyRenderer::UpdateSky() {
     m_ResourceManager.RequestPreviewUpdate(m_PrefilteredMap);
 }
 
-void SkyRenderer::UpdateAerial(const Camera& cam, float aspect)
+void SkyRenderer::UpdateAerial(const PerspectiveCamera& cam, float aspect)
 {
     ProfilerGPUEvent we("Sky::UpdateAerial");
 

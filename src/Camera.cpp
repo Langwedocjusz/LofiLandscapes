@@ -6,6 +6,8 @@
 #include "ImGuiUtils.h"
 #include "ImGuiIcons.h"
 
+//=====Frustum culling primitives=========================================
+
 bool Plane::IsInFront(const AABB& aabb, float scale_y) const {
     const glm::vec3 scale = {1.0f, scale_y, 1.0f};
     const glm::vec3 extents = scale * aabb.Extents;
@@ -32,44 +34,21 @@ bool Frustum::IsInFrustum(const AABB& aabb, float scale_y) const {
         && Far.IsInFront(aabb, scale_y);
 }
 
+//=====Base camera class================================================
+
 Camera::Camera(glm::vec3 pos, glm::vec3 wup, float pitch, float yaw)
     : m_Pos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
 {
     updateVectors();
 }
 
-glm::mat4 Camera::getViewMatrix() {
+glm::mat4 Camera::getViewMatrix() const
+{
     return glm::lookAt(m_Pos, m_Pos + m_Front, m_Up);
 }
 
-void Camera::ProcessKeyboard(float deltatime) {
-    float velocity = deltatime * m_Speed;
-
-    if ((m_Movement & Forward) != None)
-        m_Pos += velocity * m_Front;
-
-    if ((m_Movement & Backward) != None)
-        m_Pos -= velocity * m_Front;
-
-    if ((m_Movement & Left) != None)
-        m_Pos -= velocity * m_Right;
-
-    if ((m_Movement & Right) != None)
-        m_Pos += velocity * m_Right;
-}
-
-void Camera::ProcessMouse(float xoffset, float yoffset, float aspect) {
-    m_Pitch += m_Sensitivity * yoffset;
-    m_Yaw   += m_Sensitivity * xoffset;
-
-    if (m_Pitch > 89.0f) m_Pitch = 89.0f;
-    if (m_Pitch < -89.0f) m_Pitch = -89.0f;
-
-    updateVectors();
-    updateFrustum(aspect);
-}
-
-void Camera::updateVectors() {
+void Camera::updateVectors() 
+{
    m_Front.x = glm::cos(glm::radians(m_Yaw)) * glm::cos(glm::radians(m_Pitch));
    m_Front.y = glm::sin(glm::radians(m_Pitch));
    m_Front.z = glm::sin(glm::radians(m_Yaw)) * glm::cos(glm::radians(m_Pitch));
@@ -79,7 +58,27 @@ void Camera::updateVectors() {
    m_Up = glm::normalize(glm::cross(m_Right, m_Front));
 }
 
-void Camera::updateFrustum(float aspect) {
+bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const 
+{
+    return m_Frustum.IsInFrustum(aabb, scale_y);
+}
+
+//=====Perspective camera class===================================================
+
+glm::mat4 PerspectiveCamera::getProjMatrix() const
+{
+    return glm::perspective(
+        glm::radians(m_Fov), m_Aspect, m_NearPlane, m_FarPlane
+    );
+}
+
+glm::mat4 PerspectiveCamera::getViewProjMatrix() const
+{
+    return getProjMatrix() * getViewMatrix();
+}
+
+void PerspectiveCamera::updateFrustum(float aspect) 
+{
     //Camera position in coordinate system tied to the grid:
     const glm::vec3 pos = glm::vec3(0.0f, m_Pos.y, 0.0f);
 
@@ -101,34 +100,72 @@ void Camera::updateFrustum(float aspect) {
     m_Frustum.Bottom = { pos, (glm::cross(m_Right, farFront - halfV * m_Up)) };
 }
 
-bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const {
-    return m_Frustum.IsInFrustum(aabb, scale_y);
-}
-
-void Camera::OnImGui(bool& open) {
+void PerspectiveCamera::OnImGui(bool& open)
+{
     ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColSliderFloat("Speed", &(m_Speed), 0.0, 10.0f);
-    ImGuiUtils::ColSliderFloat("Sensitivity", &(m_Sensitivity), 0.0f, 200.0f);
     ImGuiUtils::ColSliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
     ImGui::Columns(1, "###col");
     ImGui::End();
 }
 
+//=====First person camera class=====================================================
+
 FPCamera::FPCamera() {}
 FPCamera::~FPCamera() {}
 
-void FPCamera::Update(float deltatime) {
+void FPCamera::Update(float aspect, float deltatime) 
+{
     ProcessKeyboard(deltatime);
-}
 
-glm::mat4 FPCamera::getProjMatrix(float aspect) {
-    return glm::perspective(
+    //Vectors are not updated here, since they only change on mouse input
+    //which is handled on event
+
+    //Update matrices
+    m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_Up);
+    
+    m_Proj = glm::perspective(
         glm::radians(m_Fov), aspect, m_NearPlane, m_FarPlane
     );
+    
+    m_ViewProj = m_Proj * m_View;
+
+    //In principle frustum update should be done here, although at the moment
+    //we are only rendering clipmap and sky which have fixed positions
+    //with repect to the camera origin, so this is of little consequence for now
 }
 
-void FPCamera::OnKeyPressed(int keycode, bool repeat) {
+void FPCamera::ProcessKeyboard(float deltatime)
+{
+    float velocity = deltatime * m_Speed;
+
+    if ((m_Movement & Forward) != None)
+        m_Pos += velocity * m_Front;
+
+    if ((m_Movement & Backward) != None)
+        m_Pos -= velocity * m_Front;
+
+    if ((m_Movement & Left) != None)
+        m_Pos -= velocity * m_Right;
+
+    if ((m_Movement & Right) != None)
+        m_Pos += velocity * m_Right;
+}
+
+void FPCamera::ProcessMouse(float xoffset, float yoffset, float aspect) 
+{
+    m_Pitch += m_Sensitivity * yoffset;
+    m_Yaw += m_Sensitivity * xoffset;
+
+    if (m_Pitch > 89.0f) m_Pitch = 89.0f;
+    if (m_Pitch < -89.0f) m_Pitch = -89.0f;
+
+    updateVectors();
+    updateFrustum(aspect);
+}
+
+void FPCamera::OnKeyPressed(int keycode, bool repeat)
+{
     if (!repeat) {
         switch(keycode) {
             case LOFI_KEY_W: {
@@ -152,7 +189,8 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat) {
 
 }
 
-void FPCamera::OnKeyReleased(int keycode) {
+void FPCamera::OnKeyReleased(int keycode) 
+{
     switch(keycode) {
         case LOFI_KEY_W: {
             m_Movement = m_Movement & ~Forward;
@@ -173,7 +211,8 @@ void FPCamera::OnKeyReleased(int keycode) {
     }
 }
 
-void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect) {
+void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect) 
+{
     float xpos = x/width;
     float ypos = y/height;
 
@@ -198,4 +237,15 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
     ProcessMouse(xoffset, yoffset, aspect);
+}
+
+void FPCamera::OnImGui(bool& open)
+{
+    ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderFloat("Speed", &(m_Speed), 0.0, 10.0f);
+    ImGuiUtils::ColSliderFloat("Sensitivity", &(m_Sensitivity), 0.0f, 200.0f);
+    ImGuiUtils::ColSliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
+    ImGui::Columns(1, "###col");
+    ImGui::End();
 }

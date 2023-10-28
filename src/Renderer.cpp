@@ -92,16 +92,16 @@ void Renderer::OnUpdate(float deltatime) {
     glm::vec3 prev_pos3 = m_Camera.getPos();
     glm::vec2 prev_pos2 = { prev_pos3.x, prev_pos3.z };
 
-    m_Camera.Update(deltatime);
+    m_Camera.Update(m_Aspect, deltatime);
 
     glm::vec3 curr_pos3 = m_Camera.getPos();
     glm::vec2 curr_pos2 = { curr_pos3.x, curr_pos3.z };
 
-    glm::mat4 proj = m_Camera.getProjMatrix(m_Aspect);
-    glm::mat4 view = m_Camera.getViewMatrix();
+
+    glm::mat4 proj_view = m_Camera.getViewProjMatrix();
     glm::mat4 model = glm::mat4(1.0f);
 
-    m_MVP = proj * view * model;
+    m_MVP = proj_view * model;
 
     //Update sky
     m_SkyRenderer.Update(m_Camera, m_InvAspect, m_TerrainRenderer.DoFog());

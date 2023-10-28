@@ -12,7 +12,7 @@ public:
 	SkyRenderer(ResourceManager& manager);
 
 	void OnImGui(bool& open);
-	void Update(const Camera& cam, float aspect, bool aerial);
+	void Update(const PerspectiveCamera& cam, float aspect, bool aerial);
 	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
 
 	void BindSkyLUT(int id=0) const;
@@ -34,7 +34,7 @@ private:
 	void UpdateTrans();
 	void UpdateMulti();
 	void UpdateSky();
-	void UpdateAerial(const Camera& cam, float aspect);
+	void UpdateAerial(const PerspectiveCamera& cam, float aspect);
 
 	int m_UpdateFlags = None;
 
