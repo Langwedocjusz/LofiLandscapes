@@ -60,7 +60,6 @@ private:
     
     FPCamera m_Camera;
     glm::vec3 m_LastPos = glm::vec3(0.0f);
-    glm::mat4 m_MVP = glm::mat4(1.0f);
 
     ResourceManager m_ResourceManager;
     Serializer m_Serializer;

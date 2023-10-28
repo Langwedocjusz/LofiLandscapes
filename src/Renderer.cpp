@@ -16,12 +16,12 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
-    , m_TerrainRenderer(m_ResourceManager)
-    , m_GrassRenderer(m_ResourceManager)
     , m_Clipmap(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
-    , m_SkyRenderer(m_ResourceManager)
+    , m_SkyRenderer(m_ResourceManager, m_Camera)
+    , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
+    , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
 {
     m_Serializer.RegisterLoadCallback("Terrain Editor",
         std::bind(&MapGenerator::OnDeserialize, &m_Map, std::placeholders::_1)
@@ -97,14 +97,8 @@ void Renderer::OnUpdate(float deltatime) {
     glm::vec3 curr_pos3 = m_Camera.getPos();
     glm::vec2 curr_pos2 = { curr_pos3.x, curr_pos3.z };
 
-
-    glm::mat4 proj_view = m_Camera.getViewProjMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
-
-    m_MVP = proj_view * model;
-
     //Update sky
-    m_SkyRenderer.Update(m_Camera, m_InvAspect, m_TerrainRenderer.DoFog());
+    m_SkyRenderer.Update(m_TerrainRenderer.DoFog());
 
     //Update clipmap geometry if camera moved
     m_Map.BindHeightmap();
@@ -123,16 +117,16 @@ void Renderer::OnRender() {
 
     if (m_Wireframe) 
     {
-        m_TerrainRenderer.RenderWireframe(m_MVP, m_Camera, m_Map, m_Clipmap);
+        m_TerrainRenderer.RenderWireframe();
     }
 
     else 
     {
-        m_TerrainRenderer.RenderShaded(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer, m_Clipmap);
+        m_TerrainRenderer.RenderShaded();
 
-        m_GrassRenderer.Render(m_MVP, m_Camera, m_Map, m_Material, m_SkyRenderer, m_Clipmap);
+        m_GrassRenderer.Render();
 
-        m_SkyRenderer.Render(m_Camera.getFront(), m_Camera.getFov(), m_InvAspect);
+        m_SkyRenderer.Render();
     }
 }
 

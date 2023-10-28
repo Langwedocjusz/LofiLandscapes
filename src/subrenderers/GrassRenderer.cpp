@@ -8,8 +8,15 @@
 #include "ImGuiUtils.h"
 #include "ImGuiIcons.h"
 
-GrassRenderer::GrassRenderer(ResourceManager& manager)
+GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
+	                         const MapGenerator& map, const MaterialGenerator& material,
+	                         const Clipmap& clipmap, const SkyRenderer& sky)
 	: m_ResourceManager(manager)
+	, m_Camera(cam)
+	, m_Map(map)
+	, m_Material(material)
+	, m_Clipmap(clipmap)
+	, m_Sky(sky)
 {
 	m_RaycastShader = m_ResourceManager.RequestComputeShader("res/shaders/grass/raycast.glsl");
 	m_NoiseGenerator = m_ResourceManager.RequestComputeShader("res/shaders/grass/noise.glsl");
@@ -178,20 +185,21 @@ void GrassRenderer::OnImGui(bool& open)
 	ImGui::End();
 }
 
-void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
-	const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap)
+void GrassRenderer::Render()
 {
 	if (!m_RenderGrass) return;
 
 	{
 		ProfilerGPUEvent we("Grass::Prepare");
 
+		const glm::mat4 mvp = m_Camera.getViewProjMatrix();
+
 		m_PresentShader->Bind();
-		m_PresentShader->setUniform1f("uL", map.getScaleSettings().ScaleXZ);
-		m_PresentShader->setUniform3f("uPos", cam.getPos());
+		m_PresentShader->setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+		m_PresentShader->setUniform3f("uPos", m_Camera.getPos());
 		m_PresentShader->setUniformMatrix4fv("uMVP", mvp);
 
-		m_PresentShader->setUniform3f("uLightDir", sky.getSunDir());
+		m_PresentShader->setUniform3f("uLightDir", m_Sky.getSunDir());
 		m_PresentShader->setUniform3f("uSunCol", m_SunCol);
 		m_PresentShader->setUniform1f("uSunStr", m_SunStr);
 		m_PresentShader->setUniform1f("uSkyDiff", m_SkyDiff);
@@ -220,21 +228,21 @@ void GrassRenderer::Render(const glm::mat4& mvp, const Camera& cam, const MapGen
 		m_PresentShader->setUniform1i("noise", 1);
 
 
-		map.BindNormalmap(2);
+		m_Map.BindNormalmap(2);
 		m_PresentShader->setUniform1i("normalmap", 2);
-		map.BindShadowmap(3);
+		m_Map.BindShadowmap(3);
 		m_PresentShader->setUniform1i("shadowmap", 3);
 
-		sky.BindIrradiance(4);
+		m_Sky.BindIrradiance(4);
 		m_PresentShader->setUniform1i("irradiance", 4);
-		sky.BindPrefiltered(5);
+		m_Sky.BindPrefiltered(5);
 		m_PresentShader->setUniform1i("prefiltered", 5);
 	}
 
 	{
 		ProfilerGPUEvent we("Grass::Draw");
 
-		auto scale_y = map.getScaleSettings().ScaleY;
-		clipmap.BindAndDraw(cam, scale_y, m_LodLevels);
+		auto scale_y = m_Map.getScaleSettings().ScaleY;
+		m_Clipmap.BindAndDraw(m_Camera, scale_y, m_LodLevels);
 	}
 }

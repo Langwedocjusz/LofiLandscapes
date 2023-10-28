@@ -77,6 +77,12 @@ glm::mat4 PerspectiveCamera::getViewProjMatrix() const
     return getProjMatrix() * getViewMatrix();
 }
 
+void PerspectiveCamera::setAspect(float aspect)
+{
+    m_Aspect = aspect;
+    m_InvAspect = 1.0f / aspect;
+}
+
 void PerspectiveCamera::updateFrustum(float aspect) 
 {
     //Camera position in coordinate system tied to the grid:
@@ -122,10 +128,13 @@ void FPCamera::Update(float aspect, float deltatime)
     //which is handled on event
 
     //Update matrices
+    m_Aspect = aspect;
+    m_InvAspect = 1.0f / aspect;
+
     m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_Up);
     
     m_Proj = glm::perspective(
-        glm::radians(m_Fov), aspect, m_NearPlane, m_FarPlane
+        glm::radians(m_Fov), m_Aspect, m_NearPlane, m_FarPlane
     );
     
     m_ViewProj = m_Proj * m_View;

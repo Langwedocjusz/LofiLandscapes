@@ -14,14 +14,15 @@
 
 class GrassRenderer{
 public:
-	GrassRenderer(ResourceManager& manager);
+	GrassRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
+		          const MapGenerator& map, const MaterialGenerator& material,
+		          const Clipmap& clipmap, const SkyRenderer& sky);
 
 	void Init();
 	void OnUpdate(float deltatime);
 	void OnImGui(bool& open);
 
-	void Render(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
-		const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap);
+	void Render();
 
 private:
 	//===Temporary - those values are doubled in TerrainRenderer=====================
@@ -75,6 +76,13 @@ private:
 	std::shared_ptr<Texture2D> m_Noise;
 
 	std::shared_ptr<VertFragShader> m_PresentShader;
+
+	//External handles
+	const PerspectiveCamera& m_Camera;
+	const MapGenerator& m_Map;
+	const MaterialGenerator& m_Material;
+	const Clipmap& m_Clipmap;
+	const SkyRenderer& m_Sky;
 
 	ResourceManager& m_ResourceManager;
 };

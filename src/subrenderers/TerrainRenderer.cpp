@@ -8,8 +8,15 @@
 
 #include "glad/glad.h"
 
-TerrainRenderer::TerrainRenderer(ResourceManager& manager)
+TerrainRenderer::TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
+                                 const MapGenerator& map, const MaterialGenerator& material,
+                                 const Clipmap& clipmap, const SkyRenderer& sky)
     : m_ResourceManager(manager)
+    , m_Camera(cam)
+    , m_Map(map)
+    , m_Material(material)
+    , m_Clipmap(clipmap)
+    , m_Sky(sky)
 {
     m_ShadedShader    = m_ResourceManager.RequestVertFragShader("res/shaders/shaded.vert", "res/shaders/shaded.frag");
     m_WireframeShader = m_ResourceManager.RequestVertFragShader("res/shaders/wireframe.vert", "res/shaders/wireframe.frag");
@@ -17,29 +24,30 @@ TerrainRenderer::TerrainRenderer(ResourceManager& manager)
 
 TerrainRenderer::~TerrainRenderer() {}
 
-void TerrainRenderer::RenderWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, const Clipmap& clipmap) {
+void TerrainRenderer::RenderWireframe() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     {
         ProfilerGPUEvent we("Terrain::PrepareWireframe");
 
+        const glm::mat4 mvp = m_Camera.getViewProjMatrix();
+
         m_WireframeShader->Bind();
-        m_WireframeShader->setUniform1f("uL", map.getScaleSettings().ScaleXZ);
-        m_WireframeShader->setUniform2f("uPos", cam.getPos().x, cam.getPos().z);
+        m_WireframeShader->setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+        m_WireframeShader->setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
         m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
     }
     
     {
         ProfilerGPUEvent we("Terrain::Draw");
 
-        auto scale_y = map.getScaleSettings().ScaleY;
-        clipmap.BindAndDraw(cam, scale_y);
+        auto scale_y = m_Map.getScaleSettings().ScaleY;
+        m_Clipmap.BindAndDraw(m_Camera, scale_y);
     }
 }
 
-void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map,
-                                    const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap)
+void TerrainRenderer::RenderShaded()
 {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -47,12 +55,14 @@ void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, cons
     {
         ProfilerGPUEvent we("Terrain::PrepareShaded");
 
-        const float scale_xz = map.getScaleSettings().ScaleXZ;
+        const float scale_xz = m_Map.getScaleSettings().ScaleXZ;
+
+        const glm::mat4 mvp = m_Camera.getViewProjMatrix();
 
         m_ShadedShader->Bind();
         m_ShadedShader->setUniform1f("uL", scale_xz);
-        m_ShadedShader->setUniform3f("uLightDir", sky.getSunDir());
-        m_ShadedShader->setUniform3f("uPos", cam.getPos());
+        m_ShadedShader->setUniform3f("uLightDir", m_Sky.getSunDir());
+        m_ShadedShader->setUniform3f("uPos", m_Camera.getPos());
         m_ShadedShader->setUniformMatrix4fv("uMVP", mvp);
         m_ShadedShader->setUniform1i("uShadow", int(m_Shadows));
         m_ShadedShader->setUniform1i("uMaterial", int(m_Materials));
@@ -66,31 +76,31 @@ void TerrainRenderer::RenderShaded(const glm::mat4& mvp, const Camera& cam, cons
         m_ShadedShader->setUniform1f("uTilingFactor", m_TilingFactor);
         m_ShadedShader->setUniform1f("uNormalStrength", m_NormalStrength);
 
-        map.BindNormalmap(0);
+        m_Map.BindNormalmap(0);
         m_ShadedShader->setUniform1i("normalmap", 0);
-        map.BindShadowmap(1);
+        m_Map.BindShadowmap(1);
         m_ShadedShader->setUniform1i("shadowmap", 1);
-        map.BindMaterialmap(2);
+        m_Map.BindMaterialmap(2);
         m_ShadedShader->setUniform1i("materialmap", 2);
 
-        material.BindAlbedo(3);
+        m_Material.BindAlbedo(3);
         m_ShadedShader->setUniform1i("albedo", 3);
-        material.BindNormal(4);
+        m_Material.BindNormal(4);
         m_ShadedShader->setUniform1i("normal", 4);
 
-        sky.BindIrradiance(5);
+        m_Sky.BindIrradiance(5);
         m_ShadedShader->setUniform1i("irradiance", 5);
-        sky.BindPrefiltered(6);
+        m_Sky.BindPrefiltered(6);
         m_ShadedShader->setUniform1i("prefiltered", 6);
-        sky.BindAerial(7);
+        m_Sky.BindAerial(7);
         m_ShadedShader->setUniform1i("aerial", 7);
     }
     
     {
         ProfilerGPUEvent we("Terrain::Draw");
 
-        auto scale_y = map.getScaleSettings().ScaleY;
-        clipmap.BindAndDraw(cam, scale_y);
+        auto scale_y = m_Map.getScaleSettings().ScaleY;
+        m_Clipmap.BindAndDraw(m_Camera, scale_y);
     }
 }
 

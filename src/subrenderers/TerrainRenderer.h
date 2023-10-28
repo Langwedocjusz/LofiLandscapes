@@ -13,12 +13,13 @@
 
 class TerrainRenderer {
 public:
-    TerrainRenderer(ResourceManager& manager);
+    TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
+                    const MapGenerator& map, const MaterialGenerator& material,
+                    const Clipmap& clipmap, const SkyRenderer& sky);
     ~TerrainRenderer();
 
-    void RenderWireframe(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, const Clipmap& clipmap);
-    void RenderShaded(const glm::mat4& mvp, const Camera& cam, const MapGenerator& map, 
-                       const MaterialGenerator& material, const SkyRenderer& sky, const Clipmap& clipmap);
+    void RenderWireframe();
+    void RenderShaded();
 
     void OnImGui(bool& open);
 
@@ -39,5 +40,13 @@ private:
     bool m_Fog = true;
 
     std::shared_ptr<VertFragShader> m_ShadedShader, m_WireframeShader;
+
+    //External handles
+    const PerspectiveCamera& m_Camera;
+    const MapGenerator& m_Map;
+    const MaterialGenerator& m_Material;
+    const Clipmap& m_Clipmap;
+    const SkyRenderer& m_Sky;
+
     ResourceManager& m_ResourceManager;
 };

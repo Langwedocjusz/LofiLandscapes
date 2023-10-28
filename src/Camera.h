@@ -75,9 +75,13 @@ public:
     glm::mat4 getViewProjMatrix() const override;
 
     float getFov() const { return m_Fov; }
+    //Aspect is assumed to be x/y
+    float getAspect() const { return m_Aspect; }
+    //Inverse aspect is assumed to be y/x
+    float getInvAspect() const { return m_InvAspect; }
 
     //Aspect is assumed to be x/y
-    float setAspect(float aspect) { m_Aspect = aspect; }
+    void setAspect(float aspect);
 
     void OnImGui(bool& open) override;
 protected:
@@ -85,7 +89,8 @@ protected:
     virtual void updateFrustum(float aspect) override;
 
     float m_Fov = 45.0f;
-    float m_Aspect = 1.0;
+
+    float m_Aspect = 1.0f, m_InvAspect = 1.0f;
 };
 
 //In principle we could also have orthographic or some more exotic projections here...

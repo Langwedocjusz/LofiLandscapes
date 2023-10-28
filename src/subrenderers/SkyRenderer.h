@@ -9,11 +9,11 @@
 
 class SkyRenderer {
 public:
-	SkyRenderer(ResourceManager& manager);
+	SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam);
 
 	void OnImGui(bool& open);
-	void Update(const PerspectiveCamera& cam, float aspect, bool aerial);
-	void Render(glm::vec3 cam_dir, float cam_fov, float aspect);
+	void Update(bool aerial);
+	void Render();
 
 	void BindSkyLUT(int id=0) const;
 	void BindIrradiance(int id=0) const;
@@ -34,7 +34,7 @@ private:
 	void UpdateTrans();
 	void UpdateMulti();
 	void UpdateSky();
-	void UpdateAerial(const PerspectiveCamera& cam, float aspect);
+	void UpdateAerial();
 
 	int m_UpdateFlags = None;
 
@@ -47,8 +47,6 @@ private:
 
 	Quad m_Quad;
 	std::shared_ptr<VertFragShader> m_FinalShader;
-
-	ResourceManager& m_ResourceManager;
 
 	//Atmosphere parameters
 	float m_Height = 300.0f; //in meters
@@ -63,4 +61,9 @@ private:
 	//Aerial
 	float m_AerialBrightness = 47.0f;
 	float m_AerialDistscale = 10.0f;
+
+	//External handles
+	const PerspectiveCamera& m_Camera;
+
+	ResourceManager& m_ResourceManager;
 };

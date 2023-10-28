@@ -8,8 +8,9 @@
 
 #include "Profiler.h"
 
-SkyRenderer::SkyRenderer(ResourceManager& manager)
+SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam)
     : m_ResourceManager(manager)
+    , m_Camera(cam)
 {
     m_TransShader       = m_ResourceManager.RequestComputeShader("res/shaders/sky/transmittance.glsl");
     m_MultiShader       = m_ResourceManager.RequestComputeShader("res/shaders/sky/multiscatter.glsl");
@@ -90,7 +91,7 @@ void SkyRenderer::Init() {
     m_UpdateFlags = Transmittance;
 }
 
-void SkyRenderer::Update(const PerspectiveCamera& cam, float aspect, bool aerial) {
+void SkyRenderer::Update(bool aerial) {
 
     if ((m_UpdateFlags & Transmittance) != None)
     {
@@ -109,7 +110,7 @@ void SkyRenderer::Update(const PerspectiveCamera& cam, float aspect, bool aerial
     }
 
     if (aerial)
-        UpdateAerial(cam, aspect);
+        UpdateAerial();
 
     m_UpdateFlags = None;
 }
@@ -213,7 +214,7 @@ void SkyRenderer::UpdateSky() {
     m_ResourceManager.RequestPreviewUpdate(m_PrefilteredMap);
 }
 
-void SkyRenderer::UpdateAerial(const PerspectiveCamera& cam, float aspect)
+void SkyRenderer::UpdateAerial()
 {
     ProfilerGPUEvent we("Sky::UpdateAerial");
 
@@ -229,12 +230,12 @@ void SkyRenderer::UpdateAerial(const PerspectiveCamera& cam, float aspect)
     m_AerialShader->setUniform1i("uResolution", res_z);
     m_AerialShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader->setUniform3f("uSunDir", m_SunDir);
-    m_AerialShader->setUniform1f("uFar", cam.getFarPlane());
-    m_AerialShader->setUniform1f("uFov", glm::radians(cam.getFov()));
-    m_AerialShader->setUniform1f("uAspect", aspect);
-    m_AerialShader->setUniform3f("uFront", cam.getFront());
-    m_AerialShader->setUniform3f("uRight", cam.getRight());
-    m_AerialShader->setUniform3f("uTop", cam.getUp());
+    m_AerialShader->setUniform1f("uFar", m_Camera.getFarPlane());
+    m_AerialShader->setUniform1f("uFov", glm::radians(m_Camera.getFov()));
+    m_AerialShader->setUniform1f("uAspect", m_Camera.getInvAspect());
+    m_AerialShader->setUniform3f("uFront", m_Camera.getFront());
+    m_AerialShader->setUniform3f("uRight", m_Camera.getRight());
+    m_AerialShader->setUniform3f("uTop", m_Camera.getUp());
     m_AerialShader->setUniform1f("uBrightness", m_AerialBrightness);
     m_AerialShader->setUniform1f("uDistScale", m_AerialDistscale);
 
@@ -246,7 +247,7 @@ void SkyRenderer::UpdateAerial(const PerspectiveCamera& cam, float aspect)
 }
 
 //Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
-void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
+void SkyRenderer::Render() {
     ProfilerGPUEvent we("Sky::Render");
 
     m_TransLUT->Bind(0);
@@ -256,9 +257,9 @@ void SkyRenderer::Render(glm::vec3 cam_dir, float cam_fov, float aspect) {
     m_FinalShader->setUniform1i("transLUT", 0);
     m_FinalShader->setUniform1i("skyLUT", 1);
     m_FinalShader->setUniform3f("uSunDir", m_SunDir);
-    m_FinalShader->setUniform3f("uCamDir", cam_dir);
-    m_FinalShader->setUniform1f("uCamFov", glm::radians(cam_fov));
-    m_FinalShader->setUniform1f("uAspectRatio", aspect);
+    m_FinalShader->setUniform3f("uCamDir", m_Camera.getFront());
+    m_FinalShader->setUniform1f("uCamFov", glm::radians(m_Camera.getFov()));
+    m_FinalShader->setUniform1f("uAspectRatio", m_Camera.getInvAspect());
     m_FinalShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_FinalShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
