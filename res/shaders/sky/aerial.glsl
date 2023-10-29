@@ -19,12 +19,14 @@ uniform float uHeight;
 uniform vec3 uSunDir;
 
 uniform float uFar;
-uniform float uFov;
-uniform float uAspect;//y/x
+uniform float uNear;
 
 uniform vec3 uFront;
-uniform vec3 uRight;
-uniform vec3 uTop;
+
+uniform vec3 uBotLeft;
+uniform vec3 uBotRight;
+uniform vec3 uTopLeft;
+uniform vec3 uTopRight;
 
 uniform float uBrightness;
 uniform float uDistScale;
@@ -52,48 +54,71 @@ void main() {
     ivec3 texelCoord = ivec3(gl_GlobalInvocationID.xyz);
 
     //Normalized 3d coordinates [0,1]
-    vec3 coord = (vec3(texelCoord)+0.5)/float(uResolution); //assumes cubic shape
+    vec3 coord = (vec3(texelCoord)+0.5)/imageSize(aerialLUT);
 
-    //Plane coordinates [-1;1]
-    vec2 uv = 2.0 * coord.xy - 1.0;
-
-    //Ray data
-    const int max_steps = 128;
-    int num_steps = int(float(max_steps) * coord.z);
-
+    //Construct ray origin
     float h = max(uHeight, 0.000001);
-
     vec3 org = vec3(0.0, ground_rad + h, 0.0);
-    vec3 dir = (uFront + tan(uFov)*(uv.x*uRight + uAspect*uv.y*uTop)); //not normalized on purpose
-    vec3 norm_dir = normalize(dir);
 
-    float conv_fac = dot(dir, uFront)/length(dir);
+    //Retrieve ray direction
+    vec3 dir = mix(mix(uBotLeft, uBotRight, coord.x), mix(uTopLeft, uTopRight, coord.x), coord.y);
+    dir = normalize(dir);
 
-    //Should be in megameters
-    float t_max = (uDistScale * 0.000001 * uFar) * coord.z;
-    float dt = t_max / float(num_steps);
-    float dt_phys = dt/conv_fac;
+    //Calculate initial and final distances
 
-    //Distance cutoff due to planet/atmosphere geometry
-    float atm_dist = IntersectSphere(org, norm_dir, atmosphere_rad);
-    float gnd_dist = IntersectSphere(org, norm_dir, ground_rad);
+    //uNear/uFar are along z axis, so we need to project onto the ray
+    //We also change units to megameters
+    //And we also consider distance scale parameter
+    float proj = 1.0/dot(uFront, dir);
 
-    float max_t = conv_fac * atm_dist;
-    if (gnd_dist > 0.0) max_t = min(max_t, conv_fac * gnd_dist);
+    float t0    =            proj*0.000001*uNear;
+    float t_end = uDistScale*proj*0.000001*uFar;
+
+    float tf = t0 + coord.z*(t_end-t0);
+
+    //Calculate step size
+    const int samples_per_voxel = 5;
+    
+    int num_steps = samples_per_voxel * int(gl_GlobalInvocationID.z) //uint->int (small so should be fine)
+                  + (samples_per_voxel + (samples_per_voxel % 2))/2;
+    
+    float dt = (tf - t0)/float(num_steps);
+
+    //Consider intersections with the planet/atmosphere
+    float atm_dist = IntersectSphere(org, dir, atmosphere_rad);
+    float gnd_dist = IntersectSphere(org, dir, ground_rad);
+
+    //If we didn't hit the atmosphere we may as well exit early
+    if (atm_dist < 0.0)
+    {
+        vec4 res = vec4(vec3(0.0), 1.0);
+        imageStore(aerialLUT, texelCoord, res);
+        return;
+    }
+
+    float t_cutoff = atm_dist;
+
+    //Select minimum for the cutoff dist
+    if (gnd_dist > 0.0)
+    {
+        t_cutoff = min(t_cutoff, gnd_dist);
+    }
 
     //Phase functions
     vec3 sun_dir = vec3(-1,1,-1) * uSunDir;
-    float cosSunAngle = dot(norm_dir, sun_dir);        
+    float cosSunAngle = dot(dir, sun_dir);        
     float mie_phase      = MiePhase(-cosSunAngle);
     float rayleigh_phase = RayleighPhase(cosSunAngle);
 
     //Raymarching
-    float t = 0.0; //distance along z axis
-
     float transmittance = 1.0;
     vec3 in_scatter = vec3(0.0);
 
-    for (int i=0; i<num_steps; i++) {
+    //Start at the beginning of the frustum
+    float t = t0;
+
+    for (int i=0; i<= num_steps; i++)
+    {
         vec3 p = org + t*dir;
 
         //Scattering values
@@ -106,7 +131,7 @@ void main() {
         float mie_in_s     = mie_s      * mie_phase;
 
         //Transmittance
-        vec3 sample_trans = exp(-dt_phys*extinction);
+        vec3 sample_trans = exp(-dt*extinction);
         vec3 sun_trans = getValueFromLUT(transLUT, p, sun_dir);
 
         //Earth shadow
@@ -122,7 +147,7 @@ void main() {
 
         t += dt;
 
-        if (t >= max_t) break;
+        if (t >= t_cutoff) break;
     }
 
     //Save

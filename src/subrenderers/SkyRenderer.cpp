@@ -118,14 +118,14 @@ void SkyRenderer::Update(bool aerial) {
 void SkyRenderer::UpdateTrans() {
     ProfilerGPUEvent we("Sky::UpdateTransLUT");
 
-    const int res = m_TransLUT->getSpec().ResolutionX;
-
     m_TransLUT->BindImage(0, 0);
 
     m_TransShader->Bind();
-    m_TransShader->setUniform1i("uResolution", res);
 
-    m_TransShader->Dispatch(res, res, 1);
+    const int res_x = m_TransLUT->getSpec().ResolutionX;
+    const int res_y = m_TransLUT->getSpec().ResolutionY;
+
+    m_TransShader->Dispatch(res_x, res_y, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -135,17 +135,17 @@ void SkyRenderer::UpdateTrans() {
 void SkyRenderer::UpdateMulti() {
     ProfilerGPUEvent we("Sky::UpdateMultiLUT");
 
-    const int res = m_MultiLUT->getSpec().ResolutionX;
-
     m_TransLUT->Bind(0);
     m_MultiLUT->BindImage(0, 0);
 
     m_MultiShader->Bind();
     m_MultiShader->setUniform1i("transLUT", 0);
-    m_MultiShader->setUniform1i("uResolution", res);
     m_MultiShader->setUniform3f("uGroundAlbedo", m_GroundAlbedo);
 
-    m_MultiShader->Dispatch(res, res, 1);
+    const int res_x = m_MultiLUT->getSpec().ResolutionX;
+    const int res_y = m_MultiLUT->getSpec().ResolutionY;
+
+    m_MultiShader->Dispatch(res_x, res_y, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -156,8 +156,6 @@ void SkyRenderer::UpdateSky() {
     ProfilerGPUEvent we("Sky::UpdateSkyLUT");
 
     //Update sky lut
-    const int res = m_SkyLUT->getSpec().ResolutionX;
-
     m_TransLUT->Bind(0);
     m_MultiLUT->Bind(1);
     m_SkyLUT->BindImage(0, 0);
@@ -165,11 +163,13 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader->Bind();
     m_SkyShader->setUniform1i("transLUT", 0);
     m_SkyShader->setUniform1i("multiLUT", 1);
-    m_SkyShader->setUniform1i("uResolution", res);
     m_SkyShader->setUniform3f("uSunDir", m_SunDir);
     m_SkyShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
-    m_SkyShader->Dispatch(res, res, 1);
+    const int res_x = m_SkyLUT->getSpec().ResolutionX;
+    const int res_y = m_SkyLUT->getSpec().ResolutionY;
+
+    m_SkyShader->Dispatch(res_x, res_y, 1);
     
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -218,26 +218,30 @@ void SkyRenderer::UpdateAerial()
 {
     ProfilerGPUEvent we("Sky::UpdateAerial");
 
-    const int res_x = m_AerialLUT->getSpec().ResolutionX;
-    const int res_y = m_AerialLUT->getSpec().ResolutionY;
-    const int res_z = m_AerialLUT->getSpec().ResolutionZ;
-
     m_AerialLUT->BindImage(0, 0);
 
     m_AerialShader->Bind();
     m_AerialShader->setUniform1i("transLUT", 0);
     m_AerialShader->setUniform1i("multiLUT", 1);
-    m_AerialShader->setUniform1i("uResolution", res_z);
     m_AerialShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader->setUniform3f("uSunDir", m_SunDir);
+    m_AerialShader->setUniform1f("uNear", glm::radians(m_Camera.getNearPlane()));
     m_AerialShader->setUniform1f("uFar", m_Camera.getFarPlane());
-    m_AerialShader->setUniform1f("uFov", glm::radians(m_Camera.getFov()));
-    m_AerialShader->setUniform1f("uAspect", m_Camera.getInvAspect());
     m_AerialShader->setUniform3f("uFront", m_Camera.getFront());
-    m_AerialShader->setUniform3f("uRight", m_Camera.getRight());
-    m_AerialShader->setUniform3f("uTop", m_Camera.getUp());
+
+    const FrustumExtents extents = m_Camera.getFrustumExtents();
+
+    m_AerialShader->setUniform3f("uBotLeft", extents.BottomLeft);
+    m_AerialShader->setUniform3f("uBotRight", extents.BottomRight);
+    m_AerialShader->setUniform3f("uTopLeft", extents.TopLeft);
+    m_AerialShader->setUniform3f("uTopRight", extents.TopRight);
+
     m_AerialShader->setUniform1f("uBrightness", m_AerialBrightness);
-    m_AerialShader->setUniform1f("uDistScale", m_AerialDistscale);
+    m_AerialShader->setUniform1f("uDistScale", m_AerialDistWrite);
+
+    const int res_x = m_AerialLUT->getSpec().ResolutionX;
+    const int res_y = m_AerialLUT->getSpec().ResolutionY;
+    const int res_z = m_AerialLUT->getSpec().ResolutionZ;
 
     m_AerialShader->Dispatch(res_x, res_y, res_z);
     
@@ -318,7 +322,8 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGuiUtils::BeginGroupPanel("Fog");
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
-    ImGuiUtils::ColSliderFloat("Aerial distance", &m_AerialDistscale, 0.0f, 10.0f);
+    ImGuiUtils::ColSliderFloat("Dist scale (write)", &m_AerialDistWrite, 0.0f, 10.0f);
+    ImGuiUtils::ColSliderFloat("Dist scale (read)", &m_AerialDistRead, 0.0f, 10.0f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 

@@ -82,8 +82,8 @@ vec3 RaymarchScattering(vec3 pos, vec3 ray_dir, vec3 sun_dir, float t_max) {
 void main() { 
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    //Normalized coordinates (square texture)
-    vec2 uv = (vec2(texelCoord)+0.5)/float(uResolution);
+    //Normalized coordinates
+    vec2 uv = (vec2(texelCoord)+0.5)/imageSize(skyLUT);
 
     //From [-pi, pi]
     float azimuthAngle = 2.0*PI*(uv.x - 0.5);

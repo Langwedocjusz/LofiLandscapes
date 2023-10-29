@@ -7,8 +7,6 @@
 
 #define PI 3.1415926535
 
-uniform int uResolution;
-
 //Planet parameters
 //In mega-meters by assumption
 const float ground_rad = 6.360;

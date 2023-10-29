@@ -21,6 +21,7 @@ public:
 	void BindAerial(int id=0) const;
 
 	glm::vec3 getSunDir() const { return m_SunDir; }
+	float getAerialDistScale() const { return m_AerialDistRead; }
 private:
 	void Init();
 
@@ -60,7 +61,8 @@ private:
 
 	//Aerial
 	float m_AerialBrightness = 47.0f;
-	float m_AerialDistscale = 10.0f;
+	float m_AerialDistWrite = 10.0f;
+	float m_AerialDistRead = 1.0f;
 
 	//External handles
 	const PerspectiveCamera& m_Camera;

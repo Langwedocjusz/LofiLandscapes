@@ -49,8 +49,8 @@ vec3 Transmittance(vec3 pos, vec3 dir) {
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    //Normalized coordinates (square texture)
-    vec2 uv = (vec2(texelCoord)+0.5)/float(uResolution);
+    //Normalized coordinates
+    vec2 uv = (vec2(texelCoord)+0.5)/imageSize(transLUT);
 
     //Convert to (sun zenith angle, height above ground)
     float sunAngleCos = 2.0 * uv.x - 1.0;

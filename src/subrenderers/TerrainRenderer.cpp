@@ -76,6 +76,8 @@ void TerrainRenderer::RenderShaded()
         m_ShadedShader->setUniform1f("uTilingFactor", m_TilingFactor);
         m_ShadedShader->setUniform1f("uNormalStrength", m_NormalStrength);
 
+        m_ShadedShader->setUniform1f("uAerialDist", m_Sky.getAerialDistScale());
+
         m_Map.BindNormalmap(0);
         m_ShadedShader->setUniform1i("normalmap", 0);
         m_Map.BindShadowmap(1);

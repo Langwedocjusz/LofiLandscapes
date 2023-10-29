@@ -16,6 +16,8 @@ uniform sampler3D aerial;
 
 uniform int uFog;
 
+uniform float uAerialDist;
+
 mat3 rotation(vec3 N){
     vec3 T = vec3(1.0, 0.0, 0.0);
     T = normalize(T - dot(N,T)*N);
@@ -41,6 +43,8 @@ void main() {
         vec3 sampling_point = pos.xyz;
         sampling_point.xy = 0.5*sampling_point.xy/pos.w + 0.5; 
         sampling_point.z = sampling_point.z/1000;
+
+        sampling_point.z = min(1.0, uAerialDist * sampling_point.z);
         
         fog_data = texture(aerial, sampling_point);
     }
