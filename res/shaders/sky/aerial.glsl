@@ -11,6 +11,9 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba16, binding = 0) uniform image3D aerialLUT;
 
 uniform sampler2D transLUT;
+uniform sampler2D multiLUT;
+
+uniform sampler2D shadowmap;
 
 #include "common.glsl"
 
@@ -30,6 +33,14 @@ uniform vec3 uTopRight;
 
 uniform float uBrightness;
 uniform float uDistScale;
+
+uniform vec3 uGroundAlbedo;
+
+uniform int uMultiscatter;
+uniform float uMultiWeight;
+
+//uniform vec3 uPos;
+//uniform int uShadows;
 
 float MiePhase(float cosTheta) {
     const float g = 0.8;
@@ -105,10 +116,10 @@ void main() {
     }
 
     //Phase functions
-    vec3 sun_dir = vec3(-1,1,-1) * uSunDir;
+    vec3 sun_dir = vec3(1,1,1) * uSunDir;
     float cosSunAngle = dot(dir, sun_dir);        
-    float mie_phase      = MiePhase(-cosSunAngle);
-    float rayleigh_phase = RayleighPhase(cosSunAngle);
+    float mie_phase      = MiePhase(cosSunAngle);
+    float rayleigh_phase = RayleighPhase(-cosSunAngle);
 
     //Raymarching
     float transmittance = 1.0;
@@ -134,12 +145,45 @@ void main() {
         vec3 sample_trans = exp(-dt*extinction);
         vec3 sun_trans = getValueFromLUT(transLUT, p, sun_dir);
 
-        //Earth shadow
+        //Planet (sphere) shadow
         float earth_dist = IntersectSphere(p, sun_dir, ground_rad);
         float earth_shadow = float(earth_dist < 0.0);
 
+        //Terrain shadows
+        float shadow = 1.0;
+
+        //if (uShadows == 1)
+        //{
+        //    //Convert position to usual clipmap coordinates
+        //    float t_meters = 1000000*t/uDistScale;
+        //
+        //    vec3 world_pos = uPos + t_meters*dir;
+        //
+        //    //Find intersection (along sun ray) with ground plane
+        //    float t_hit = - world_pos.y/sun_dir.y;
+        //
+        //    vec3 hit_point = world_pos + t_hit*sun_dir;
+        //
+        //    //Sample at intersection
+        //    const float L = 4.0; //This should be uniform!
+        //    const float Scale = 400.0; //This should be uniform!
+        //
+        //    vec2 shadow_uv = (L/2.0) * hit_point.xz / Scale;
+        //
+        //    shadow_uv = 0.5*shadow_uv + 0.5;
+        //
+        //    shadow = texture(shadowmap, shadow_uv).r;
+        //}
+
         //Integration
-        vec3 S = earth_shadow * sun_trans * (rayleigh_in_s + mie_in_s);
+        vec3 S = shadow * earth_shadow * sun_trans * (rayleigh_in_s + mie_in_s);
+
+        if (uMultiscatter == 1)
+        {
+            //Weight is ad-hoc term temporarily added to give more control
+            S += uMultiWeight * (rayleigh_s + mie_s) * getValueFromLUT(multiLUT, p, sun_dir);
+        }
+
         vec3 IntS = S*(1.0 - sample_trans)/extinction;
 
         in_scatter += transmittance * IntS;
@@ -150,8 +194,31 @@ void main() {
         if (t >= t_cutoff) break;
     }
 
+    //Account for the light that bounced off the planet
+    //if (gnd_dist > 0.0)
+	//{
+	//	vec3 p = org + gnd_dist * dir;
+    //
+	//	vec3 sun_trans = getValueFromLUT(transLUT, p, sun_dir);
+    //
+    //    //Normal to the planet is just normalized p
+    //    vec3 norm = normalize(p);
+    //
+	//	float NdotL = clamp(dot(norm, sun_dir), 0.0, 1.0);
+    //
+	//	//in_scatter += sun_trans * transmittance * NdotL * uGroundAlbedo / PI;
+    //}
+
     //Save
     vec4 res = vec4(uBrightness*in_scatter, transmittance);
+
+    //Debug shadowmap visualization
+    //float t_meters = 1000000*tf/(uDistScale);
+    //vec3 pos = vec3(1,1,1)*uPos + t_meters*dir;
+    //vec2 shadow_uv = (4.0/2.0)*vec2(pos.x, pos.z)/400.0;
+    //shadow_uv = 0.5*shadow_uv + 0.5;
+    //float shadow = texture(shadowmap, shadow_uv).r;
+    //res = vec4(vec3(shadow), 1.0);
 
     imageStore(aerialLUT, texelCoord, res);
 }

@@ -4,12 +4,13 @@
 #include "Texture.h"
 #include "GLUtils.h"
 #include "ResourceManager.h"
+#include "MapGenerator.h"
 
 #include "Camera.h"
 
 class SkyRenderer {
 public:
-	SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam);
+	SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam, const MapGenerator& map);
 
 	void OnImGui(bool& open);
 	void Update(bool aerial);
@@ -64,8 +65,14 @@ private:
 	float m_AerialDistWrite = 10.0f;
 	float m_AerialDistRead = 1.0f;
 
+	bool m_AerialMultiscatter = true;
+	float m_AerialMultiWeight = 0.092f;
+
+	bool m_AerialShadows = false;
+
 	//External handles
 	const PerspectiveCamera& m_Camera;
+	const MapGenerator& m_Map;
 
 	ResourceManager& m_ResourceManager;
 };

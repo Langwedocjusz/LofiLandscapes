@@ -19,7 +19,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     , m_Clipmap(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
-    , m_SkyRenderer(m_ResourceManager, m_Camera)
+    , m_SkyRenderer(m_ResourceManager, m_Camera, m_Map)
     , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
     , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
 {

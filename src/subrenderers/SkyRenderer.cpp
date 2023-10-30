@@ -8,9 +8,10 @@
 
 #include "Profiler.h"
 
-SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam)
+SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam, const MapGenerator& map)
     : m_ResourceManager(manager)
     , m_Camera(cam)
+    , m_Map(map)
 {
     m_TransShader       = m_ResourceManager.RequestComputeShader("res/shaders/sky/transmittance.glsl");
     m_MultiShader       = m_ResourceManager.RequestComputeShader("res/shaders/sky/multiscatter.glsl");
@@ -220,9 +221,14 @@ void SkyRenderer::UpdateAerial()
 
     m_AerialLUT->BindImage(0, 0);
 
+    m_TransLUT->Bind(0);
+    m_MultiLUT->Bind(1);
+    m_Map.BindShadowmap(2);
+
     m_AerialShader->Bind();
     m_AerialShader->setUniform1i("transLUT", 0);
     m_AerialShader->setUniform1i("multiLUT", 1);
+    m_AerialShader->setUniform1i("shadowmap", 2);
     m_AerialShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader->setUniform3f("uSunDir", m_SunDir);
     m_AerialShader->setUniform1f("uNear", glm::radians(m_Camera.getNearPlane()));
@@ -238,6 +244,13 @@ void SkyRenderer::UpdateAerial()
 
     m_AerialShader->setUniform1f("uBrightness", m_AerialBrightness);
     m_AerialShader->setUniform1f("uDistScale", m_AerialDistWrite);
+    m_AerialShader->setUniform3f("uGroundAlbedo", m_GroundAlbedo);
+
+    m_AerialShader->setUniform1i("uMultiscatter", int(m_AerialMultiscatter));
+    m_AerialShader->setUniform1f("uMultiWeight", m_AerialMultiWeight);
+
+    //m_AerialShader->setUniform3f("uPos", m_Camera.getPos());
+    //m_AerialShader->setUniform1i("uShadows", int(m_AerialShadows));
 
     const int res_x = m_AerialLUT->getSpec().ResolutionX;
     const int res_y = m_AerialLUT->getSpec().ResolutionY;
@@ -324,6 +337,9 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGuiUtils::ColSliderFloat("Aerial brightness", &m_AerialBrightness, 0.0f, 500.0f);
     ImGuiUtils::ColSliderFloat("Dist scale (write)", &m_AerialDistWrite, 0.0f, 10.0f);
     ImGuiUtils::ColSliderFloat("Dist scale (read)", &m_AerialDistRead, 0.0f, 10.0f);
+    ImGuiUtils::ColCheckbox("Multiscatter", &m_AerialMultiscatter);
+    ImGuiUtils::ColSliderFloat("Multi factor", &m_AerialMultiWeight, 0.0f, 1.0f);
+    //ImGuiUtils::ColCheckbox("Shadows", &m_AerialShadows);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
