@@ -243,7 +243,14 @@ ComputeShader::~ComputeShader()
 
 void ComputeShader::Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z)
 {
-    glDispatchCompute(size_x/m_LocalSizeX, size_y/m_LocalSizeY, size_z/m_LocalSizeZ);
+    //We need to take ceilings of the divisions here since for example 33 invocations with 
+    //local size 32 should result in 2 dispatches, not one
+
+    const uint32_t disp_x = (size_x + m_LocalSizeX - 1) / m_LocalSizeX;
+    const uint32_t disp_y = (size_y + m_LocalSizeY - 1) / m_LocalSizeY;
+    const uint32_t disp_z = (size_z + m_LocalSizeZ - 1) / m_LocalSizeZ;
+
+    glDispatchCompute(disp_x, disp_y, disp_z);
 }
 
 void ComputeShader::RetrieveLocalSizes(const std::string& source_code)

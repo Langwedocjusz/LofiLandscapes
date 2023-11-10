@@ -37,12 +37,17 @@ private:
 	void UpdateMulti();
 	void UpdateSky();
 	void UpdateAerial();
+	void UpdateAerialWithShadows();
 
 	int m_UpdateFlags = None;
 
 	std::shared_ptr<Texture2D> m_TransLUT, m_MultiLUT, m_SkyLUT;
 	std::shared_ptr<Texture3D> m_AerialLUT;
-	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader, m_AerialShader;
+	std::shared_ptr<Texture3D> m_ScatterVolume, m_ShadowVolume;
+	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader;
+
+	std::shared_ptr<ComputeShader> m_AerialShader;
+	std::shared_ptr<ComputeShader> m_AScatterShader, m_AShadowShader, m_ARaymarchShader;
 
 	std::shared_ptr<Cubemap> m_IrradianceMap, m_PrefilteredMap;
 	std::shared_ptr<ComputeShader> m_IrradianceShader, m_PrefilteredShader;
@@ -69,6 +74,7 @@ private:
 	float m_AerialMultiWeight = 0.092f;
 
 	bool m_AerialShadows = false;
+	bool m_ShowShadows = true;
 
 	//External handles
 	const PerspectiveCamera& m_Camera;
