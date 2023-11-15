@@ -17,10 +17,13 @@ uniform float uScaleXZ;
 uniform float uScaleY;
 uniform vec2 uPos;
 
+uniform float uModScale;
+
 void main() {
     uint i = gl_GlobalInvocationID.x;
 
     vec2 hoffset = uPos - mod(uPos, verts[i].pos.w);
+    //vec2 hoffset = uPos - mod(uPos, uModScale);
 
     vec2 uv = (2.0/uScaleXZ) * (verts[i].pos.xz + hoffset);
     uv = 0.5*uv + 0.5;

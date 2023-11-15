@@ -64,7 +64,6 @@ private:
     ResourceManager m_ResourceManager;
     Serializer m_Serializer;
 
-    Clipmap m_Clipmap;
     MapGenerator m_Map;
     MaterialGenerator m_Material;
     TerrainRenderer m_TerrainRenderer;

@@ -10,16 +10,16 @@
 
 GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
 	                         const MapGenerator& map, const MaterialGenerator& material,
-	                         const Clipmap& clipmap, const SkyRenderer& sky)
+	                         const SkyRenderer& sky)
 	: m_ResourceManager(manager)
 	, m_Camera(cam)
 	, m_Map(map)
 	, m_Material(material)
-	, m_Clipmap(clipmap)
 	, m_Sky(sky)
 {
 	m_RaycastShader = m_ResourceManager.RequestComputeShader("res/shaders/grass/raycast.glsl");
 	m_NoiseGenerator = m_ResourceManager.RequestComputeShader("res/shaders/grass/noise.glsl");
+	m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
 
 	m_PresentShader = m_ResourceManager.RequestVertFragShader(
 		"res/shaders/grass/present.vert", 
@@ -32,6 +32,8 @@ GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& 
 
 void GrassRenderer::Init()
 {
+	m_Clipmap.Init(32, 5);
+
 	m_RaycastResult->Initialize(Texture3DSpec{
 		128, 128, 16,
 		GL_RGBA16F, GL_RGBA,
@@ -57,56 +59,92 @@ void GrassRenderer::OnUpdate(float deltatime)
 	m_Time += deltatime;
 	if (m_Time > 1e3) m_Time = 0.0f;
 
+	UpdateGeometry();
+
 	if ((m_UpdateFlags & Raycast) != None)
-	{
-		ProfilerGPUEvent we("Grass::Raycast");
-
-		auto res_x = m_RaycastResult->getSpec().ResolutionX;
-		auto res_y = m_RaycastResult->getSpec().ResolutionY;
-		auto res_z = m_RaycastResult->getSpec().ResolutionZ;
-
-		m_RaycastResult->BindImage(0, 0);
-
-		m_RaycastShader->Bind();
-		m_RaycastShader->setUniform1f("uViewAngle", m_ViewAngle);
-		m_RaycastShader->setUniform1f("uSlant", m_Slant);
-		m_RaycastShader->setUniform1f("uBaseWidth", m_BaseWidth);
-		m_RaycastShader->setUniform1f("uNumBlades", static_cast<float>(m_NumBlades));
-
-		m_RaycastShader->Dispatch(res_x, res_y, res_z);
-		
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-		//m_RaycastResult->Bind();
-		//glGenerateMipmap(GL_TEXTURE_3D);
-
-		m_ResourceManager.RequestPreviewUpdate(m_RaycastResult);
-	}
+		UpdateRaycast();
 
 	if ((m_UpdateFlags & Noise) != None)
-	{
-		ProfilerGPUEvent we("Grass::NoiseGen");
-
-		auto res_x = m_Noise->getSpec().ResolutionX;
-		auto res_y = m_Noise->getSpec().ResolutionY;
-
-		m_Noise->BindImage(0, 0);
-
-		m_NoiseGenerator->Bind();
-		m_NoiseGenerator->setUniform1i("uScale", m_NoiseScale);
-		m_NoiseGenerator->setUniform1i("uOctaves", m_Octaves);
-
-		m_NoiseGenerator->Dispatch(res_x, res_y, 1);
-
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-		m_Noise->Bind();
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		m_ResourceManager.RequestPreviewUpdate(m_Noise);
-	}
+		UpdateNoise();
 
 	m_UpdateFlags = None;
+}
+
+void GrassRenderer::UpdateRaycast()
+{
+	ProfilerGPUEvent we("Grass::Raycast");
+
+	auto res_x = m_RaycastResult->getSpec().ResolutionX;
+	auto res_y = m_RaycastResult->getSpec().ResolutionY;
+	auto res_z = m_RaycastResult->getSpec().ResolutionZ;
+
+	m_RaycastResult->BindImage(0, 0);
+
+	m_RaycastShader->Bind();
+	m_RaycastShader->setUniform1f("uViewAngle", m_ViewAngle);
+	m_RaycastShader->setUniform1f("uSlant", m_Slant);
+	m_RaycastShader->setUniform1f("uBaseWidth", m_BaseWidth);
+	m_RaycastShader->setUniform1f("uNumBlades", static_cast<float>(m_NumBlades));
+
+	m_RaycastShader->Dispatch(res_x, res_y, res_z);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+	//m_RaycastResult->Bind();
+	//glGenerateMipmap(GL_TEXTURE_3D);
+
+	m_ResourceManager.RequestPreviewUpdate(m_RaycastResult);
+}
+
+void GrassRenderer::UpdateNoise() 
+{
+	ProfilerGPUEvent we("Grass::NoiseGen");
+
+	auto res_x = m_Noise->getSpec().ResolutionX;
+	auto res_y = m_Noise->getSpec().ResolutionY;
+
+	m_Noise->BindImage(0, 0);
+
+	m_NoiseGenerator->Bind();
+	m_NoiseGenerator->setUniform1i("uScale", m_NoiseScale);
+	m_NoiseGenerator->setUniform1i("uOctaves", m_Octaves);
+
+	m_NoiseGenerator->Dispatch(res_x, res_y, 1);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+	m_Noise->Bind();
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	m_ResourceManager.RequestPreviewUpdate(m_Noise);
+}
+
+void GrassRenderer::UpdateGeometry()
+{
+	m_Map.BindHeightmap();
+
+	const glm::vec2 curr{ m_Camera.getPos().x, m_Camera.getPos().z };
+
+	m_DisplaceShader->Bind();
+	m_DisplaceShader->setUniform2f("uPos", curr);
+	m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
+	m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
+
+	const uint32_t binding_id = 1;
+
+	if (m_UpdateAllLevels)
+	{
+		m_Clipmap.RunCompute(m_DisplaceShader, binding_id);
+	}
+
+	else
+	{
+		const glm::vec2 prev{ m_Camera.getPrevPos().x, m_Camera.getPrevPos().z };
+
+		m_Clipmap.RunCompute(m_DisplaceShader, binding_id, curr, prev);
+	}
+
+	m_UpdateAllLevels = false;
 }
 
 void GrassRenderer::OnImGui(bool& open)
@@ -195,7 +233,7 @@ void GrassRenderer::Render()
 		const glm::mat4 mvp = m_Camera.getViewProjMatrix();
 
 		m_PresentShader->Bind();
-		m_PresentShader->setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+		m_PresentShader->setUniform1f("uL", m_Map.getScaleXZ());
 		m_PresentShader->setUniform3f("uPos", m_Camera.getPos());
 		m_PresentShader->setUniformMatrix4fv("uMVP", mvp);
 
@@ -242,7 +280,23 @@ void GrassRenderer::Render()
 	{
 		ProfilerGPUEvent we("Grass::Draw");
 
-		auto scale_y = m_Map.getScaleSettings().ScaleY;
-		m_Clipmap.BindAndDraw(m_Camera, scale_y, m_LodLevels);
+		auto scale_y = m_Map.getScaleY();
+
+		for (uint32_t i=0; i<m_Clipmap.MaxGridIDUpTo(m_LodLevels); i++)
+		{
+			const auto& grid = m_Clipmap.getGrids()[i];
+
+			if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
+			{
+				grid.Draw();
+			}
+		}
+
+		for (uint32_t i = 0; i < m_Clipmap.MaxFillIDUpTo(m_LodLevels); i++)
+		{
+			const auto& fill = m_Clipmap.getFills()[i];
+
+			fill.Draw();
+		}
 	}
 }

@@ -7,11 +7,6 @@
 
 #include "nlohmann/json.hpp"
 
-struct ScaleSettings{
-    float ScaleXZ = 100.0f;
-    float ScaleY = 20.0f;
-};
-
 struct AOSettings{
     int Samples = 16;
     float R = 0.01;
@@ -39,15 +34,16 @@ public:
     void BindNormalmap(int id=0) const;
     void BindShadowmap(int id=0) const;
     void BindMaterialmap(int id=0) const;
+    void RequestShadowUpdate() const;
 
     void ImGuiTerrain(bool &open, bool update_shadows);
     void ImGuiShadowmap(bool &open, bool update_shadows);
     void ImGuiMaterials(bool& open);
-    void RequestShadowUpdate();
 
     bool GeometryShouldUpdate();
 
-    ScaleSettings getScaleSettings() const {return m_ScaleSettings;}
+    float getScaleXZ() const {return m_ScaleXZ;}
+    float getScaleY() const {return m_ScaleY;}
 
     void OnSerialize(nlohmann::ordered_json& output);
     void OnDeserialize(nlohmann::ordered_json& input);
@@ -74,18 +70,17 @@ private:
     std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
     std::shared_ptr<ComputeShader> m_MipShader;
     
-    ScaleSettings     m_ScaleSettings;
+    float m_ScaleXZ = 100.0f;
+    float m_ScaleY = 20.0f;
+
     ShadowmapSettings m_ShadowSettings;
     AOSettings        m_AOSettings;
 
-    int m_UpdateFlags = None;
+    mutable int m_UpdateFlags = None;
     int m_MipLevels = 0;
     
     ResourceManager& m_ResourceManager;
 };
-
-bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs);
-bool operator!=(const ScaleSettings& lhs, const ScaleSettings& rhs);
 
 bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);
 bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);

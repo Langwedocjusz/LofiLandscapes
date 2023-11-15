@@ -183,8 +183,8 @@ void MapGenerator::UpdateNormal() {
     m_Normalmap->BindImage(0, 0);
  
     m_NormalmapShader->Bind();
-    m_NormalmapShader->setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
-    m_NormalmapShader->setUniform1f("uScaleY" , m_ScaleSettings.ScaleY );
+    m_NormalmapShader->setUniform1f("uScaleXZ", m_ScaleXZ);
+    m_NormalmapShader->setUniform1f("uScaleY" , m_ScaleY );
 
     m_NormalmapShader->setUniform1i("uAOSamples", m_AOSettings.Samples);
     m_NormalmapShader->setUniform1f("uAOR", m_AOSettings.R);
@@ -210,8 +210,8 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     m_ShadowmapShader->Bind();
     m_ShadowmapShader->setUniform1i("uResolution", res);
     m_ShadowmapShader->setUniform3f("uSunDir", sun_dir);
-    m_ShadowmapShader->setUniform1f("uScaleXZ", m_ScaleSettings.ScaleXZ);
-    m_ShadowmapShader->setUniform1f("uScaleY", m_ScaleSettings.ScaleY);
+    m_ShadowmapShader->setUniform1f("uScaleXZ", m_ScaleXZ);
+    m_ShadowmapShader->setUniform1f("uScaleY", m_ScaleY);
     
     m_ShadowmapShader->setUniform1i("uMips", m_MipLevels);
     m_ShadowmapShader->setUniform1i("uMipOffset", m_ShadowSettings.MipOffset);
@@ -303,18 +303,19 @@ void MapGenerator::BindMaterialmap(int id) const {
 }
 
 void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
-    ScaleSettings temp_s = m_ScaleSettings;
+    float scale_xz = m_ScaleXZ;
+    float scale_y = m_ScaleY;
 
     ImGui::Begin(LOFI_ICONS_TERRAIN "Terrain editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGui::Text("Scale:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColSliderFloat("Scale xz", &(temp_s.ScaleXZ), 0.0f, 400.0f);
-    ImGuiUtils::ColSliderFloat("Scale y" , &(temp_s.ScaleY ), 0.0f, 100.0f);
+    ImGuiUtils::ColSliderFloat("Scale xz", &(scale_xz), 0.0f, 400.0f);
+    ImGuiUtils::ColSliderFloat("Scale y" , &(scale_y), 0.0f, 100.0f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::Separator();
 
-    bool scale_changed = (temp_s != m_ScaleSettings);
+    bool scale_changed = (scale_xz != m_ScaleXZ) || (scale_y != m_ScaleY);
 
     ImGui::Text("Heightmap procedures:");
 
@@ -330,7 +331,9 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     }
 
     else if (scale_changed) {
-        m_ScaleSettings = temp_s;
+        m_ScaleXZ = scale_xz;
+        m_ScaleY = scale_y;
+
         m_UpdateFlags = m_UpdateFlags | Normal;
 
         if (update_shadows)
@@ -345,9 +348,6 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
 
     ImGui::Begin(LOFI_ICONS_SHADOW "Shadow/AO settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
-    //ImGui::Text("Shadowmap Settings:");
-    //ImGui::Spacing();
-
     ImGuiUtils::BeginGroupPanel("Shadowmap settings:");
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderInt("Min level", &temp.MinLevel, 0, 12);
@@ -356,10 +356,6 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ImGuiUtils::ColSliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
-
-    //ImGuiUtils::Separator();
-    //ImGui::Text("AO Settings:");
-    //ImGui::Spacing();
 
     ImGuiUtils::BeginGroupPanel("AO settings:");
     ImGui::Columns(2, "###col");
@@ -396,7 +392,7 @@ void MapGenerator::ImGuiMaterials(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Material;
 }
 
-void MapGenerator::RequestShadowUpdate() {
+void MapGenerator::RequestShadowUpdate() const {
     m_UpdateFlags = m_UpdateFlags | Shadow;
 }
 
@@ -408,8 +404,8 @@ bool MapGenerator::GeometryShouldUpdate() {
 
 void MapGenerator::OnSerialize(nlohmann::ordered_json& output)
 {
-    output["Scale XZ"] = m_ScaleSettings.ScaleXZ;
-    output["Scale Y"] = m_ScaleSettings.ScaleY;
+    output["Scale XZ"] = m_ScaleXZ;
+    output["Scale Y"] = m_ScaleY;
 
     m_HeightEditor.OnSerialize(output);
     m_MaterialEditor.OnSerialize(output);
@@ -417,8 +413,8 @@ void MapGenerator::OnSerialize(nlohmann::ordered_json& output)
 
 void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
 {
-    m_ScaleSettings.ScaleXZ = input["Scale XZ"];
-    m_ScaleSettings.ScaleY = input["Scale Y"];
+    m_ScaleXZ = input["Scale XZ"];
+    m_ScaleY = input["Scale Y"];
 
     m_HeightEditor.OnDeserialize(input[m_HeightEditor.getName()]);
     m_MaterialEditor.OnDeserialize(input[m_MaterialEditor.getName()]);
@@ -427,14 +423,6 @@ void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
 }
 
 //Settings structs operator overloads:
-
-bool operator==(const ScaleSettings& lhs, const ScaleSettings& rhs) {
-    return (lhs.ScaleXZ == rhs.ScaleXZ) && (lhs.ScaleY == rhs.ScaleY);
-}
-
-bool operator!=(const ScaleSettings& lhs, const ScaleSettings& rhs) {
-    return !(lhs==rhs);
-}
 
 bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
     return (lhs.MinLevel == rhs.MinLevel) && (lhs.StartCell == rhs.StartCell)

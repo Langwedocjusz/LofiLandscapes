@@ -16,12 +16,11 @@ Renderer::Renderer(unsigned int width, unsigned int height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
     , m_InvAspect(1.0/m_Aspect)
-    , m_Clipmap(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
     , m_SkyRenderer(m_ResourceManager, m_Camera, m_Map)
-    , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
-    , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_Clipmap, m_SkyRenderer)
+    , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
+    , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
 {
     m_Serializer.RegisterLoadCallback("Terrain Editor",
         std::bind(&MapGenerator::OnDeserialize, &m_Map, std::placeholders::_1)
@@ -43,7 +42,7 @@ Renderer::Renderer(unsigned int width, unsigned int height)
 Renderer::~Renderer() {}
 
 void Renderer::Init(StartSettings settings) {
-    m_Clipmap.Init(settings.Subdivisions, settings.LodLevels);
+    m_TerrainRenderer.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
     m_Material.Init(settings.MaterialRes);
 
@@ -70,50 +69,35 @@ void Renderer::Init(StartSettings settings) {
     m_Material.Update();
 
     //Initial geometry displacement
-    m_Map.BindHeightmap();
-
-    glm::vec2 pos{ m_Camera.getPos().x, m_Camera.getPos().z };
-
-    m_Clipmap.DisplaceVertices(
-        m_Map.getScaleSettings().ScaleXZ,
-        m_Map.getScaleSettings().ScaleY,
-        pos
-    );
+    m_TerrainRenderer.Update();
 }
 
 void Renderer::OnUpdate(float deltatime) {
     ProfilerCPUEvent we("Renderer::OnUpdate");
 
+    if (m_Map.GeometryShouldUpdate())
+        m_TerrainRenderer.RequestFullUpdate();
+
+    if (m_SkyRenderer.SunDirChanged() && m_TerrainRenderer.DoShadows())
+        m_Map.RequestShadowUpdate();
+
     m_ResourceManager.OnUpdate();
-
-    m_GrassRenderer.OnUpdate(deltatime);
-
-    //Update camera
-    glm::vec3 prev_pos3 = m_Camera.getPos();
-    glm::vec2 prev_pos2 = { prev_pos3.x, prev_pos3.z };
 
     m_Camera.Update(m_Aspect, deltatime);
 
-    glm::vec3 curr_pos3 = m_Camera.getPos();
-    glm::vec2 curr_pos2 = { curr_pos3.x, curr_pos3.z };
+    m_Map.Update(m_SkyRenderer.getSunDir());
 
-    //Update sky
+    m_GrassRenderer.OnUpdate(deltatime);
+
     m_SkyRenderer.Update(m_TerrainRenderer.DoFog());
 
-    //Update clipmap geometry if camera moved
-    m_Map.BindHeightmap();
-
-    m_Clipmap.DisplaceVertices(
-        m_Map.getScaleSettings().ScaleXZ,
-        m_Map.getScaleSettings().ScaleY,
-        curr_pos2, prev_pos2
-    );
+    m_TerrainRenderer.Update();
 }
 
 void Renderer::OnRender() {
     ProfilerCPUEvent we("Renderer::OnRender");
 
-    const float scale_y  = m_Map.getScaleSettings().ScaleY;
+    const float scale_y  = m_Map.getScaleY();
 
     if (m_Wireframe) 
     {
@@ -211,55 +195,23 @@ void Renderer::OnImGuiRender() {
     if (m_ShowMapMaterialMenu)
         m_Map.ImGuiMaterials(m_ShowMapMaterialMenu);
 
-    bool update_geo = m_Map.GeometryShouldUpdate();
-
     if(m_ShowShadowMenu)
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_TerrainRenderer.DoShadows());
 
     if (m_ShowMaterialMenu)
         m_Material.OnImGui(m_ShowMaterialMenu);
 
-    if (m_ShowLightMenu) {
-        bool shadows = m_TerrainRenderer.DoShadows();
-
+    if (m_ShowLightMenu)
         m_TerrainRenderer.OnImGui(m_ShowLightMenu);
 
-        if (shadows != m_TerrainRenderer.DoShadows()) {
-            if (m_TerrainRenderer.DoShadows()) 
-                m_Map.RequestShadowUpdate();
-        }
-    }
-
-    if (m_ShowSkyMenu) {
-        glm::vec3 sun_dir = m_SkyRenderer.getSunDir();
-
+    if (m_ShowSkyMenu)
         m_SkyRenderer.OnImGui(m_ShowSkyMenu);
-
-        if (sun_dir != m_SkyRenderer.getSunDir() && m_TerrainRenderer.DoShadows())
-            m_Map.RequestShadowUpdate();
-    }
 
     if (m_ShowTexBrowser)
         m_ResourceManager.DrawTextureBrowser(m_ShowTexBrowser);
 
     if (m_ShowProfiler)
         Profiler::OnImGui(m_ShowProfiler);
-
-    //Update Maps
-    m_Map.Update(m_SkyRenderer.getSunDir());
-
-    //Update geometry if heightmap/scale changed
-    if (update_geo) {
-        m_Map.BindHeightmap();
-
-        glm::vec2 pos{ m_Camera.getPos().x, m_Camera.getPos().z };
-
-        m_Clipmap.DisplaceVertices(
-            m_Map.getScaleSettings().ScaleXZ,
-            m_Map.getScaleSettings().ScaleY,
-            pos
-        );
-    }
 }
 
 void Renderer::OnWindowResize(unsigned int width, unsigned int height) {

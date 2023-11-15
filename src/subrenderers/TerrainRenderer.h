@@ -15,8 +15,13 @@ class TerrainRenderer {
 public:
     TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
                     const MapGenerator& map, const MaterialGenerator& material,
-                    const Clipmap& clipmap, const SkyRenderer& sky);
+                    const SkyRenderer& sky);
     ~TerrainRenderer();
+
+    void Init(uint32_t subdivisions, uint32_t levels);
+
+    void Update();
+    void RequestFullUpdate();
 
     void RenderWireframe();
     void RenderShaded();
@@ -27,6 +32,7 @@ public:
     bool DoFog() { return m_Fog; }
 
 private:
+    //Settings
     float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
 
     glm::vec3 m_SunCol{ 0.90f, 0.85f, 0.70f };
@@ -39,13 +45,18 @@ private:
     bool m_Materials = true, m_FixTiling = true;
     bool m_Fog = true;
 
+    //Private resources
+    bool m_UpdateAll = true;
+
     std::shared_ptr<VertFragShader> m_ShadedShader, m_WireframeShader;
+    std::shared_ptr<ComputeShader> m_DisplaceShader;
+
+    Clipmap m_Clipmap;
 
     //External handles
     const PerspectiveCamera& m_Camera;
     const MapGenerator& m_Map;
     const MaterialGenerator& m_Material;
-    const Clipmap& m_Clipmap;
     const SkyRenderer& m_Sky;
 
     ResourceManager& m_ResourceManager;

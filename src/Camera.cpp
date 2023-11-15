@@ -37,7 +37,7 @@ bool Frustum::IsInFrustum(const AABB& aabb, float scale_y) const {
 //=====Base camera class================================================
 
 Camera::Camera(glm::vec3 pos, glm::vec3 wup, float pitch, float yaw)
-    : m_Pos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
+    : m_Pos(pos), m_PrevPos(pos), m_WorldUp(wup), m_Pitch(pitch), m_Yaw(yaw)
 {
     updateVectors();
 }
@@ -138,6 +138,8 @@ FPCamera::~FPCamera() {}
 
 void FPCamera::Update(float aspect, float deltatime) 
 {
+    m_PrevPos = m_Pos;
+
     ProcessKeyboard(deltatime);
 
     //Vectors are not updated here, since they only change on mouse input

@@ -172,6 +172,7 @@ void SkyRenderer::Update(bool aerial) {
     }
 
     m_UpdateFlags = None;
+    m_SunDirChanged = false;
 }
 
 void SkyRenderer::UpdateTrans() {
@@ -372,8 +373,8 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_AShadowShader->setUniform3f("uTopLeft", extents.TopLeft);
     m_AShadowShader->setUniform3f("uTopRight", extents.TopRight);
     m_AShadowShader->setUniform1f("uL", 4.0f); //Temp, get this from the clipmap!
-    m_AShadowShader->setUniform1f("uScaleY", m_Map.getScaleSettings().ScaleY);
-    m_AShadowShader->setUniform1f("uScaleXZ", m_Map.getScaleSettings().ScaleXZ);
+    m_AShadowShader->setUniform1f("uScaleY", m_Map.getScaleY());
+    m_AShadowShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
 
     m_AShadowShader->Dispatch(res_x, res_y, res_z);
     
@@ -439,18 +440,23 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderFloat("Height (m)", &height, 0.0f, 2000.0f);
 
+    const glm::vec3 sun_dir = m_SunDir;
+
     if (phi != m_Phi || theta != m_Theta || height != m_Height) {
         m_Phi = phi;
         m_Theta = theta;
         m_Height = height;
 
-        float cT = cos(theta), sT = sin(theta);
-        float cP = cos(phi), sP = sin(phi);
+        const float cT = cos(theta), sT = sin(theta);
+        const float cP = cos(phi),   sP = sin(phi);
 
         m_SunDir = glm::vec3(cP * sT, cT, sP * sT);
 
         m_UpdateFlags = m_UpdateFlags | SkyView;
     }
+
+    if (sun_dir != m_SunDir)
+        m_SunDirChanged = true;
 
     glm::vec3 albedo = m_GroundAlbedo;
 

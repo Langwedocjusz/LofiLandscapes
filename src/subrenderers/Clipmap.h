@@ -7,59 +7,62 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "ResourceManager.h"
+#include "MapGenerator.h"
+
+#include <cstdint>
 
 class Drawable{
 public:
-    Drawable();
     ~Drawable();
 
-    void GenBuffers();
-    void DispatchCompute();
+    void GenGLBuffers();
+    void BindBufferBase(uint32_t id = 0) const;
     void Draw() const;
-
-    unsigned int VAO = 0, VBO = 0, EBO = 0;
-    unsigned int ElementCount = 0;
+    
     std::vector<float> VertexData;
-    std::vector<unsigned int> IndexData;
+    std::vector<uint32_t> IndexData;
+    uint32_t VertexCount = 0, ElementCount = 0;
+protected:
+    uint32_t m_VAO = 0, m_VBO = 0, m_EBO = 0;
 };
 
-class ClipmapRing {
+class DrawableWithBounding : public Drawable {
 public:
-    ClipmapRing(int N, float L, unsigned int level);
-    ~ClipmapRing();
-
-    void DispatchCompute();
-    void Draw(const Camera& cam, float scale_y) const;
-private:
-    std::vector<Drawable> m_Grid;
-    std::vector<AABB> m_Bounds;
-
-    Drawable m_FillX, m_FillY;
+    AABB BoundingBox;
 };
 
 class Clipmap {
 public:
-    Clipmap(ResourceManager& manager);
+    void Init(uint32_t subdivisions, uint32_t levels);
 
-    void Init(int subdivisions, int levels);
+    const std::vector<DrawableWithBounding>& getGrids() const { return m_Grids; }
+    const std::vector<Drawable>& getFills() const { return m_Fills; }
 
-    void DisplaceVertices(float scale_xz, float scale_y,
-                          glm::vec2 pos);
+    //Dispatches the compute shader for all grids/fills of the clipmap
+    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations 
+    //Binding is forwarded as glBindBufferBase argument
+    void RunCompute(std::shared_ptr<ComputeShader> shader, uint32_t binding);
 
-    void DisplaceVertices(float scale_xz, float scale_y,
-                          glm::vec2 curr, glm::vec2 prev);
+    //Conditionally runs the compute shader, for those grids/fill that should be updated
+    //afted a change in the camera position.
+    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations 
+    //Binding is forwarded as glBindBufferBase argument
+    void RunCompute(std::shared_ptr<ComputeShader> shader, uint32_t binding, glm::vec2 curr, glm::vec2 prev);
 
-    void BindAndDraw(const Camera& cam, float scale_y) const;
+    static uint32_t NumGridsPerLevel(uint32_t level);
+    static uint32_t NumFillsPerLevel(uint32_t level);
 
-    void BindAndDraw(const Camera& cam, float scale_y, int levels) const;
-
-    int getLevels() const { return m_LodLevels.size(); }
+    static uint32_t MaxGridIDUpTo(uint32_t level);
+    static uint32_t MaxFillIDUpTo(uint32_t level);
+    
+    bool LevelShouldUpdate(uint32_t level, glm::vec2 curr, glm::vec2 prev) const;
 
 private:
-    float m_L = 4.0f, m_BaseOffset = 1.0f;
+    float m_BaseSideLength = 4.0f;
+    float m_VertsPerLine, m_BaseOffset;
 
-    std::vector<ClipmapRing> m_LodLevels;
-    std::shared_ptr<ComputeShader> m_DisplaceShader;
+    uint32_t m_Levels = 0;
 
-    ResourceManager& m_ResourceManager;
+    std::vector<DrawableWithBounding> m_Grids;
+    std::vector<Drawable> m_Fills;
 };

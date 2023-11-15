@@ -16,7 +16,7 @@ class GrassRenderer{
 public:
 	GrassRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
 		          const MapGenerator& map, const MaterialGenerator& material,
-		          const Clipmap& clipmap, const SkyRenderer& sky);
+		          const SkyRenderer& sky);
 
 	void Init();
 	void OnUpdate(float deltatime);
@@ -25,6 +25,10 @@ public:
 	void Render();
 
 private:
+	void UpdateRaycast();
+	void UpdateNoise();
+	void UpdateGeometry();
+
 	//===Temporary - those values are doubled in TerrainRenderer=====================
 	glm::vec3 m_SunCol{ 0.90f, 0.85f, 0.70f };
 
@@ -68,20 +72,24 @@ private:
 	float m_Roughness = 0.13f;
 	float m_Translucent = 2.53f;
 
-
+	//Private resources
 	std::shared_ptr<ComputeShader> m_RaycastShader;
 	std::shared_ptr<ComputeShader> m_NoiseGenerator;
+	std::shared_ptr<ComputeShader> m_DisplaceShader;
 
 	std::shared_ptr<Texture3D> m_RaycastResult;
 	std::shared_ptr<Texture2D> m_Noise;
 
 	std::shared_ptr<VertFragShader> m_PresentShader;
 
+	Clipmap m_Clipmap;
+	bool m_UpdateAllLevels = true;
+
 	//External handles
 	const PerspectiveCamera& m_Camera;
 	const MapGenerator& m_Map;
 	const MaterialGenerator& m_Material;
-	const Clipmap& m_Clipmap;
+	//const Clipmap& m_Clipmap;
 	const SkyRenderer& m_Sky;
 
 	ResourceManager& m_ResourceManager;

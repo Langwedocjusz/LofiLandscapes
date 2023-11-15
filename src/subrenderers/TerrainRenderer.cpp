@@ -10,19 +10,58 @@
 
 TerrainRenderer::TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
                                  const MapGenerator& map, const MaterialGenerator& material,
-                                 const Clipmap& clipmap, const SkyRenderer& sky)
+                                 const SkyRenderer& sky)
     : m_ResourceManager(manager)
     , m_Camera(cam)
     , m_Map(map)
     , m_Material(material)
-    , m_Clipmap(clipmap)
     , m_Sky(sky)
 {
     m_ShadedShader    = m_ResourceManager.RequestVertFragShader("res/shaders/shaded.vert", "res/shaders/shaded.frag");
     m_WireframeShader = m_ResourceManager.RequestVertFragShader("res/shaders/wireframe.vert", "res/shaders/wireframe.frag");
+
+    m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
 }
 
 TerrainRenderer::~TerrainRenderer() {}
+
+void TerrainRenderer::Init(uint32_t subdivisions, uint32_t levels)
+{
+    m_Clipmap.Init(subdivisions, levels);
+}
+
+void TerrainRenderer::Update()
+{
+    m_Map.BindHeightmap();
+
+    const glm::vec2 curr{ m_Camera.getPos().x, m_Camera.getPos().z };
+
+    m_DisplaceShader->Bind();
+    m_DisplaceShader->setUniform2f("uPos", curr);
+    m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
+    m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
+
+    const uint32_t binding_id = 1;
+
+    if (m_UpdateAll)
+    {
+        m_Clipmap.RunCompute(m_DisplaceShader, binding_id);
+    }
+
+    else
+    {
+        const glm::vec2 prev{ m_Camera.getPrevPos().x, m_Camera.getPrevPos().z };
+
+        m_Clipmap.RunCompute(m_DisplaceShader, binding_id, curr, prev);
+    }
+
+    m_UpdateAll = false;
+}
+
+void TerrainRenderer::RequestFullUpdate()
+{
+    m_UpdateAll = true;
+}
 
 void TerrainRenderer::RenderWireframe() {
     glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
@@ -34,7 +73,7 @@ void TerrainRenderer::RenderWireframe() {
         const glm::mat4 mvp = m_Camera.getViewProjMatrix();
 
         m_WireframeShader->Bind();
-        m_WireframeShader->setUniform1f("uL", m_Map.getScaleSettings().ScaleXZ);
+        m_WireframeShader->setUniform1f("uL", m_Map.getScaleXZ());
         m_WireframeShader->setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
         m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
     }
@@ -42,8 +81,20 @@ void TerrainRenderer::RenderWireframe() {
     {
         ProfilerGPUEvent we("Terrain::Draw");
 
-        auto scale_y = m_Map.getScaleSettings().ScaleY;
-        m_Clipmap.BindAndDraw(m_Camera, scale_y);
+        auto scale_y = m_Map.getScaleY();
+
+        for (const auto& grid : m_Clipmap.getGrids())
+        {
+            if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
+            {
+                grid.Draw();
+            }
+        }
+
+        for (const auto& fill : m_Clipmap.getFills())
+        {
+            fill.Draw();
+        }
     }
 }
 
@@ -55,7 +106,7 @@ void TerrainRenderer::RenderShaded()
     {
         ProfilerGPUEvent we("Terrain::PrepareShaded");
 
-        const float scale_xz = m_Map.getScaleSettings().ScaleXZ;
+        const float scale_xz = m_Map.getScaleXZ();
 
         const glm::mat4 mvp = m_Camera.getViewProjMatrix();
 
@@ -101,13 +152,27 @@ void TerrainRenderer::RenderShaded()
     {
         ProfilerGPUEvent we("Terrain::Draw");
 
-        auto scale_y = m_Map.getScaleSettings().ScaleY;
-        m_Clipmap.BindAndDraw(m_Camera, scale_y);
+        auto scale_y = m_Map.getScaleY();
+
+        for (const auto& grid : m_Clipmap.getGrids())
+        {
+            if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
+            {
+                grid.Draw();
+            }
+        }
+
+        for (const auto& fill : m_Clipmap.getFills())
+        {
+            fill.Draw();
+        }
     }
 }
 
 void TerrainRenderer::OnImGui(bool& open) {
     ImGui::Begin(LOFI_ICONS_LIGHTING "Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+
+    const bool shadows = m_Shadows;
 
     ImGuiUtils::BeginGroupPanel("Lighting options:");
     ImGui::Columns(2, "###col");
@@ -121,6 +186,11 @@ void TerrainRenderer::OnImGui(bool& open) {
     ImGuiUtils::ColCheckbox("Render fog", &m_Fog);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
+
+    if (shadows != m_Shadows) {
+        if (m_Shadows)
+            m_Map.RequestShadowUpdate();
+    }
 
     ImGuiUtils::BeginGroupPanel("Material options:");
     ImGui::Columns(2, "###col");

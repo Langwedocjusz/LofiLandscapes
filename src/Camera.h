@@ -51,6 +51,7 @@ public:
     virtual glm::mat4 getViewProjMatrix() const = 0;
 
     glm::vec3 getPos() const {return m_Pos;}
+    glm::vec3 getPrevPos() const { return m_PrevPos; }
     glm::vec3 getFront() const {return m_Front;}
     glm::vec3 getRight() const { return m_Right; }
     glm::vec3 getUp() const { return m_Up; }
@@ -65,7 +66,7 @@ public:
     virtual void OnImGui(bool& open) = 0;
 
 protected:
-    glm::vec3 m_Pos;
+    glm::vec3 m_Pos, m_PrevPos;
     glm::vec3 m_Front, m_Up, m_Right, m_WorldUp;
     float m_Pitch, m_Yaw;
 

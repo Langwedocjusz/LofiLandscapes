@@ -23,6 +23,8 @@ public:
 
 	glm::vec3 getSunDir() const { return m_SunDir; }
 	float getAerialDistScale() const { return m_AerialDistRead; }
+
+	bool SunDirChanged() const { return m_SunDirChanged; }
 private:
 	void Init();
 
@@ -61,6 +63,7 @@ private:
 
 	float m_Phi = 1.032f, m_Theta = 1.050f;
 	glm::vec3 m_SunDir;
+	bool m_SunDirChanged = false;
 
 	float m_Brightness = 6.0f;
 	float m_IBLOversaturation = 1.4f;
