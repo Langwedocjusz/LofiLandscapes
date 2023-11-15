@@ -79,7 +79,9 @@ glm::mat4 PerspectiveCamera::getViewProjMatrix() const
 
 FrustumExtents PerspectiveCamera::getFrustumExtents() const
 {
-    const glm::mat4 view_proj = getProjMatrix() * getViewMatrix();
+    //In a sense it's a view matrix with respect to infinity, so we calculate it with position=0
+    const glm::mat4 view = glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f) + m_Front, m_Up);
+    const glm::mat4 view_proj = getProjMatrix() * view;
     const glm::mat4 view_proj_inv = glm::inverse(view_proj);
 
     glm::vec4 bot_left = view_proj_inv * glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f);
