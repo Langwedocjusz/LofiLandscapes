@@ -238,7 +238,7 @@ void GrassRenderer::Render()
 		m_PresentShader->setUniformMatrix4fv("uMVP", mvp);
 
 		m_PresentShader->setUniform3f("uLightDir", m_Sky.getSunDir());
-		m_PresentShader->setUniform3f("uSunCol", m_SunCol);
+		m_PresentShader->setUniform3f("uSunCol", m_Sky.getSunCol());
 		m_PresentShader->setUniform1f("uSunStr", m_SunStr);
 		m_PresentShader->setUniform1f("uSkyDiff", m_SkyDiff);
 		m_PresentShader->setUniform1f("uSkySpec", m_SkySpec);

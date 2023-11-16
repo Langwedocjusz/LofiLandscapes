@@ -22,9 +22,11 @@ public:
 	void BindAerial(int id=0) const;
 
 	glm::vec3 getSunDir() const { return m_SunDir; }
-	float getAerialDistScale() const { return m_AerialDistRead; }
+	glm::vec3 getSunCol() const;
 
 	bool SunDirChanged() const { return m_SunDirChanged; }
+
+	float getAerialDistScale() const { return m_AerialDistRead; }
 private:
 	void Init();
 
@@ -32,7 +34,8 @@ private:
 		None          =  0,
 		Transmittance = (1 << 0),
 		MultiScatter  = (1 << 1),
-		SkyView       = (1 << 2)
+		SkyView       = (1 << 2),
+		SunColor      = (1 << 3)
 	};
 
 	void UpdateTrans();
@@ -41,23 +44,21 @@ private:
 	void UpdateAerial();
 	void UpdateAerialWithShadows();
 
+	//This function exactly mirrors transmittance calculation from the 
+	//transmittance LUT, but only for the sun direction
+	void CalculateSunTransmittance();
+
 	int m_UpdateFlags = None;
 
-	std::shared_ptr<Texture2D> m_TransLUT, m_MultiLUT, m_SkyLUT;
-	std::shared_ptr<Texture3D> m_AerialLUT;
-	std::shared_ptr<Texture3D> m_ScatterVolume, m_ShadowVolume;
-	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader;
+	//Sky/Atmosphere parameters
+	glm::vec3 m_SunCol{ 1.0f, 1.0f, 1.0f };
+	glm::vec3 m_SunTrans{1.0f, 1.0f, 1.0f};
 
-	std::shared_ptr<ComputeShader> m_AerialShader;
-	std::shared_ptr<ComputeShader> m_AScatterShader, m_AShadowShader, m_ARaymarchShader;
+	float m_TransInfluence = 1.0f;
+	float m_TransCurve = 2.0f;
 
-	std::shared_ptr<Cubemap> m_IrradianceMap, m_PrefilteredMap;
-	std::shared_ptr<ComputeShader> m_IrradianceShader, m_PrefilteredShader;
+	bool m_UseSunTransmittance = true;
 
-	Quad m_Quad;
-	std::shared_ptr<VertFragShader> m_FinalShader;
-
-	//Atmosphere parameters
 	float m_Height = 300.0f; //in meters
 	glm::vec3 m_GroundAlbedo = glm::vec3(0.25f, 0.25f, 0.25f);
 
@@ -78,6 +79,21 @@ private:
 
 	bool m_AerialShadows = false;
 	bool m_ShowShadows = true;
+
+	//Private resources
+	std::shared_ptr<Texture2D> m_TransLUT, m_MultiLUT, m_SkyLUT;
+	std::shared_ptr<Texture3D> m_AerialLUT;
+	std::shared_ptr<Texture3D> m_ScatterVolume, m_ShadowVolume;
+	std::shared_ptr<ComputeShader> m_TransShader, m_MultiShader, m_SkyShader;
+
+	std::shared_ptr<ComputeShader> m_AerialShader;
+	std::shared_ptr<ComputeShader> m_AScatterShader, m_AShadowShader, m_ARaymarchShader;
+
+	std::shared_ptr<Cubemap> m_IrradianceMap, m_PrefilteredMap;
+	std::shared_ptr<ComputeShader> m_IrradianceShader, m_PrefilteredShader;
+
+	Quad m_Quad;
+	std::shared_ptr<VertFragShader> m_FinalShader;
 
 	//External handles
 	const PerspectiveCamera& m_Camera;

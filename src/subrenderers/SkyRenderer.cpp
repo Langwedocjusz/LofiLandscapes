@@ -171,6 +171,9 @@ void SkyRenderer::Update(bool aerial) {
             UpdateAerialWithShadows();
     }
 
+    if ((m_UpdateFlags & SunColor) != None)
+        CalculateSunTransmittance();
+
     m_UpdateFlags = None;
     m_SunDirChanged = false;
 }
@@ -426,6 +429,23 @@ void SkyRenderer::Render() {
 void SkyRenderer::OnImGui(bool& open) {
     ImGui::Begin(LOFI_ICONS_SKY "Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
+    const glm::vec3 sun_col = m_SunCol;
+    const bool use_trans = m_UseSunTransmittance;
+    const float trans_inf = m_TransInfluence;
+    const float trans_curve = m_TransCurve;
+
+    ImGuiUtils::BeginGroupPanel("Sun color");
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColColorEdit3("Base Color", &m_SunCol);
+    ImGuiUtils::ColCheckbox("Use transmittance", &m_UseSunTransmittance);
+    ImGuiUtils::ColSliderFloat("Transmittance Influence", &m_TransInfluence, 0.0f, 1.0f);
+    ImGuiUtils::ColSliderFloat("Transmittance Curve", &m_TransCurve, 0.0f, 5.0f);
+    ImGui::Columns(1, "###col");
+    ImGuiUtils::EndGroupPanel();
+
+    if (sun_col != m_SunCol || use_trans != m_UseSunTransmittance || trans_inf != m_TransInfluence || trans_curve != m_TransCurve)
+        m_UpdateFlags = m_UpdateFlags | SunColor;
+
     float phi = m_Phi, theta = m_Theta;
     float height = m_Height;
 
@@ -456,7 +476,10 @@ void SkyRenderer::OnImGui(bool& open) {
     }
 
     if (sun_dir != m_SunDir)
+    {
         m_SunDirChanged = true;
+        m_UpdateFlags = m_UpdateFlags | SunColor;
+    }
 
     glm::vec3 albedo = m_GroundAlbedo;
 
@@ -504,4 +527,113 @@ void SkyRenderer::BindPrefiltered(int id) const {
 
 void SkyRenderer::BindAerial(int id) const {
     m_AerialLUT->Bind(id);
+}
+
+glm::vec3 SkyRenderer::getSunCol() const
+{
+    if (m_UseSunTransmittance)
+        return m_SunTrans * m_SunCol;
+    else
+        return m_SunCol;
+}
+
+void SkyRenderer::CalculateSunTransmittance()
+{
+    //TO-DO:
+    //Currently all atmosphere parameters defined here are doubled in shader files
+    //Once they are exposed in the gui this will need to be unified
+
+    constexpr int num_steps = 40;
+
+    constexpr float ground_rad = 6.360f;
+    constexpr float atmosphere_rad = 6.460f;
+
+    constexpr glm::vec3 pos{ 0.0f, ground_rad, 0.0f };
+
+    //Ray-sphere intersection from
+    //https://gamedev.stackexchange.com/questions/96459/fast-ray-sphere-collision-code.
+    auto IntersectSphere = [](glm::vec3 ro, glm::vec3 rd, float rad)
+    {
+        float b = glm::dot(ro, rd);
+        float c = glm::dot(ro, ro) - rad * rad;
+        if (c > 0.0 && b > 0.0) return -1.0f;
+        float discr = b * b - c;
+        if (discr < 0.0) return -1.0f;
+        // Special case: inside sphere, use far discriminant
+        if (discr > b * b) return (-b + glm::sqrt(discr));
+        return -b - glm::sqrt(discr);
+    };
+
+    auto getScatteringValues = [ground_rad](glm::vec3 pos, glm::vec3& rayleigh_s, float& mie_s, glm::vec3& extinction)
+    {
+        //Atmosphere params
+        constexpr glm::vec3 base_rayleigh_s{ 5.802f, 13.558f, 33.1f };
+        constexpr float base_rayleigh_a = 0.0f;
+
+        constexpr float base_mie_s = 3.996f;
+        constexpr float base_mie_a = 4.4f;
+
+        constexpr glm::vec3 base_ozone_a{ 0.650f, 1.881f, 0.085f };
+
+        //Height in km
+        float altitude = (glm::length(pos) - ground_rad) * 1000.0f;
+
+        //Density(height) distributions
+        // Note: Paper gets these switched up.
+        float rayleigh_dens = glm::exp(-altitude / 8.0f);
+        float mie_dens = glm::exp(-altitude / 1.2f);
+
+        rayleigh_s = base_rayleigh_s * rayleigh_dens;
+        float rayleigh_a = base_rayleigh_a * rayleigh_dens;
+
+        mie_s = base_mie_s * mie_dens;
+        float mie_a = base_mie_a * mie_dens;
+
+        //Ozone - uniform, triangle distribution
+        glm::vec3 ozone_a = base_ozone_a * glm::max(0.0f, 1.0f - abs(altitude - 25.0f) / 15.0f);
+
+        //Extinction is a sum of absorbionts and scatterings
+        extinction = rayleigh_s + rayleigh_a + mie_s + mie_a + ozone_a;
+    };
+
+    //Ray is hitting the Earth - no transmittance
+    if (IntersectSphere(pos, m_SunDir, ground_rad) > 0.0f)
+    {
+        m_SunTrans = glm::vec3(0.0f);
+        return;
+    }
+
+    //Distance to edge of the atmosphere
+    const float atm_dist = IntersectSphere(pos, m_SunDir, atmosphere_rad);
+
+    //Integrate transmittance
+    const float dt = atm_dist / float(num_steps);
+
+    float t = 0.3 * dt; //starting offset
+
+    glm::vec3 res(1.0f);
+
+    for (int i = 0; i < num_steps; i++) {
+        glm::vec3 p = pos + t * m_SunDir;
+
+        glm::vec3 rayleigh_s, extinction;
+        float mie_s;
+
+        getScatteringValues(p, rayleigh_s, mie_s, extinction);
+
+        //Beer-Lambert law
+        res *= glm::exp(-dt * extinction);
+
+        t += dt;
+    }
+
+    auto InterpolateResult = [this](glm::vec3 res)
+    {
+        const float h = glm::max(1.0f - m_SunDir.y, 0.0f);
+        const float t = m_TransInfluence * glm::pow(h, m_TransCurve);
+
+        return t * res + (1.0f - t) * glm::vec3(1.0f);
+    };
+
+    m_SunTrans = InterpolateResult(res);
 }

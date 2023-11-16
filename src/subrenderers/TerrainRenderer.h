@@ -33,9 +33,7 @@ public:
 
 private:
     //Settings
-    float m_ClearColor[3] = { 0.0f, 0.0f, 0.0f };
-
-    glm::vec3 m_SunCol{ 0.90f, 0.85f, 0.70f };
+    glm::vec3 m_ClearColor{ 0.0f, 0.0f, 0.0f };
 
     float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
 

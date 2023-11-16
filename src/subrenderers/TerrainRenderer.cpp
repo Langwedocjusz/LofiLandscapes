@@ -119,7 +119,7 @@ void TerrainRenderer::RenderShaded()
         m_ShadedShader->setUniform1i("uMaterial", int(m_Materials));
         m_ShadedShader->setUniform1i("uFixTiling", int(m_FixTiling));
         m_ShadedShader->setUniform1i("uFog", int(m_Fog));
-        m_ShadedShader->setUniform3f("uSunCol", m_SunCol);
+        m_ShadedShader->setUniform3f("uSunCol", m_Sky.getSunCol());
         m_ShadedShader->setUniform1f("uSunStr", m_SunStr);
         m_ShadedShader->setUniform1f("uSkyDiff", m_SkyDiff);
         m_ShadedShader->setUniform1f("uSkySpec", m_SkySpec);
@@ -176,7 +176,6 @@ void TerrainRenderer::OnImGui(bool& open) {
 
     ImGuiUtils::BeginGroupPanel("Lighting options:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColColorEdit3("Sun Color", &m_SunCol);
     ImGuiUtils::ColSliderFloat("Sun", &m_SunStr, 0.0, 4.0);
     ImGuiUtils::ColSliderFloat("Sky Diffuse", &m_SkyDiff, 0.0, 1.0);
     ImGuiUtils::ColSliderFloat("Sky Specular", &m_SkySpec, 0.0, 1.0);
@@ -202,7 +201,7 @@ void TerrainRenderer::OnImGui(bool& open) {
 
     ImGuiUtils::BeginGroupPanel("Background:");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColColorEdit3("ClearColor", m_ClearColor);
+    ImGuiUtils::ColColorEdit3("ClearColor", &m_ClearColor);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
