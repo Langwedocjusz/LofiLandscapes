@@ -58,7 +58,7 @@ public:
 
     //Parameters are total numbers of invocations needed.
     //They will be automatically divided by local group sizes defined in the shader source
-    void Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z);
+    void Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z) const;
 
 private:
     void Build() override;

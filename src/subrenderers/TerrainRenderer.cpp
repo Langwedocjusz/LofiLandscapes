@@ -64,109 +64,92 @@ void TerrainRenderer::RequestFullUpdate()
 }
 
 void TerrainRenderer::RenderWireframe() {
-    glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ProfilerGPUEvent we("Terrain::Draw");
+
+    const glm::mat4 mvp = m_Camera.getViewProjMatrix();
+
+    m_WireframeShader->Bind();
+    m_WireframeShader->setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
+    m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
     
+    auto scale_y = m_Map.getScaleY();
+
+    const glm::vec3 grid_color{ 1.0f, 1.0f, 1.0f };
+    const glm::vec3 trim_color{ 1.0f, 0.6f, 0.0f };
+    const glm::vec3 fill_color{ 1.0f, 0.0f, 0.6f };
+
+    m_WireframeShader->setUniform3f("uCol", grid_color);
+
+    for (const auto& grid : m_Clipmap.getGrids())
     {
-        ProfilerGPUEvent we("Terrain::PrepareWireframe");
-
-        const glm::mat4 mvp = m_Camera.getViewProjMatrix();
-
-        m_WireframeShader->Bind();
-        m_WireframeShader->setUniform1f("uL", m_Map.getScaleXZ());
-        m_WireframeShader->setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
-        m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
+        if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
+        {
+            grid.Draw();
+        }
     }
-    
+
+    m_WireframeShader->setUniform3f("uCol", fill_color);
+
+    for (const auto& fill : m_Clipmap.getFills())
     {
-        ProfilerGPUEvent we("Terrain::Draw");
+        fill.Draw();
+    }
 
-        auto scale_y = m_Map.getScaleY();
+    m_WireframeShader->setUniform3f("uCol", trim_color);
 
-        for (const auto& grid : m_Clipmap.getGrids())
-        {
-            if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-            {
-                grid.Draw();
-            }
-        }
-
-        for (const auto& fill : m_Clipmap.getFills())
-        {
-            fill.Draw();
-        }
+    for (const auto& trim : m_Clipmap.getTrims())
+    {
+        trim.Draw();
     }
 }
 
 void TerrainRenderer::RenderShaded()
 {
-    glClearColor(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ProfilerGPUEvent we("Terrain::Draw");
 
-    {
-        ProfilerGPUEvent we("Terrain::PrepareShaded");
+    const glm::mat4 mvp = m_Camera.getViewProjMatrix();
 
-        const float scale_xz = m_Map.getScaleXZ();
+    m_ShadedShader->Bind();
+    m_ShadedShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
+    m_ShadedShader->setUniform3f("uLightDir", m_Sky.getSunDir());
+    m_ShadedShader->setUniform3f("uPos", m_Camera.getPos());
+    m_ShadedShader->setUniformMatrix4fv("uMVP", mvp);
+    m_ShadedShader->setUniform1i("uShadow", int(m_Shadows));
+    m_ShadedShader->setUniform1i("uMaterial", int(m_Materials));
+    m_ShadedShader->setUniform1i("uFixTiling", int(m_FixTiling));
+    m_ShadedShader->setUniform1i("uFog", int(m_Fog));
+    m_ShadedShader->setUniform3f("uSunCol", m_Sky.getSunCol());
+    m_ShadedShader->setUniform1f("uSunStr", m_SunStr);
+    m_ShadedShader->setUniform1f("uSkyDiff", m_SkyDiff);
+    m_ShadedShader->setUniform1f("uSkySpec", m_SkySpec);
+    m_ShadedShader->setUniform1f("uRefStr", m_RefStr);
+    m_ShadedShader->setUniform1f("uTilingFactor", m_TilingFactor);
+    m_ShadedShader->setUniform1f("uNormalStrength", m_NormalStrength);
 
-        const glm::mat4 mvp = m_Camera.getViewProjMatrix();
+    m_ShadedShader->setUniform1f("uAerialDist", m_Sky.getAerialDistScale());
 
-        m_ShadedShader->Bind();
-        m_ShadedShader->setUniform1f("uL", scale_xz);
-        m_ShadedShader->setUniform3f("uLightDir", m_Sky.getSunDir());
-        m_ShadedShader->setUniform3f("uPos", m_Camera.getPos());
-        m_ShadedShader->setUniformMatrix4fv("uMVP", mvp);
-        m_ShadedShader->setUniform1i("uShadow", int(m_Shadows));
-        m_ShadedShader->setUniform1i("uMaterial", int(m_Materials));
-        m_ShadedShader->setUniform1i("uFixTiling", int(m_FixTiling));
-        m_ShadedShader->setUniform1i("uFog", int(m_Fog));
-        m_ShadedShader->setUniform3f("uSunCol", m_Sky.getSunCol());
-        m_ShadedShader->setUniform1f("uSunStr", m_SunStr);
-        m_ShadedShader->setUniform1f("uSkyDiff", m_SkyDiff);
-        m_ShadedShader->setUniform1f("uSkySpec", m_SkySpec);
-        m_ShadedShader->setUniform1f("uRefStr", m_RefStr);
-        m_ShadedShader->setUniform1f("uTilingFactor", m_TilingFactor);
-        m_ShadedShader->setUniform1f("uNormalStrength", m_NormalStrength);
+    m_Map.BindNormalmap(0);
+    m_ShadedShader->setUniform1i("normalmap", 0);
+    m_Map.BindShadowmap(1);
+    m_ShadedShader->setUniform1i("shadowmap", 1);
+    m_Map.BindMaterialmap(2);
+    m_ShadedShader->setUniform1i("materialmap", 2);
 
-        m_ShadedShader->setUniform1f("uAerialDist", m_Sky.getAerialDistScale());
+    m_Material.BindAlbedo(3);
+    m_ShadedShader->setUniform1i("albedo", 3);
+    m_Material.BindNormal(4);
+    m_ShadedShader->setUniform1i("normal", 4);
 
-        m_Map.BindNormalmap(0);
-        m_ShadedShader->setUniform1i("normalmap", 0);
-        m_Map.BindShadowmap(1);
-        m_ShadedShader->setUniform1i("shadowmap", 1);
-        m_Map.BindMaterialmap(2);
-        m_ShadedShader->setUniform1i("materialmap", 2);
+    m_Sky.BindIrradiance(5);
+    m_ShadedShader->setUniform1i("irradiance", 5);
+    m_Sky.BindPrefiltered(6);
+    m_ShadedShader->setUniform1i("prefiltered", 6);
+    m_Sky.BindAerial(7);
+    m_ShadedShader->setUniform1i("aerial", 7);
 
-        m_Material.BindAlbedo(3);
-        m_ShadedShader->setUniform1i("albedo", 3);
-        m_Material.BindNormal(4);
-        m_ShadedShader->setUniform1i("normal", 4);
-
-        m_Sky.BindIrradiance(5);
-        m_ShadedShader->setUniform1i("irradiance", 5);
-        m_Sky.BindPrefiltered(6);
-        m_ShadedShader->setUniform1i("prefiltered", 6);
-        m_Sky.BindAerial(7);
-        m_ShadedShader->setUniform1i("aerial", 7);
-    }
+    auto scale_y = m_Map.getScaleY();
     
-    {
-        ProfilerGPUEvent we("Terrain::Draw");
-
-        auto scale_y = m_Map.getScaleY();
-
-        for (const auto& grid : m_Clipmap.getGrids())
-        {
-            if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-            {
-                grid.Draw();
-            }
-        }
-
-        for (const auto& fill : m_Clipmap.getFills())
-        {
-            fill.Draw();
-        }
-    }
+    m_Clipmap.Draw(m_Camera, scale_y);
 }
 
 void TerrainRenderer::OnImGui(bool& open) {

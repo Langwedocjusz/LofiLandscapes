@@ -19,6 +19,7 @@ GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& 
 {
 	m_RaycastShader = m_ResourceManager.RequestComputeShader("res/shaders/grass/raycast.glsl");
 	m_NoiseGenerator = m_ResourceManager.RequestComputeShader("res/shaders/grass/noise.glsl");
+
 	m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
 
 	m_PresentShader = m_ResourceManager.RequestVertFragShader(
@@ -227,76 +228,77 @@ void GrassRenderer::Render()
 {
 	if (!m_RenderGrass) return;
 
+	ProfilerGPUEvent we("Grass::Draw");
+	
+	const glm::mat4 mvp = m_Camera.getViewProjMatrix();
+	
+	m_PresentShader->Bind();
+	m_PresentShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
+	m_PresentShader->setUniform3f("uPos", m_Camera.getPos());
+	m_PresentShader->setUniformMatrix4fv("uMVP", mvp);
+	
+	m_PresentShader->setUniform3f("uLightDir", m_Sky.getSunDir());
+	m_PresentShader->setUniform3f("uSunCol", m_Sky.getSunCol());
+	m_PresentShader->setUniform1f("uSunStr", m_SunStr);
+	m_PresentShader->setUniform1f("uSkyDiff", m_SkyDiff);
+	m_PresentShader->setUniform1f("uSkySpec", m_SkySpec);
+	m_PresentShader->setUniform1f("uRefStr", m_RefStr);
+	m_PresentShader->setUniform1i("uShadow", int(m_Shadows));
+	
+	m_PresentShader->setUniform1f("uGrassHeight", m_GrassHeight);
+	m_PresentShader->setUniform1f("uTilingFactor", m_Tiling);
+	m_PresentShader->setUniform1f("uMaxDepth", m_MaxDepth);
+	m_PresentShader->setUniform1f("uTime", m_Time);
+	m_PresentShader->setUniform2f("uScrollVel", m_ScrollingVelocity.x, m_ScrollingVelocity.y);
+	m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
+	m_PresentShader->setUniform1f("uStrength", m_NoiseStrength);
+	m_PresentShader->setUniform1f("uSway", m_Sway);
+	m_PresentShader->setUniform1f("uAOMin", m_AOMin);
+	m_PresentShader->setUniform1f("uAOMax", m_AOMax);
+	
+	m_PresentShader->setUniform3f("uAlbedo", m_Albedo);
+	m_PresentShader->setUniform1f("uRoughness", m_Roughness);
+	m_PresentShader->setUniform1f("uTranslucent", m_Translucent);
+	
+	m_RaycastResult->Bind(0);
+	m_PresentShader->setUniform1i("raycast_res", 0);
+	m_Noise->Bind(1);
+	m_PresentShader->setUniform1i("noise", 1);
+	
+	
+	m_Map.BindNormalmap(2);
+	m_PresentShader->setUniform1i("normalmap", 2);
+	m_Map.BindShadowmap(3);
+	m_PresentShader->setUniform1i("shadowmap", 3);
+	
+	m_Sky.BindIrradiance(4);
+	m_PresentShader->setUniform1i("irradiance", 4);
+	m_Sky.BindPrefiltered(5);
+	m_PresentShader->setUniform1i("prefiltered", 5);
+
+	auto scale_y = m_Map.getScaleY();
+
+	for (uint32_t i=0; i<m_Clipmap.MaxGridIDUpTo(m_LodLevels); i++)
 	{
-		ProfilerGPUEvent we("Grass::Prepare");
+		const auto& grid = m_Clipmap.getGrids()[i];
 
-		const glm::mat4 mvp = m_Camera.getViewProjMatrix();
-
-		m_PresentShader->Bind();
-		m_PresentShader->setUniform1f("uL", m_Map.getScaleXZ());
-		m_PresentShader->setUniform3f("uPos", m_Camera.getPos());
-		m_PresentShader->setUniformMatrix4fv("uMVP", mvp);
-
-		m_PresentShader->setUniform3f("uLightDir", m_Sky.getSunDir());
-		m_PresentShader->setUniform3f("uSunCol", m_Sky.getSunCol());
-		m_PresentShader->setUniform1f("uSunStr", m_SunStr);
-		m_PresentShader->setUniform1f("uSkyDiff", m_SkyDiff);
-		m_PresentShader->setUniform1f("uSkySpec", m_SkySpec);
-		m_PresentShader->setUniform1f("uRefStr", m_RefStr);
-		m_PresentShader->setUniform1i("uShadow", int(m_Shadows));
-
-		m_PresentShader->setUniform1f("uGrassHeight", m_GrassHeight);
-		m_PresentShader->setUniform1f("uTilingFactor", m_Tiling);
-		m_PresentShader->setUniform1f("uMaxDepth", m_MaxDepth);
-		m_PresentShader->setUniform1f("uTime", m_Time);
-		m_PresentShader->setUniform2f("uScrollVel", m_ScrollingVelocity.x, m_ScrollingVelocity.y);
-		m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
-		m_PresentShader->setUniform1f("uStrength", m_NoiseStrength);
-		m_PresentShader->setUniform1f("uSway", m_Sway);
-		m_PresentShader->setUniform1f("uAOMin", m_AOMin);
-		m_PresentShader->setUniform1f("uAOMax", m_AOMax);
-		
-		m_PresentShader->setUniform3f("uAlbedo", m_Albedo);
-		m_PresentShader->setUniform1f("uRoughness", m_Roughness);
-		m_PresentShader->setUniform1f("uTranslucent", m_Translucent);
-
-		m_RaycastResult->Bind(0);
-		m_PresentShader->setUniform1i("raycast_res", 0);
-		m_Noise->Bind(1);
-		m_PresentShader->setUniform1i("noise", 1);
-
-
-		m_Map.BindNormalmap(2);
-		m_PresentShader->setUniform1i("normalmap", 2);
-		m_Map.BindShadowmap(3);
-		m_PresentShader->setUniform1i("shadowmap", 3);
-
-		m_Sky.BindIrradiance(4);
-		m_PresentShader->setUniform1i("irradiance", 4);
-		m_Sky.BindPrefiltered(5);
-		m_PresentShader->setUniform1i("prefiltered", 5);
+		if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
+		{
+			grid.Draw();
+		}
 	}
 
+	for (uint32_t i = 0; i < m_LodLevels; i++)
 	{
-		ProfilerGPUEvent we("Grass::Draw");
+		const auto& fill = m_Clipmap.getFills()[i];
 
-		auto scale_y = m_Map.getScaleY();
+		fill.Draw();
+	}
 
-		for (uint32_t i=0; i<m_Clipmap.MaxGridIDUpTo(m_LodLevels); i++)
-		{
-			const auto& grid = m_Clipmap.getGrids()[i];
+	for (uint32_t i = 0; i < m_LodLevels; i++)
+	{
+		const auto& trim = m_Clipmap.getTrims()[i];
 
-			if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-			{
-				grid.Draw();
-			}
-		}
-
-		for (uint32_t i = 0; i < m_Clipmap.MaxFillIDUpTo(m_LodLevels); i++)
-		{
-			const auto& fill = m_Clipmap.getFills()[i];
-
-			fill.Draw();
-		}
+		trim.Draw();
 	}
 }

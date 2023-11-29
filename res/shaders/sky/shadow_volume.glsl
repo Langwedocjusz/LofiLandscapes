@@ -19,7 +19,6 @@ uniform vec3 uBotRight;
 uniform vec3 uTopLeft;
 uniform vec3 uTopRight;
 
-uniform float uL;
 uniform float uScaleY;
 uniform float uScaleXZ;
 
@@ -32,7 +31,7 @@ vec2 getShadowUV(vec3 pos)
     vec3 hit_point = pos + t_hit*sun_dir;
     
     //Translate to uv coordinates
-    vec2 shadow_uv = (uL/2.0)*hit_point.xz/uScaleXZ;
+    vec2 shadow_uv = (2.0/uScaleXZ)*hit_point.xz;
     shadow_uv = 0.5*shadow_uv + 0.5;
 
     return shadow_uv;

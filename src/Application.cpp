@@ -34,7 +34,7 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     ImGuiStyles::OverShiftedDarkMode();
 
     //Set ImGui Font:
-    const int font_size = 16;
+    const int font_size = 20;
     const float font_size_f = static_cast<float>(font_size);
 
     io.Fonts->AddFontFromFileTTF("res/fonts/OpenSans/OpenSans-Medium.ttf", font_size);

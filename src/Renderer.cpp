@@ -99,6 +99,11 @@ void Renderer::OnRender() {
 
     const float scale_y  = m_Map.getScaleY();
 
+    const glm::vec3 clear_color = m_TerrainRenderer.getClearColor();
+
+    glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     if (m_Wireframe) 
     {
         m_TerrainRenderer.RenderWireframe();

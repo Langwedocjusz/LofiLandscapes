@@ -2,8 +2,8 @@
 
 out vec4 frag_col;
 
-uniform sampler2D tex;
+uniform vec3 uCol;
 
 void main() {
-    frag_col = vec4(1.0);
+    frag_col = vec4(uCol, 1.0);
 }

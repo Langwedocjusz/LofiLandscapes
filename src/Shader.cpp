@@ -241,7 +241,7 @@ ComputeShader::~ComputeShader()
     glDeleteProgram(m_ID);
 }
 
-void ComputeShader::Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z)
+void ComputeShader::Dispatch(uint32_t size_x, uint32_t size_y, uint32_t size_z) const
 {
     //We need to take ceilings of the divisions here since for example 33 invocations with 
     //local size 32 should result in 2 dispatches, not one

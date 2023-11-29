@@ -31,6 +31,8 @@ public:
     bool DoShadows() { return m_Shadows; }
     bool DoFog() { return m_Fog; }
 
+    glm::vec3 getClearColor() const { return m_ClearColor; }
+
 private:
     //Settings
     glm::vec3 m_ClearColor{ 0.0f, 0.0f, 0.0f };

@@ -375,7 +375,6 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_AShadowShader->setUniform3f("uBotRight", extents.BottomRight);
     m_AShadowShader->setUniform3f("uTopLeft", extents.TopLeft);
     m_AShadowShader->setUniform3f("uTopRight", extents.TopRight);
-    m_AShadowShader->setUniform1f("uL", 4.0f); //Temp, get this from the clipmap!
     m_AShadowShader->setUniform1f("uScaleY", m_Map.getScaleY());
     m_AShadowShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
 
