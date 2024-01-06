@@ -32,6 +32,8 @@ void TerrainRenderer::Init(uint32_t subdivisions, uint32_t levels)
 
 void TerrainRenderer::Update()
 {
+    ProfilerGPUEvent we("Terrain::Update (Displace)");
+
     m_Map.BindHeightmap();
 
     const glm::vec2 curr{ m_Camera.getPos().x, m_Camera.getPos().z };
