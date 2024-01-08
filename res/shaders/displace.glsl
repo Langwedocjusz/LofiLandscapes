@@ -31,6 +31,15 @@ float getHeight(vec2 uv)
     return 0.5 * uScaleY * texture(heightmap, uv).r;
 }
 
+bool OffsetSamples(float pos, float quad_size, int id)
+{
+    bool offset_samples = (abs((mod(pos, 2.0*quad_size) - quad_size)) > 0.5*quad_size);
+
+    if (id == 0) offset_samples = !offset_samples;
+
+    return offset_samples;
+}
+
 void main() {
     uint i = gl_GlobalInvocationID.x;
 
@@ -78,41 +87,29 @@ void main() {
     {
         height = getHeight(uv);
     }
-        
-    else if (verts[i].EdgeFlag == EDGE_FLAG_HORIZONTAL)
+    
+    else 
     {
+        //At this point the edge flag is either HORIZONTAL or VERTICAL
+        //so we may store this in one bool
+        bool horizontal = (verts[i].EdgeFlag == EDGE_FLAG_HORIZONTAL);
+
+        //Depending on the rotation of the trim mesh we may need to change 
+        //the vertical/horizontal orientation of our seam-correction
+        bool swap_axes = (is_trim_vertex && (id == 1 || id == 2));
+
+        if (swap_axes)
+            horizontal = !horizontal;
+
+        vec2 offset = horizontal
+                    ? vec2(quad_size/uScaleXZ, 0.0)
+                    : vec2(0.0, quad_size/uScaleXZ);
+
+        bool offset_samples = horizontal
+                            ? OffsetSamples(pos2.x, quad_size, id2.x)
+                            : OffsetSamples(pos2.y, quad_size, id2.y);
+
         vec2 sample1 = uv, sample2 = uv;
-
-        vec2 offset = vec2(quad_size/uScaleXZ, 0.0);
-
-        if (is_trim_vertex)
-            offset = rotations[id] * offset;
-
-        bool offset_samples = is_trim_vertex
-                            ? int(verts[i].Pos.x/quad_size) % 2 != 1
-                            : int(verts[i].Pos.x/quad_size) % 2 != id2.x;
-
-        if(offset_samples)
-        {
-            sample1 -= offset;
-            sample2 += offset;
-        }
-
-        height = 0.5*(getHeight(sample1)+getHeight(sample2));
-    }
-
-    else if (verts[i].EdgeFlag == EDGE_FLAG_VERTICAL)
-    {
-        vec2 sample1 = uv, sample2 = uv;
-
-        vec2 offset = vec2(0.0, quad_size/uScaleXZ);
-
-        if (is_trim_vertex)
-            offset = rotations[id] * offset;
-
-        bool offset_samples = is_trim_vertex
-                            ? int(verts[i].Pos.z/quad_size) % 2 != 1
-                            : int(verts[i].Pos.z/quad_size) % 2 != id2.y;
 
         if(offset_samples)
         {
