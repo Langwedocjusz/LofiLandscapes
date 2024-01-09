@@ -2,7 +2,7 @@
 
 #include "Shader.h"
 #include "Texture.h"
-#include "GLUtils.h"
+#include "Quad.h"
 #include "ResourceManager.h"
 #include "MapGenerator.h"
 

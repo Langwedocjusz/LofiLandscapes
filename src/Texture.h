@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cstdint>
 
 class Texture {
 public:
@@ -31,7 +32,7 @@ public:
 
     const Texture2DSpec& getSpec() { return m_Spec; }
 private:
-    unsigned int m_ID;
+    uint32_t m_ID;
     Texture2DSpec m_Spec;
 };
 
@@ -48,11 +49,11 @@ public:
     int getLayers() { return m_Layers; }
 
 private:
-    unsigned int m_ID;
+    uint32_t m_ID;
     int m_Layers;
     Texture2DSpec m_Spec;
 
-    std::vector<unsigned int> m_TextureViews;
+    std::vector<uint32_t> m_TextureViews;
 };
 
 class FramebufferTexture{
@@ -61,12 +62,16 @@ public:
     ~FramebufferTexture();
 
     void Initialize(Texture2DSpec spec);
-    void BindFBO();
-    void BindTex(int id = 0);
+
+    void BindFBO() const;
+    void BindTex(int id = 0) const;
+    void BindImage(int id, int mip) const;
+
+    void Resize(uint32_t width, uint32_t height);
 
     const Texture2DSpec& getSpec() { return m_Spec; }
 private:
-    unsigned int m_FBO, m_ID;
+    uint32_t m_FBO, m_ID, m_RBO;
     Texture2DSpec m_Spec;
 };
 
@@ -92,7 +97,7 @@ public:
 
     const Texture3DSpec& getSpec() { return m_Spec; }
 private:
-    unsigned int m_ID;
+    uint32_t m_ID;
     Texture3DSpec m_Spec;
 };
 
@@ -115,6 +120,6 @@ public:
 
     const CubemapSpec& getSpec() { return m_Spec; }
 private:
-    unsigned int m_ID;
+    uint32_t m_ID;
     CubemapSpec m_Spec;
 };

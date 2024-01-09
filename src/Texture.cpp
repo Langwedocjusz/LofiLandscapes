@@ -7,7 +7,7 @@
 
 Texture::~Texture() {}
 
-void InitTex2D(unsigned int& id, Texture2DSpec spec) {
+void InitTex2D(uint32_t& id, Texture2DSpec spec) {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
@@ -24,7 +24,7 @@ void InitTex2D(unsigned int& id, Texture2DSpec spec) {
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);
 }
 
-void InitTex3D(unsigned int& id, Texture3DSpec spec) {
+void InitTex3D(uint32_t& id, Texture3DSpec spec) {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_3D, id);
 
@@ -129,27 +129,60 @@ FramebufferTexture::~FramebufferTexture() {
 }
 
 void FramebufferTexture::Initialize(Texture2DSpec spec) {
-    //Initialize FBO:
+    //Initialize FrameBufferObject:
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
+    //Initialize RenderBufferObject containing depth and tencil attachments
+    glGenRenderbuffers(1, &m_RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, spec.ResolutionX, spec.ResolutionY);
+
+    //Attach RBO to framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
     //Initialize texture:
     InitTex2D(m_ID, spec);
+    m_Spec = spec;
 
     //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D, m_ID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ID, 0);
 
-    m_Spec = spec;
+    //Reset framebuffer to default
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FramebufferTexture::BindFBO() {
+void FramebufferTexture::BindFBO() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 }
 
-void FramebufferTexture::BindTex(int id) {
+void FramebufferTexture::BindTex(int id) const {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_ID);
+}
+
+void FramebufferTexture::BindImage(int id, int mip) const {
+    int format = m_Spec.InternalFormat;
+
+    glBindImageTexture(id, m_ID, mip, GL_FALSE, 0, GL_READ_WRITE, format);
+}
+
+void FramebufferTexture::Resize(uint32_t width, uint32_t height)
+{
+    m_Spec.ResolutionX = width;
+    m_Spec.ResolutionY = height;
+
+    BindTex();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, m_Spec.InternalFormat,
+        m_Spec.ResolutionX, m_Spec.ResolutionY, 0,
+        m_Spec.Format, m_Spec.Type, NULL);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Spec.ResolutionX, m_Spec.ResolutionY);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 void Texture3D::Initialize(Texture3DSpec spec) {

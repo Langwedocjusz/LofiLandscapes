@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-Window::Window(const std::string& title, unsigned int width, unsigned int height) {
+Window::Window(const std::string& title, uint32_t width, uint32_t height) {
     m_WindowData.Title  = title;
     m_WindowData.Width  = width;
     m_WindowData.Height = height;

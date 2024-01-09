@@ -1,4 +1,4 @@
-#include "GLUtils.h"
+#include "Quad.h"
 
 #include "glad/glad.h"
 

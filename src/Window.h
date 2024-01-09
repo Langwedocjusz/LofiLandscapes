@@ -6,17 +6,18 @@
 
 #include <string>
 #include <functional>
+#include <cstdint>
 
 struct WindowData {
     std::string Title;
-    unsigned int Width, Height;
+    uint32_t Width, Height;
 
     std::function<void(Event&)> EventCallback;
 };
 
 class Window{
 public:
-    Window(const std::string& title, unsigned int width, unsigned int height);
+    Window(const std::string& title, uint32_t width, uint32_t height);
     ~Window();
 
     void OnUpdate();
@@ -27,8 +28,8 @@ public:
     bool ShouldClose();
     GLFWwindow* getGLFWPointer() {return m_Window;}
 
-    unsigned int getWidth()  const {return m_WindowData.Width;}
-    unsigned int getHeight() const {return m_WindowData.Height;}
+    uint32_t getWidth()  const {return m_WindowData.Width;}
+    uint32_t getHeight() const {return m_WindowData.Height;}
 
     void setEventCallback(std::function<void(Event&)> callback);
 private:

@@ -123,10 +123,12 @@ void Application::StartMenu() {
         else if (selected_id == 1)
             m_StartSettings.WrapType = GL_REPEAT;
 
+        //-------------------------------------------------
+
+        ImGuiUtils::ColSliderFloat("Internal Resolution Scale", &m_StartSettings.InternalResScale, 0.5f, 1.0f);
+
         ImGui::Columns(1, "###col");
         ImGui::EndChild();
-
-        //-------------------------------------------------
 
         ImGui::Spacing();
 

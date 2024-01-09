@@ -15,7 +15,7 @@
 
 class Renderer {
 public:
-    Renderer(unsigned int width, unsigned int height);
+    Renderer(uint32_t width, uint32_t height);
     ~Renderer();
 
     struct StartSettings {
@@ -25,6 +25,7 @@ public:
         int ShadowRes = 2048;
         int MaterialRes = 1024;
         int WrapType = GL_CLAMP_TO_BORDER;
+        float InternalResScale = 1.0f;
     };
 
     void InitImGuiIniHandler();
@@ -34,7 +35,7 @@ public:
     void OnRender();
     void OnImGuiRender();
 
-    void OnWindowResize(unsigned int width, unsigned int height);
+    void OnWindowResize(uint32_t width, uint32_t height);
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
     void OnMouseMoved(float x, float y);
@@ -55,7 +56,7 @@ private:
 
     bool m_ShowTexBrowser = false, m_ShowProfiler = false;
 
-    unsigned int m_WindowWidth, m_WindowHeight;
+    uint32_t m_WindowWidth, m_WindowHeight;
     float m_Aspect, m_InvAspect;
     
     FPCamera m_Camera;
@@ -69,4 +70,10 @@ private:
     TerrainRenderer m_TerrainRenderer;
     GrassRenderer m_GrassRenderer;
     SkyRenderer m_SkyRenderer;
+
+    float m_InternalResScale = 1.0f;
+    uint32_t m_InternalWidth, m_InternalHeight;
+    FramebufferTexture m_Framebuffer;
+    Quad m_Quad;
+    std::shared_ptr<VertFragShader> m_PresentShader;
 };
