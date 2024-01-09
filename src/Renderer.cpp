@@ -101,6 +101,12 @@ void Renderer::OnUpdate(float deltatime)
 {
     ProfilerCPUEvent we("Renderer::OnUpdate");
 
+    if (m_ResizeFramebuffer)
+    {
+        m_Framebuffer.Resize(m_InternalWidth, m_InternalHeight);
+        m_ResizeFramebuffer = false;
+    }
+
     if (m_Map.GeometryShouldUpdate())
         m_TerrainRenderer.RequestFullUpdate();
 
@@ -278,7 +284,7 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_Aspect = float(m_WindowWidth) / float(m_WindowHeight);
     m_InvAspect = 1.0 / m_Aspect;
 
-    m_Framebuffer.Resize(m_InternalWidth, m_InternalHeight);
+    m_ResizeFramebuffer = true;
 }
 
 void Renderer::OnKeyPressed(int keycode, bool repeat) 

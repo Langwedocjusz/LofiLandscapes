@@ -73,6 +73,7 @@ private:
 
     float m_InternalResScale = 1.0f;
     uint32_t m_InternalWidth, m_InternalHeight;
+    bool m_ResizeFramebuffer = true;
     FramebufferTexture m_Framebuffer;
     Quad m_Quad;
     std::shared_ptr<VertFragShader> m_PresentShader;
