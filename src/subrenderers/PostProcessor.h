@@ -8,7 +8,7 @@ public:
 
 	void Init(uint32_t width, uint32_t height);
 	void OnRender();
-	void OnImGui(bool open);
+	void OnImGui(bool& open);
 	
 	void ResizeBuffers(uint32_t width, uint32_t height);
 

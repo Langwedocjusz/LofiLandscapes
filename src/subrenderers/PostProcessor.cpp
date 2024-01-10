@@ -81,7 +81,7 @@ void PostProcessor::DoFXAA()
 	}
 }
 
-void PostProcessor::OnImGui(bool open)
+void PostProcessor::OnImGui(bool& open)
 {
 	ImGui::Begin(LOFI_ICONS_POSTFX "Postprocessing", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
