@@ -15,12 +15,13 @@
 Renderer::Renderer(uint32_t width, uint32_t height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
-    , m_InvAspect(1.0/m_Aspect)
+    , m_InvAspect(1.0 / m_Aspect)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
     , m_SkyRenderer(m_ResourceManager, m_Camera, m_Map)
     , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
     , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
+    , m_PostProcessor(m_ResourceManager, m_Framebuffer)
 {
     //Bind (de)serialization callbacks
     m_Serializer.RegisterLoadCallback("Terrain Editor",
@@ -93,6 +94,8 @@ void Renderer::Init(StartSettings settings)
 
     m_Framebuffer.Initialize(framebuffer_spec);
 
+    m_PostProcessor.Init(m_InternalHeight, m_InternalHeight);
+
     //Bind default framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -104,6 +107,8 @@ void Renderer::OnUpdate(float deltatime)
     if (m_ResizeFramebuffer)
     {
         m_Framebuffer.Resize(m_InternalWidth, m_InternalHeight);
+        m_PostProcessor.ResizeBuffers(m_InternalWidth, m_InternalHeight);
+
         m_ResizeFramebuffer = false;
     }
 
@@ -147,6 +152,7 @@ void Renderer::OnRender()
 
     else 
     {
+        //Initial rendering to framebuffer
         m_Framebuffer.BindFBO();
         glViewport(0, 0, m_InternalWidth, m_InternalHeight);
         glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
@@ -157,13 +163,18 @@ void Renderer::OnRender()
         m_GrassRenderer.Render();
         m_SkyRenderer.Render();
 
+        //Post processing
+        m_PostProcessor.OnRender();
+
+        //Presenting results to the screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, m_WindowWidth, m_WindowHeight);
         glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        m_Framebuffer.BindTex(0);
+        //m_Framebuffer.BindTex(0);
+        m_PostProcessor.BindOutput(0);
 
         m_PresentShader->Bind();
         m_PresentShader->setUniform1i("framebuffer", 0);
@@ -215,6 +226,7 @@ void Renderer::OnImGuiRender()
             ImGui::MenuItem(LOFI_ICONS_MATERIAL    "Material",     NULL, &m_ShowMaterialMenu);
             ImGui::MenuItem(LOFI_ICONS_MATERIALMAP "Material Map", NULL, &m_ShowMapMaterialMenu);
             ImGui::MenuItem(LOFI_ICONS_SKY         "Sky",          NULL, &m_ShowSkyMenu);
+            ImGui::MenuItem(LOFI_ICONS_POSTFX      "PostFX",       NULL, &m_ShowPostMenu);
 
             ImGui::EndMenu();
         }
@@ -265,6 +277,9 @@ void Renderer::OnImGuiRender()
 
     if (m_ShowSkyMenu)
         m_SkyRenderer.OnImGui(m_ShowSkyMenu);
+
+    if (m_ShowPostMenu)
+        m_PostProcessor.OnImGui(m_ShowPostMenu);
 
     if (m_ShowTexBrowser)
         m_ResourceManager.DrawTextureBrowser(m_ShowTexBrowser);
@@ -337,6 +352,7 @@ void Renderer::InitImGuiIniHandler()
         if (CheckLine("ShowMaterialMenu=%d\n"))    r->m_ShowMaterialMenu    = bool(value);
         if (CheckLine("ShowSkyMenu=%d\n"))         r->m_ShowSkyMenu         = bool(value);
         if (CheckLine("ShowMapMaterialMenu=%d\n")) r->m_ShowMapMaterialMenu = bool(value);
+        if (CheckLine("ShowPostMenu=%d\n"))        r->m_ShowPostMenu        = bool(value);
     };
 
     auto MyUserData_WriteAll = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
@@ -352,6 +368,7 @@ void Renderer::InitImGuiIniHandler()
         out_buf->appendf("ShowMaterialMenu=%d\n", r->m_ShowMaterialMenu);
         out_buf->appendf("ShowSkyMenu=%d\n", r->m_ShowSkyMenu);
         out_buf->appendf("ShowMapMaterialMenu=%d\n", r->m_ShowMapMaterialMenu);
+        out_buf->appendf("ShowPostMenu=%d\n", r->m_ShowPostMenu);
         out_buf->appendf("\n");
     };
 

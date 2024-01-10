@@ -59,8 +59,19 @@ void Texture2D::BindImage(int id, int mip) const {
 }
 
 void Texture2D::AttachToFramebuffer() {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D, m_ID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ID, 0);
+}
+
+void Texture2D::Resize(uint32_t width, uint32_t height)
+{
+    m_Spec.ResolutionX = width;
+    m_Spec.ResolutionY = height;
+
+    Bind();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, m_Spec.InternalFormat,
+        m_Spec.ResolutionX, m_Spec.ResolutionY, 0,
+        m_Spec.Format, m_Spec.Type, NULL);
 }
 
 void Texture2D::DrawToImGui(float width, float height) {

@@ -28,6 +28,8 @@ public:
     void BindImage(int id, int mip) const;
     void AttachToFramebuffer();
 
+    void Resize(uint32_t width, uint32_t height);
+
     void DrawToImGui(float width, float height);
 
     const Texture2DSpec& getSpec() { return m_Spec; }
