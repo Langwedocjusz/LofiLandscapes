@@ -155,6 +155,8 @@ void TerrainRenderer::RenderShaded()
 }
 
 void TerrainRenderer::OnImGui(bool& open) {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_LIGHTING "Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     const bool shadows = m_Shadows;

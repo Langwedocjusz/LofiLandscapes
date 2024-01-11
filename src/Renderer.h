@@ -27,6 +27,7 @@ public:
         int MaterialRes = 1024;
         int WrapType = GL_CLAMP_TO_BORDER;
         float InternalResScale = 1.0f;
+        bool IncludeGrass = false;
     };
 
     void InitImGuiIniHandler();
@@ -45,17 +46,20 @@ public:
 private:
 
     bool m_Wireframe = false;
+    bool m_IncludeGrass = false;
 
     //Show menu window flags
     //To-do: In practice using this is somewhat ugly, 
     // may switch to map<string, bool> or something like that
-    bool m_ShowTerrainMenu = true,
-         m_ShowLightMenu   = true,  m_ShowShadowMenu      = true,
-         m_ShowCamMenu     = true,  m_ShowMaterialMenu    = true,
-         m_ShowSkyMenu     = true,  m_ShowMapMaterialMenu = true,
+    bool m_ShowTerrainMenu = false,
+         m_ShowLightMenu   = false,  m_ShowShadowMenu      = false,
+         m_ShowCamMenu     = false,  m_ShowMaterialMenu    = false,
+         m_ShowSkyMenu     = false,  m_ShowMapMaterialMenu = false,
          m_ShowGrassMenu   = false, m_ShowPostMenu = false;
 
     bool m_ShowTexBrowser = false, m_ShowProfiler = false;
+
+    bool m_ShowHelpPopup = true;
 
     uint32_t m_WindowWidth, m_WindowHeight;
     float m_Aspect, m_InvAspect;

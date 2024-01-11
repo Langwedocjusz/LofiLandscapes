@@ -91,12 +91,37 @@ void Application::StartMenu() {
         ImGui::Begin("Start settings", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
         
         ImGui::BeginChild("#Settings", ImVec2(0.0f, 0.9f*ImGui::GetContentRegionAvail().y), true);
-        ImGui::Columns(2, "###col");
+        
+        //TERRAIN GEOMETRY-----------------------------------------------------------------------
 
+        ImGuiUtils::BeginGroupPanel("Terrain geometry");
+
+        ImGui::Columns(2, "###col");
         ImGuiUtils::ColSliderInt("Grid subdivisions", &m_StartSettings.Subdivisions, 16, 96);
         ImGuiUtils::ColSliderInt("Lod levels", &m_StartSettings.LodLevels, 1, 10);
 
-        ImGui::Spacing(); ImGui::NextColumn(); ImGui::Spacing(); ImGui::NextColumn();
+        //World type selection
+        std::vector<std::string> options{ "finite", "tiling" };
+
+        static int selected_id = 1;
+
+        ImGui::Columns(2, "###col");
+        ImGuiUtils::ColCombo("World type", options, selected_id);
+
+        if (selected_id == 0)
+            m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
+        else if (selected_id == 1)
+            m_StartSettings.WrapType = GL_REPEAT;
+
+        ImGui::Columns(1, "###col");
+
+        ImGuiUtils::EndGroupPanel();
+
+        //TEXTURES--------------------------------------------------------------------------------
+
+        ImGuiUtils::BeginGroupPanel("Textures");
+
+        ImGui::Columns(2, "###col");
 
         ImGuiUtils::ColSliderIntLog("Heightmap resolution", &m_StartSettings.HeightRes, 256, 4096);
         ImGuiUtils::ColSliderIntLog("Shadowmap resolution", &m_StartSettings.ShadowRes, 256, 4096);
@@ -110,25 +135,33 @@ void Application::StartMenu() {
         m_StartSettings.ShadowRes = std::exp2(std::round(std::log2(m_StartSettings.ShadowRes)));
         m_StartSettings.MaterialRes = std::exp2(std::round(std::log2(m_StartSettings.MaterialRes)));
 
-        //-----World type selection----------------------
-        std::vector<std::string> options{"finite", "tiling"};
+        ImGui::Columns(1, "###col");
 
-        static int selected_id = 1;
+        ImGuiUtils::EndGroupPanel();
+
+        //RENDERING-----------------------------------------------------------------------------
+
+        ImGuiUtils::BeginGroupPanel("Rendering");
 
         ImGui::Columns(2, "###col");
-        ImGuiUtils::ColCombo("World type", options, selected_id);
-
-        if (selected_id == 0)
-            m_StartSettings.WrapType = GL_CLAMP_TO_BORDER;
-        else if (selected_id == 1)
-            m_StartSettings.WrapType = GL_REPEAT;
-
-        //-------------------------------------------------
-
         ImGuiUtils::ColSliderFloat("Internal Resolution Scale", &m_StartSettings.InternalResScale, 0.5f, 1.0f);
-
         ImGui::Columns(1, "###col");
+
+        ImGuiUtils::EndGroupPanel();
+
+        //EXPERIMENTAL--------------------------------------------------------------------------
+
+        ImGuiUtils::BeginGroupPanel("Experimental features");
+
+        ImGui::Columns(2, "###col");
+        ImGuiUtils::ColCheckbox("Grass renderer (can cause long startup)", &m_StartSettings.IncludeGrass);
+        ImGui::Columns(1, "###col");
+
+        ImGuiUtils::EndGroupPanel();
+
         ImGui::EndChild();
+
+        //START BUTTON--------------------------------------------------------------------------
 
         ImGui::Spacing();
 

@@ -204,6 +204,8 @@ void Profiler::DrawLegend(std::deque<FrameData>& frames, std::vector<std::string
 
 void Profiler::OnImGui(bool& open)
 {
+	ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f), ImGuiCond_FirstUseEver);
+
 	ImGui::Begin("Profiler", &open);
 
 	const int palette_size = 6;

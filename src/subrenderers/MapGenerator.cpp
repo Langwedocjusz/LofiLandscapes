@@ -306,6 +306,8 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     float scale_xz = m_ScaleXZ;
     float scale_y = m_ScaleY;
 
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_TERRAIN "Terrain editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGui::Text("Scale:");
@@ -346,6 +348,8 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_SHADOW "Shadow/AO settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     ImGuiUtils::BeginGroupPanel("Shadowmap settings:");
@@ -382,6 +386,8 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
 }
 
 void MapGenerator::ImGuiMaterials(bool& open) {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_MATERIALMAP "Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     bool material_changed = m_MaterialEditor.OnImGui();

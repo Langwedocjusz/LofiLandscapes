@@ -83,6 +83,8 @@ void PostProcessor::DoFXAA()
 
 void PostProcessor::OnImGui(bool& open)
 {
+	ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f), ImGuiCond_FirstUseEver);
+
 	ImGui::Begin(LOFI_ICONS_POSTFX "Postprocessing", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
 	if (ImGui::CollapsingHeader("FXAA"))

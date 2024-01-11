@@ -148,9 +148,20 @@ void GrassRenderer::UpdateGeometry()
 	m_UpdateAllLevels = false;
 }
 
+void GrassRenderer::RequestGeometryUpdate()
+{
+	m_UpdateAllLevels = true;
+}
+
 void GrassRenderer::OnImGui(bool& open)
 {
+	ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
 	ImGui::Begin(LOFI_ICONS_GRASS "Grass", &open, ImGuiWindowFlags_NoFocusOnAppearing);
+
+	ImGui::Columns(2, "###col");
+	ImGuiUtils::ColCheckbox("Render grass", &m_RenderGrass);
+	ImGui::Columns(1, "###col");
 
 	if (ImGui::CollapsingHeader("Precomputed raycast"))
 	{
@@ -188,8 +199,6 @@ void GrassRenderer::OnImGui(bool& open)
 	if (ImGui::CollapsingHeader("Rendering"))
 	{
 		ImGui::Columns(2, "###col");
-
-		ImGuiUtils::ColCheckbox("Render grass", &m_RenderGrass);
 
 		ImGuiUtils::ColSliderInt("Lod Levels", &m_LodLevels, 0, 5);
 

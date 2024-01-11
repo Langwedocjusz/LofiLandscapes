@@ -54,8 +54,13 @@ void Renderer::Init(StartSettings settings)
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
     m_Material.Init(settings.MaterialRes);
 
-    m_GrassRenderer.Init();
-
+    if (settings.IncludeGrass)
+    {
+        m_IncludeGrass = true;
+        m_GrassRenderer.Init();
+        m_GrassRenderer.RequestGeometryUpdate();
+    }
+        
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)
     //being rendered after all geometry
@@ -113,8 +118,11 @@ void Renderer::OnUpdate(float deltatime)
     }
 
     if (m_Map.GeometryShouldUpdate())
+    {
         m_TerrainRenderer.RequestFullUpdate();
-
+        m_GrassRenderer.RequestGeometryUpdate();
+    }
+        
     if (m_SkyRenderer.SunDirChanged() && m_TerrainRenderer.DoShadows())
         m_Map.RequestShadowUpdate();
 
@@ -124,7 +132,8 @@ void Renderer::OnUpdate(float deltatime)
 
     m_Map.Update(m_SkyRenderer.getSunDir());
 
-    m_GrassRenderer.OnUpdate(deltatime);
+    if (m_IncludeGrass)
+        m_GrassRenderer.OnUpdate(deltatime);
 
     m_SkyRenderer.Update(m_TerrainRenderer.DoFog());
 
@@ -160,7 +169,10 @@ void Renderer::OnRender()
         glEnable(GL_DEPTH_TEST);
 
         m_TerrainRenderer.RenderShaded();
-        m_GrassRenderer.Render();
+
+        if (m_IncludeGrass)
+            m_GrassRenderer.Render();
+
         m_SkyRenderer.Render();
 
         //Post processing
@@ -173,7 +185,6 @@ void Renderer::OnRender()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        //m_Framebuffer.BindTex(0);
         m_PostProcessor.BindOutput(0);
 
         m_PresentShader->Bind();
@@ -219,7 +230,6 @@ void Renderer::OnImGuiRender()
         if (ImGui::BeginMenu("Windows")) 
         {
             ImGui::MenuItem(LOFI_ICONS_TERRAIN     "Terrain",      NULL, &m_ShowTerrainMenu);
-            ImGui::MenuItem(LOFI_ICONS_GRASS       "Grass",        NULL, &m_ShowGrassMenu);
             ImGui::MenuItem(LOFI_ICONS_LIGHTING    "Lighting",     NULL, &m_ShowLightMenu);
             ImGui::MenuItem(LOFI_ICONS_SHADOW      "Shadows",      NULL, &m_ShowShadowMenu);
             ImGui::MenuItem(LOFI_ICONS_CAMERA      "Camera",       NULL, &m_ShowCamMenu);
@@ -227,6 +237,9 @@ void Renderer::OnImGuiRender()
             ImGui::MenuItem(LOFI_ICONS_MATERIALMAP "Material Map", NULL, &m_ShowMapMaterialMenu);
             ImGui::MenuItem(LOFI_ICONS_SKY         "Sky",          NULL, &m_ShowSkyMenu);
             ImGui::MenuItem(LOFI_ICONS_POSTFX      "PostFX",       NULL, &m_ShowPostMenu);
+
+            if (m_IncludeGrass)
+                ImGui::MenuItem(LOFI_ICONS_GRASS   "Grass",        NULL, &m_ShowGrassMenu);
 
             ImGui::EndMenu();
         }
@@ -238,6 +251,14 @@ void Renderer::OnImGuiRender()
 
             ImGui::MenuItem("Show Texture Browser", NULL, &m_ShowTexBrowser);
             ImGui::MenuItem("Show Profiler", NULL, &m_ShowProfiler);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Help"))
+        {
+            if (ImGui::MenuItem("Welcome Popup"))
+                m_ShowHelpPopup = true;
 
             ImGui::EndMenu();
         }
@@ -260,7 +281,7 @@ void Renderer::OnImGuiRender()
     if (m_ShowTerrainMenu)
         m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_TerrainRenderer.DoShadows());
 
-    if (m_ShowGrassMenu)
+    if (m_IncludeGrass && m_ShowGrassMenu)
         m_GrassRenderer.OnImGui(m_ShowGrassMenu);
 
     if (m_ShowMapMaterialMenu)
@@ -286,6 +307,33 @@ void Renderer::OnImGuiRender()
 
     if (m_ShowProfiler)
         Profiler::OnImGui(m_ShowProfiler);
+
+    //-----Help popup
+
+    const std::string popup_name{ "Welcome to LofiLandscapes!" };
+
+    if (m_ShowHelpPopup)
+        ImGui::OpenPopup(popup_name.c_str());
+
+    ImGui::SetNextWindowSize(ImVec2(600.0f, 500.0f), ImGuiCond_FirstUseEver);
+
+    if (ImGui::BeginPopupModal(popup_name.c_str(), &m_ShowHelpPopup)) {
+        
+        ImGui::Bullet();
+        ImGui::TextWrapped("Use escape to close/re-open the gui");
+        ImGui::Bullet();
+        ImGui::TextWrapped("When gui is closed:");
+        ImGui::TextWrapped("        Use WASD to move around");
+        ImGui::TextWrapped("        Use mouse/touchpad to look around");
+        ImGui::Bullet();
+        ImGui::TextWrapped("When using a touchpad, if you can't turn while moving, try disabling \"palm check\" or other similar settings");
+        ImGui::Bullet();
+        ImGui::TextWrapped("Use File, Open to see example worlds");
+        ImGui::Bullet();
+        ImGui::TextWrapped("Open things from Windows tab to see what's possible");
+
+        ImGui::EndPopup();
+    }
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -353,6 +401,7 @@ void Renderer::InitImGuiIniHandler()
         if (CheckLine("ShowSkyMenu=%d\n"))         r->m_ShowSkyMenu         = bool(value);
         if (CheckLine("ShowMapMaterialMenu=%d\n")) r->m_ShowMapMaterialMenu = bool(value);
         if (CheckLine("ShowPostMenu=%d\n"))        r->m_ShowPostMenu        = bool(value);
+        if (CheckLine("ShowHelp=%d\n"))            r->m_ShowHelpPopup       = bool(value);
     };
 
     auto MyUserData_WriteAll = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
@@ -369,6 +418,7 @@ void Renderer::InitImGuiIniHandler()
         out_buf->appendf("ShowSkyMenu=%d\n", r->m_ShowSkyMenu);
         out_buf->appendf("ShowMapMaterialMenu=%d\n", r->m_ShowMapMaterialMenu);
         out_buf->appendf("ShowPostMenu=%d\n", r->m_ShowPostMenu);
+        out_buf->appendf("ShowHelp=%d\n", r->m_ShowHelpPopup);
         out_buf->appendf("\n");
     };
 

@@ -426,6 +426,8 @@ void SkyRenderer::Render() {
 }
 
 void SkyRenderer::OnImGui(bool& open) {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_SKY "Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
 
     const glm::vec3 sun_col = m_SunCol;

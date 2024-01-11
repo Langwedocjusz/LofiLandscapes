@@ -126,6 +126,8 @@ void PerspectiveCamera::updateFrustum(float aspect)
 
 void PerspectiveCamera::OnImGui(bool& open)
 {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
@@ -270,6 +272,8 @@ void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int h
 
 void FPCamera::OnImGui(bool& open)
 {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f), ImGuiCond_FirstUseEver);
+
     ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderFloat("Speed", &(m_Speed), 0.0, 10.0f);

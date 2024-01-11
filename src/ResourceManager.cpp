@@ -61,6 +61,8 @@ std::shared_ptr<Cubemap> ResourceManager::RequestCubemap()
 
 void ResourceManager::DrawTextureBrowser(bool& open)
 {
+	ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f), ImGuiCond_FirstUseEver);
+
 	ImGui::Begin("Texture Browser", &open);
 
 	std::shared_ptr<Texture> tmp_ptr;

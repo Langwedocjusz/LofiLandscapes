@@ -178,6 +178,7 @@ void MaterialGenerator::Update() {
 }
 
 void MaterialGenerator::OnImGui(bool& open) {
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(LOFI_ICONS_MATERIAL "Material editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     

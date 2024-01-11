@@ -66,6 +66,8 @@ void Serializer::RegisterSaveCallback(const std::string& token, std::function<vo
 
 void Serializer::LoadPopup()
 {
+    ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
+
     if (ImGui::BeginPopupModal("Load...", &m_SaveDialogOpen)) {
 
         const std::string button_text{ "Load" };
@@ -97,6 +99,8 @@ void Serializer::LoadPopup()
 
 void Serializer::SavePopup()
 {
+    ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
+
     if (ImGui::BeginPopupModal("Save...", &m_SaveDialogOpen)) {
        
         const std::string button_text{ "Save" };

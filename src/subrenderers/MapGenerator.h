@@ -9,7 +9,7 @@
 
 struct AOSettings{
     int Samples = 16;
-    float R = 0.01;
+    float R = 0.005f;
 };
 
 struct ShadowmapSettings{
