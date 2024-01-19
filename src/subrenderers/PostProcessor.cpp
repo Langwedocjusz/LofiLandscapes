@@ -7,7 +7,7 @@
 
 #include "glad/glad.h"
 
-PostProcessor::PostProcessor(ResourceManager& manager, const FramebufferTexture& framebuffer)
+PostProcessor::PostProcessor(ResourceManager& manager, const Framebuffer& framebuffer)
 	: m_ResourceManager(manager)
 	, m_Framebuffer(framebuffer)
 {
@@ -50,8 +50,8 @@ void PostProcessor::DoFXAA()
 		m_LuminanceShader->Bind();
 		m_LuminanceShader->setUniform1i("InputTexture", 0);
 
-		const auto res_x = m_FrontBuffer->getSpec().ResolutionX;
-		const auto res_y = m_FrontBuffer->getSpec().ResolutionY;
+		const auto res_x = m_FrontBuffer->getResolutionX();
+		const auto res_y = m_FrontBuffer->getResolutionY();
 
 		m_LuminanceShader->Dispatch(res_x, res_y, 1);
 
@@ -70,8 +70,8 @@ void PostProcessor::DoFXAA()
 		m_ContrastShader->setUniform1f("uRelativeThreshold", m_FXAARelativeThreshold);
 		m_ContrastShader->setUniform1f("uSubpixelAmount", m_FXAASubpixelAmount);
 
-		const auto res_x = m_BackBuffer->getSpec().ResolutionX;
-		const auto res_y = m_BackBuffer->getSpec().ResolutionY;
+		const auto res_x = m_BackBuffer->getResolutionX();
+		const auto res_y = m_BackBuffer->getResolutionY();
 
 		m_ContrastShader->Dispatch(res_x, res_y, 1);
 
@@ -109,7 +109,7 @@ void PostProcessor::ResizeBuffers(uint32_t width, uint32_t height)
 void PostProcessor::BindOutput(int id)
 {
 	if (m_FirstPass)
-		m_Framebuffer.BindTex(id);
+		m_Framebuffer.BindColorTex(id);
 
 	else
 	{
@@ -126,7 +126,7 @@ void PostProcessor::BindInputTexture(int id)
 {
 	if (m_FirstPass)
 	{
-		m_Framebuffer.BindTex(id);
+		m_Framebuffer.BindColorTex(id);
 		m_FirstPass = false;
 	}
 

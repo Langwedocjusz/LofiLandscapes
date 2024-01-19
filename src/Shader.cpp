@@ -27,11 +27,11 @@ void Shader::Reload()
     Build();
 }
 
-unsigned int Shader::getUniformLocation(const std::string& name)
+uint32_t Shader::getUniformLocation(const std::string& name)
 {
     auto search_res = std::find_if(
         m_UniformCache.begin(), m_UniformCache.end(),
-        [&name](const std::pair<std::string, unsigned int> element)
+        [&name](const std::pair<std::string, uint32_t> element)
         {
             return element.first == name;
         }
@@ -40,13 +40,13 @@ unsigned int Shader::getUniformLocation(const std::string& name)
     if (search_res != m_UniformCache.end())
         return search_res->second;
 
-    const unsigned int location = glGetUniformLocation(m_ID, name.c_str());
+    const uint32_t location = glGetUniformLocation(m_ID, name.c_str());
     m_UniformCache.push_back(std::make_pair(name, location));
     return location;
 }
 
 //Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
-void compileShaderCode(const std::string& source, unsigned int& id, int program_type)
+static void compileShaderCode(const std::string& source, unsigned int& id, int program_type)
 {
     const char* source_c = source.c_str();
 
@@ -69,7 +69,7 @@ void compileShaderCode(const std::string& source, unsigned int& id, int program_
     }
 }
 
-std::string loadSource(std::filesystem::path filepath, bool recursive_call = false)
+static std::string loadSource(std::filesystem::path filepath, bool recursive_call = false)
 {
     const std::string include_token{"#include"};
 

@@ -123,7 +123,7 @@ void MaterialGenerator::Update() {
     {
         ProfilerGPUEvent we("Material::UpdateHeight");
 
-        const int res = m_Height->getSpec().ResolutionX;
+        const int res = m_Height->getResolutionX();
         
         m_Height->BindImage(0, m_Current, 0);
         m_HeightEditor.OnDispatch(m_Current, res);
@@ -136,7 +136,7 @@ void MaterialGenerator::Update() {
     {
         ProfilerGPUEvent we("Material::UpdateNormal");
 
-        const int res = m_Normal->getSpec().ResolutionX;
+        const int res = m_Normal->getResolutionX();
         m_Height->BindLayer(0, m_Current);
         
         m_Normal->BindImage(0, m_Current, 0);
@@ -161,7 +161,7 @@ void MaterialGenerator::Update() {
     {
         ProfilerGPUEvent we("Material::UpdateAlbedo");
 
-        const int res = m_Albedo->getSpec().ResolutionX;
+        const int res = m_Albedo->getResolutionX();
         m_Height->BindLayer(0, m_Current);
 
         m_Albedo->BindImage(0, m_Current, 0);

@@ -23,16 +23,20 @@ struct Texture2DSpec {
 
 class Texture2D : public Texture {
 public:
+    friend class Framebuffer;
+
     void Initialize(Texture2DSpec spec);
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;
-    void AttachToFramebuffer();
 
     void Resize(uint32_t width, uint32_t height);
 
     void DrawToImGui(float width, float height);
 
-    const Texture2DSpec& getSpec() { return m_Spec; }
+    int getResolutionX() const { return m_Spec.ResolutionX; }
+    int getResolutionY() const { return m_Spec.ResolutionY; }
+
+    const Texture2DSpec& getSpec() const { return m_Spec; }
 private:
     uint32_t m_ID;
     Texture2DSpec m_Spec;
@@ -40,41 +44,24 @@ private:
 
 class TextureArray : public Texture {
 public:
-
     void Initialize(Texture2DSpec spec, int layers);
 
     void Bind(int id = 0) const;
     void BindLayer(int id, int layer) const;
     void BindImage(int id, int layer, int mip) const;
 
-    const Texture2DSpec& getSpec() { return m_Spec; }
-    int getLayers() { return m_Layers; }
+    int getResolutionX() const { return m_Spec.ResolutionX; }
+    int getResolutionY() const { return m_Spec.ResolutionY; }
+    uint32_t getLayers() const { return m_Layers; }
+
+    const Texture2DSpec& getSpec() const { return m_Spec; }
 
 private:
     uint32_t m_ID;
-    int m_Layers;
+    uint32_t m_Layers;
     Texture2DSpec m_Spec;
 
     std::vector<uint32_t> m_TextureViews;
-};
-
-class FramebufferTexture{
-public:
-    FramebufferTexture();
-    ~FramebufferTexture();
-
-    void Initialize(Texture2DSpec spec);
-
-    void BindFBO() const;
-    void BindTex(int id = 0) const;
-    void BindImage(int id, int mip) const;
-
-    void Resize(uint32_t width, uint32_t height);
-
-    const Texture2DSpec& getSpec() { return m_Spec; }
-private:
-    uint32_t m_FBO, m_ID, m_RBO;
-    Texture2DSpec m_Spec;
 };
 
 struct Texture3DSpec {
@@ -96,6 +83,10 @@ public:
     void Initialize(Texture3DSpec spec);
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;
+
+    int getResolutionX() const { return m_Spec.ResolutionX; }
+    int getResolutionY() const { return m_Spec.ResolutionY; }
+    int getResolutionZ() const { return m_Spec.ResolutionZ; }
 
     const Texture3DSpec& getSpec() { return m_Spec; }
 private:
@@ -120,7 +111,9 @@ public:
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;
 
-    const CubemapSpec& getSpec() { return m_Spec; }
+    int getResolution() const { return m_Spec.Resolution; }
+
+    const CubemapSpec& getSpec() const { return m_Spec; }
 private:
     uint32_t m_ID;
     CubemapSpec m_Spec;

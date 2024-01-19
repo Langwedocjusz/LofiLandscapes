@@ -34,10 +34,10 @@ public:
 protected:
     virtual void Build() = 0;
 
-    unsigned int m_ID = 0;
+    uint32_t m_ID = 0;
 
-    unsigned int getUniformLocation(const std::string& name);
-    std::vector<std::pair<std::string, unsigned int>> m_UniformCache;
+    uint32_t getUniformLocation(const std::string& name);
+    std::vector<std::pair<std::string, uint32_t>> m_UniformCache;
 };
 
 class VertFragShader : public Shader {

@@ -185,8 +185,8 @@ void SkyRenderer::UpdateTrans() {
 
     m_TransShader->Bind();
 
-    const int res_x = m_TransLUT->getSpec().ResolutionX;
-    const int res_y = m_TransLUT->getSpec().ResolutionY;
+    const int res_x = m_TransLUT->getResolutionX();
+    const int res_y = m_TransLUT->getResolutionY();
 
     m_TransShader->Dispatch(res_x, res_y, 1);
 
@@ -205,8 +205,8 @@ void SkyRenderer::UpdateMulti() {
     m_MultiShader->setUniform1i("transLUT", 0);
     m_MultiShader->setUniform3f("uGroundAlbedo", m_GroundAlbedo);
 
-    const int res_x = m_MultiLUT->getSpec().ResolutionX;
-    const int res_y = m_MultiLUT->getSpec().ResolutionY;
+    const int res_x = m_MultiLUT->getResolutionX();
+    const int res_y = m_MultiLUT->getResolutionY();
 
     m_MultiShader->Dispatch(res_x, res_y, 1);
 
@@ -229,8 +229,8 @@ void SkyRenderer::UpdateSky() {
     m_SkyShader->setUniform3f("uSunDir", m_SunDir);
     m_SkyShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
-    const int res_x = m_SkyLUT->getSpec().ResolutionX;
-    const int res_y = m_SkyLUT->getSpec().ResolutionY;
+    const int res_x = m_SkyLUT->getResolutionX();
+    const int res_y = m_SkyLUT->getResolutionY();
 
     m_SkyShader->Dispatch(res_x, res_y, 1);
     
@@ -239,13 +239,13 @@ void SkyRenderer::UpdateSky() {
     m_ResourceManager.RequestPreviewUpdate(m_SkyLUT);
 
     //Update cubemaps
-    const int irr_res = m_IrradianceMap->getSpec().Resolution;
+    const int irr_res = m_IrradianceMap->getResolution();
 
     m_IrradianceMap->BindImage(0, 0);
     m_SkyLUT->Bind();
 
     m_IrradianceShader->Bind();
-    m_IrradianceShader->setUniform1i("uResolution", m_IrradianceMap->getSpec().Resolution);
+    m_IrradianceShader->setUniform1i("uResolution", m_IrradianceMap->getResolution());
     m_IrradianceShader->setUniform3f("uSunDir", m_SunDir);
     m_IrradianceShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_IrradianceShader->setUniform1f("uIBLOversaturation", m_IBLOversaturation);
@@ -256,13 +256,13 @@ void SkyRenderer::UpdateSky() {
 
     m_ResourceManager.RequestPreviewUpdate(m_IrradianceMap);
 
-    const int pref_res = m_PrefilteredMap->getSpec().Resolution;
+    const int pref_res = m_PrefilteredMap->getResolution();
 
     m_PrefilteredMap->BindImage(0, 0);
     m_SkyLUT->Bind();
 
     m_PrefilteredShader->Bind();
-    m_PrefilteredShader->setUniform1i("uResolution", m_PrefilteredMap->getSpec().Resolution);
+    m_PrefilteredShader->setUniform1i("uResolution", m_PrefilteredMap->getResolution());
     m_PrefilteredShader->setUniform3f("uSunDir", m_SunDir);
     m_PrefilteredShader->setUniform1f("uSkyBrightness", m_Brightness);
     m_PrefilteredShader->setUniform1f("uIBLOversaturation", m_IBLOversaturation);
@@ -309,9 +309,9 @@ void SkyRenderer::UpdateAerial()
 
     m_AerialShader->setUniform1f("uBrightness", m_AerialBrightness);
 
-    const int res_x = m_AerialLUT->getSpec().ResolutionX;
-    const int res_y = m_AerialLUT->getSpec().ResolutionY;
-    const int res_z = m_AerialLUT->getSpec().ResolutionZ;
+    const int res_x = m_AerialLUT->getResolutionX();
+    const int res_y = m_AerialLUT->getResolutionY();
+    const int res_z = m_AerialLUT->getResolutionZ();
 
     m_AerialShader->Dispatch(res_x, res_y, res_z);
     
@@ -327,9 +327,9 @@ void SkyRenderer::UpdateAerialWithShadows()
     const FrustumExtents extents = m_Camera.getFrustumExtents();
 
     //All 3d textures used here have the same resolution by assumption
-    int res_x = m_ScatterVolume->getSpec().ResolutionX;
-    int res_y = m_ScatterVolume->getSpec().ResolutionY;
-    int res_z = m_ScatterVolume->getSpec().ResolutionZ;
+    int res_x = m_ScatterVolume->getResolutionX();
+    int res_y = m_ScatterVolume->getResolutionY();
+    int res_z = m_ScatterVolume->getResolutionZ();
 
     //Update scatter volume
     m_ScatterVolume->BindImage(0, 0);

@@ -78,7 +78,7 @@ enum EdgeData {
 };
 
 //n - number of verts per line, l - side length of the grid
-void GenerateGrid(Drawable& grid,
+static void GenerateGrid(Drawable& grid,
                   uint32_t n, float l,
                   glm::vec2 global_offset,
                   EdgeFlag edge_flag)
@@ -168,7 +168,7 @@ enum class Orientation {
 };
 
 //n - number of verts in line
-void GenerateStrip(Drawable& fill, Orientation orientation, 
+static void GenerateStrip(Drawable& fill, Orientation orientation, 
                   uint32_t n, float quad_size,
                   glm::vec2 global_offset,
                   bool is_trim,

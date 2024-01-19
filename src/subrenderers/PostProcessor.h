@@ -1,10 +1,11 @@
 #pragma once
 
 #include "ResourceManager.h"
+#include "Framebuffer.h"
 
 class PostProcessor {
 public:
-	PostProcessor(ResourceManager& manager, const FramebufferTexture& framebuffer);
+	PostProcessor(ResourceManager& manager, const Framebuffer& framebuffer);
 
 	void Init(uint32_t width, uint32_t height);
 	void OnRender();
@@ -34,5 +35,5 @@ private:
 	float m_FXAASubpixelAmount = 0.75f;
 
 	ResourceManager& m_ResourceManager;
-	const FramebufferTexture& m_Framebuffer;
+	const Framebuffer& m_Framebuffer;
 };

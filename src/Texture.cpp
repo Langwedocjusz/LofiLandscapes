@@ -7,7 +7,8 @@
 
 Texture::~Texture() {}
 
-void InitTex2D(uint32_t& id, Texture2DSpec spec) {
+static void InitTex2D(uint32_t& id, Texture2DSpec spec) 
+{
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
@@ -24,7 +25,8 @@ void InitTex2D(uint32_t& id, Texture2DSpec spec) {
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);
 }
 
-void InitTex3D(uint32_t& id, Texture3DSpec spec) {
+static void InitTex3D(uint32_t& id, Texture3DSpec spec) 
+{
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_3D, id);
 
@@ -42,24 +44,23 @@ void InitTex3D(uint32_t& id, Texture3DSpec spec) {
         glTexParameterfv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, spec.Border);
 }
 
-void Texture2D::Initialize(Texture2DSpec spec) {
+void Texture2D::Initialize(Texture2DSpec spec) 
+{
     InitTex2D(m_ID, spec);
     m_Spec = spec;
 }
 
-void Texture2D::Bind(int id) const {
+void Texture2D::Bind(int id) const 
+{
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_ID);
 }
 
-void Texture2D::BindImage(int id, int mip) const {
+void Texture2D::BindImage(int id, int mip) const 
+{
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_FALSE, 0, GL_READ_WRITE, format);
-}
-
-void Texture2D::AttachToFramebuffer() {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ID, 0);
 }
 
 void Texture2D::Resize(uint32_t width, uint32_t height)
@@ -74,12 +75,13 @@ void Texture2D::Resize(uint32_t width, uint32_t height)
         m_Spec.Format, m_Spec.Type, NULL);
 }
 
-void Texture2D::DrawToImGui(float width, float height) {
+void Texture2D::DrawToImGui(float width, float height) 
+{
     ImGui::Image((void*)(intptr_t)m_ID, ImVec2(width, height));
 }
 
-
-void TextureArray::Initialize(Texture2DSpec spec, int layers) {
+void TextureArray::Initialize(Texture2DSpec spec, int layers) 
+{
 
     auto log2 = [](int value) {
         int copy = value, result = 0;
@@ -117,102 +119,46 @@ void TextureArray::Initialize(Texture2DSpec spec, int layers) {
     m_Layers = layers;
 }
 
-void TextureArray::Bind(int id) const {
+void TextureArray::Bind(int id) const 
+{
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_ID);
 }
 
-void TextureArray::BindLayer(int id, int layer) const {
+void TextureArray::BindLayer(int id, int layer) const 
+{
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_TextureViews[layer]);
 }
 
-void TextureArray::BindImage(int id, int layer, int mip) const {
+void TextureArray::BindImage(int id, int layer, int mip) const 
+{
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_FALSE, layer, GL_READ_WRITE, format);
 }
 
-FramebufferTexture::FramebufferTexture() {}
-
-FramebufferTexture::~FramebufferTexture() {
-    glDeleteFramebuffers(1, &m_FBO);
-}
-
-void FramebufferTexture::Initialize(Texture2DSpec spec) {
-    //Initialize FrameBufferObject:
-    glGenFramebuffers(1, &m_FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-
-    //Initialize RenderBufferObject containing depth and tencil attachments
-    glGenRenderbuffers(1, &m_RBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, spec.ResolutionX, spec.ResolutionY);
-
-    //Attach RBO to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    //Initialize texture:
-    InitTex2D(m_ID, spec);
-    m_Spec = spec;
-
-    //Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ID, 0);
-
-    //Reset framebuffer to default
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void FramebufferTexture::BindFBO() const {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-}
-
-void FramebufferTexture::BindTex(int id) const {
-    glActiveTexture(GL_TEXTURE0 + id);
-    glBindTexture(GL_TEXTURE_2D, m_ID);
-}
-
-void FramebufferTexture::BindImage(int id, int mip) const {
-    int format = m_Spec.InternalFormat;
-
-    glBindImageTexture(id, m_ID, mip, GL_FALSE, 0, GL_READ_WRITE, format);
-}
-
-void FramebufferTexture::Resize(uint32_t width, uint32_t height)
+void Texture3D::Initialize(Texture3DSpec spec) 
 {
-    m_Spec.ResolutionX = width;
-    m_Spec.ResolutionY = height;
-
-    BindTex();
-
-    glTexImage2D(GL_TEXTURE_2D, 0, m_Spec.InternalFormat,
-        m_Spec.ResolutionX, m_Spec.ResolutionY, 0,
-        m_Spec.Format, m_Spec.Type, NULL);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Spec.ResolutionX, m_Spec.ResolutionY);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-}
-
-void Texture3D::Initialize(Texture3DSpec spec) {
     InitTex3D(m_ID, spec);
     m_Spec = spec;
 }
 
-void Texture3D::Bind(int id) const {
+void Texture3D::Bind(int id) const 
+{
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_3D, m_ID);
 }
 
-void Texture3D::BindImage(int id, int mip) const {
+void Texture3D::BindImage(int id, int mip) const 
+{
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_TRUE, 0, GL_READ_WRITE, format);
 }
 
-void Cubemap::Initialize(CubemapSpec spec) {
+void Cubemap::Initialize(CubemapSpec spec) 
+{
     glGenTextures(1, &m_ID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
 
@@ -232,12 +178,14 @@ void Cubemap::Initialize(CubemapSpec spec) {
     m_Spec = spec;
 }
 
-void Cubemap::Bind(int id) const {
+void Cubemap::Bind(int id) const 
+{
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
 }
 
-void Cubemap::BindImage(int id, int mip) const {
+void Cubemap::BindImage(int id, int mip) const 
+{
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_TRUE, 0, GL_READ_WRITE, format);

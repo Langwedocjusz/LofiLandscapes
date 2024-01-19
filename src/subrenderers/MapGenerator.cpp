@@ -162,7 +162,7 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
 void MapGenerator::UpdateHeight() {
     ProfilerGPUEvent we("Map::UpdateHeight");
 
-    const int res = m_Heightmap->getSpec().ResolutionX;
+    const int res = m_Heightmap->getResolutionX();
 
     m_Heightmap->BindImage(0, 0);
     m_HeightEditor.OnDispatch(res);
@@ -177,7 +177,7 @@ void MapGenerator::UpdateHeight() {
 void MapGenerator::UpdateNormal() {
     ProfilerGPUEvent we("Map::UpdateNormal");
 
-    const int res = m_Normalmap->getSpec().ResolutionX;
+    const int res = m_Normalmap->getResolutionX();
 
     m_Heightmap->Bind();
     m_Normalmap->BindImage(0, 0);
@@ -202,7 +202,7 @@ void MapGenerator::UpdateNormal() {
 void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     ProfilerGPUEvent we("Map::UpdateShadow");
 
-    const int res = m_Shadowmap->getSpec().ResolutionX;
+    const int res = m_Shadowmap->getResolutionX();
 
     m_Heightmap->Bind();
     m_Shadowmap->BindImage(0, 0);
@@ -234,7 +234,7 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
 void MapGenerator::UpdateMaterial() {
     ProfilerGPUEvent we("Map::UpdateMaterial");
 
-    const int res = m_Materialmap->getSpec().ResolutionX;
+    const int res = m_Materialmap->getResolutionX();
 
     m_Heightmap->Bind();
 
@@ -250,7 +250,7 @@ void MapGenerator::UpdateMaterial() {
 void MapGenerator::GenMaxMips() {
     if (m_MipLevels == 0) return;
 
-    const int res = m_Heightmap->getSpec().ResolutionX;
+    const int res = m_Heightmap->getResolutionX();
 
     for (int i = 0; i < m_MipLevels; i++) {
         m_MipShader->Bind();

@@ -75,9 +75,9 @@ void GrassRenderer::UpdateRaycast()
 {
 	ProfilerGPUEvent we("Grass::Raycast");
 
-	auto res_x = m_RaycastResult->getSpec().ResolutionX;
-	auto res_y = m_RaycastResult->getSpec().ResolutionY;
-	auto res_z = m_RaycastResult->getSpec().ResolutionZ;
+	auto res_x = m_RaycastResult->getResolutionX();
+	auto res_y = m_RaycastResult->getResolutionY();
+	auto res_z = m_RaycastResult->getResolutionZ();
 
 	m_RaycastResult->BindImage(0, 0);
 
@@ -101,8 +101,8 @@ void GrassRenderer::UpdateNoise()
 {
 	ProfilerGPUEvent we("Grass::NoiseGen");
 
-	auto res_x = m_Noise->getSpec().ResolutionX;
-	auto res_y = m_Noise->getSpec().ResolutionY;
+	auto res_x = m_Noise->getResolutionX();
+	auto res_y = m_Noise->getResolutionY();
 
 	m_Noise->BindImage(0, 0);
 

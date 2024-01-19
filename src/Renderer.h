@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "Serializer.h"
 #include "ResourceManager.h"
+#include "Framebuffer.h"
 
 #include "glad/glad.h"
 
@@ -80,7 +81,7 @@ private:
     float m_InternalResScale = 1.0f;
     uint32_t m_InternalWidth, m_InternalHeight;
     bool m_ResizeFramebuffer = true;
-    FramebufferTexture m_Framebuffer;
+    Framebuffer m_Framebuffer;
     Quad m_Quad;
     std::shared_ptr<VertFragShader> m_PresentShader;
 };
