@@ -2,7 +2,6 @@
 
 #include "glm/gtc/type_ptr.hpp"
 
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
 void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string>& options, int& selected_id) 
