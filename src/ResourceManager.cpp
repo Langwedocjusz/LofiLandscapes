@@ -9,6 +9,7 @@ ResourceManager::ResourceManager()
 	: m_Tex2DPrevShader("res/shaders/debug/texture2d_preview.glsl")
 	, m_CubePrevShader("res/shaders/debug/cubemap_preview.glsl")
 	, m_3DPrevShader("res/shaders/debug/texture3d_preview.glsl")
+	, m_PreviewTexture("Preview")
 {
 	m_PreviewTexture.Initialize(Texture2DSpec{
 		1024, 1024, GL_RGBA8, GL_RGBA,
@@ -35,27 +36,27 @@ void ResourceManager::ReloadShaders()
 	m_ReloadShaders = true;
 }
 
-std::shared_ptr<Texture2D> ResourceManager::RequestTexture2D()
+std::shared_ptr<Texture2D> ResourceManager::RequestTexture2D(const std::string& name)
 {
-	m_Texture2DCache.push_back(std::make_shared<Texture2D>());
+	m_Texture2DCache.push_back(std::make_shared<Texture2D>(name));
 	return m_Texture2DCache.back();
 }
 
-std::shared_ptr<Texture3D> ResourceManager::RequestTexture3D()
+std::shared_ptr<Texture3D> ResourceManager::RequestTexture3D(const std::string& name)
 {
-	m_Texture3DCache.push_back(std::make_shared<Texture3D>());
+	m_Texture3DCache.push_back(std::make_shared<Texture3D>(name));
 	return m_Texture3DCache.back();
 }
 
-std::shared_ptr<TextureArray> ResourceManager::RequestTextureArray()
+std::shared_ptr<TextureArray> ResourceManager::RequestTextureArray(const std::string& name)
 {
-	m_TextureArrayCache.push_back(std::make_shared<TextureArray>());
+	m_TextureArrayCache.push_back(std::make_shared<TextureArray>(name));
 	return m_TextureArrayCache.back();
 }
 
-std::shared_ptr<Cubemap> ResourceManager::RequestCubemap()
+std::shared_ptr<Cubemap> ResourceManager::RequestCubemap(const std::string& name)
 {
-	m_CubemapCache.push_back(std::make_shared<Cubemap>());
+	m_CubemapCache.push_back(std::make_shared<Cubemap>(name));
 	return m_CubemapCache.back();
 }
 
@@ -67,12 +68,13 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	ImGui::BeginChild("#Texture browser settings", ImVec2(0, 250), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY);
 
+	ImGuiUtils::BeginGroupPanel("Currently previewing");
 	ImGui::Columns(2, "###col");
 
-	std::vector<std::string> options{ "Texture", "Texture Array", "Cubemap", "Texture 3D" };
+	std::vector<std::string> options{ "Texture 2D", "Texture Array", "Cubemap", "Texture 3D" };
 	int tmp_id = static_cast<int>(m_PrevType);
 
-	ImGuiUtils::ColCombo("Currently previewing", options, tmp_id);
+	ImGuiUtils::ColCombo("Texture type", options, tmp_id);
 
 	m_PrevType = static_cast<PreviewType>(tmp_id);
 
@@ -83,27 +85,57 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	int arr_layer = m_PreviewLayer, cube_side = m_PreviewSide;
 	float depth_3d = m_PreviewDepth;
 
+	auto ColComboTexture = [](auto& texture_cache, int& selected_id)
+	{
+		ImGui::TextUnformatted("Texture name");
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, style.Colors[ImGuiCol_Button]);
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, style.Colors[ImGuiCol_ButtonHovered]);
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, style.Colors[ImGuiCol_ButtonActive]);
+
+		if (ImGui::BeginCombo("##Texture name", texture_cache.at(selected_id)->getName().c_str()))
+		{
+			for (int n = 0; n < texture_cache.size(); n++)
+			{
+				bool is_selected = (selected_id == n);
+
+				if (ImGui::Selectable(texture_cache.at(n)->getName().c_str(), is_selected))
+					selected_id = n;
+
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::PopStyleColor(3);
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+	};
+
 	switch (m_PrevType)
 	{
 		case PreviewType::Texture2D:
 		{
-			const int max_id = std::max(0, int(m_Texture2DCache.size()) - 1);
-
-			ImGuiUtils::ColSliderInt("Texture ID", &tex_id, 0, max_id);
+			ColComboTexture(m_Texture2DCache, tex_id);
 
 			tmp_ptr = m_Texture2DCache.at(tex_id);
 			break;
 		}
 		case PreviewType::TextureArray:
 		{
-			const int max_id = std::max(0, int(m_TextureArrayCache.size()) - 1);
-			
+			ColComboTexture(m_TextureArrayCache, tex_arr_id);
+
 			const int max_layer = std::max(0, static_cast<int>(m_TextureArrayCache.at(tex_arr_id)->getLayers()) - 1);
 
 			if (arr_layer > max_layer)
 				arr_layer = max_layer;
 
-			ImGuiUtils::ColSliderInt("Texture ID", &tex_arr_id, 0, max_id);
 			ImGuiUtils::ColSliderInt("Texture layer", &arr_layer, 0, max_layer);
 
 			tmp_ptr = m_TextureArrayCache.at(tex_arr_id);
@@ -111,9 +143,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 		case PreviewType::Cubemap:
 		{
-			const int max_id = std::max(0, int(m_CubemapCache.size()) - 1);
-
-			ImGuiUtils::ColSliderInt("Texture ID", &cube_id, 0, max_id);
+			ColComboTexture(m_CubemapCache, cube_id);
 
 			std::vector<std::string> side_names{
 				"Positive X", "Negative X",
@@ -128,9 +158,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 		case PreviewType::Texture3D:
 		{
-			const int max_id = std::max(0, int(m_Texture3DCache.size()) - 1);
-
-			ImGuiUtils::ColSliderInt("Texture ID", &tex3d_id, 0, max_id);
+			ColComboTexture(m_Texture3DCache, tex3d_id);
+			
 			ImGuiUtils::ColSliderFloat("Depth", &depth_3d, 0.0, 1.0);
 
 			tmp_ptr = m_Texture3DCache.at(tex3d_id);
@@ -139,6 +168,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	}
 
 	ImGui::Columns(1, "###col");
+	ImGuiUtils::EndGroupPanel();
 
 	ImGuiUtils::BeginGroupPanel("Preview settings");
 	ImGui::Columns(2, "###col");

@@ -12,10 +12,10 @@ public:
 	std::shared_ptr<VertFragShader> RequestVertFragShader(const std::string& v_path, const std::string& f_path);
 	std::shared_ptr<ComputeShader>  RequestComputeShader(const std::string& path);
 
-	std::shared_ptr<Texture2D>    RequestTexture2D();
-	std::shared_ptr<Texture3D>    RequestTexture3D();
-	std::shared_ptr<TextureArray> RequestTextureArray();
-	std::shared_ptr<Cubemap>      RequestCubemap();
+	std::shared_ptr<Texture2D>    RequestTexture2D(const std::string& name);
+	std::shared_ptr<Texture3D>    RequestTexture3D(const std::string& name);
+	std::shared_ptr<TextureArray> RequestTextureArray(const std::string& name);
+	std::shared_ptr<Cubemap>      RequestCubemap(const std::string& name);
 
 	void ReloadShaders();
 	void DrawTextureBrowser(bool& open);

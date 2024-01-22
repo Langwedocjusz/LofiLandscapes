@@ -5,7 +5,7 @@
 Framebuffer::Framebuffer(ResourceManager& manager)
     : m_ResourceManager(manager)
 {
-    m_ColorAttachment = m_ResourceManager.RequestTexture2D();
+    m_ColorAttachment = m_ResourceManager.RequestTexture2D("Framebuffer Color");
 }
 
 Framebuffer::~Framebuffer() 
@@ -64,4 +64,9 @@ void Framebuffer::Resize(uint32_t width, uint32_t height)
     glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, res_x, res_y);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+void Framebuffer::RequestPreviewUpdate()
+{
+    m_ResourceManager.RequestPreviewUpdate(m_ColorAttachment);
 }

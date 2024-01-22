@@ -32,18 +32,18 @@ SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
         m_ARaymarchShader = m_ResourceManager.RequestComputeShader("res/shaders/sky/aerial_shadowed.glsl");
     }
 
-    m_TransLUT       = m_ResourceManager.RequestTexture2D();
-    m_MultiLUT       = m_ResourceManager.RequestTexture2D();
-    m_SkyLUT         = m_ResourceManager.RequestTexture2D();
-    m_IrradianceMap  = m_ResourceManager.RequestCubemap();
-    m_PrefilteredMap = m_ResourceManager.RequestCubemap();
+    m_TransLUT       = m_ResourceManager.RequestTexture2D("Transmittance LUT");
+    m_MultiLUT       = m_ResourceManager.RequestTexture2D("Multiscatter LUT");
+    m_SkyLUT         = m_ResourceManager.RequestTexture2D("Skyview LUT");
+    m_IrradianceMap  = m_ResourceManager.RequestCubemap("Irradiance Map");
+    m_PrefilteredMap = m_ResourceManager.RequestCubemap("Prefiltered Map");
 
-    m_AerialLUT = m_ResourceManager.RequestTexture3D();
+    m_AerialLUT = m_ResourceManager.RequestTexture3D("Aerial LUT");
 
     if (m_AerialShadows)
     {
-        m_ScatterVolume = m_ResourceManager.RequestTexture3D();
-        m_ShadowVolume = m_ResourceManager.RequestTexture3D();
+        m_ScatterVolume = m_ResourceManager.RequestTexture3D("Scatter Volume");
+        m_ShadowVolume = m_ResourceManager.RequestTexture3D("Shadow Volume");
     }
 
     Init();

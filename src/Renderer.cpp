@@ -176,6 +176,8 @@ void Renderer::OnRender()
 
         m_SkyRenderer.Render();
 
+        m_Framebuffer.RequestPreviewUpdate();
+
         //Post processing
         m_PostProcessor.OnRender();
 

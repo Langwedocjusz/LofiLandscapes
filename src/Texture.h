@@ -1,13 +1,17 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <cstdint>
 
-//This polymorphism is currently only needed
-//for the update mechanism in texture browser
+
 class Texture {
 public:
     virtual ~Texture() = 0;
+
+    std::string getName() const { return m_Name; }
+protected:
+    std::string m_Name;
 };
 
 struct Texture2DSpec {
@@ -26,6 +30,8 @@ struct Texture2DSpec {
 class Texture2D : public Texture {
 public:
     friend class Framebuffer;
+
+    Texture2D(const std::string& name);
 
     void Initialize(Texture2DSpec spec);
     void Bind(int id = 0) const;
@@ -46,6 +52,8 @@ private:
 
 class TextureArray : public Texture {
 public:
+    TextureArray(const std::string& name);
+
     void Initialize(Texture2DSpec spec, int layers);
 
     void Bind(int id = 0) const;
@@ -82,6 +90,8 @@ struct Texture3DSpec {
 
 class Texture3D : public Texture {
 public:
+    Texture3D(const std::string& name);
+
     void Initialize(Texture3DSpec spec);
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;
@@ -109,6 +119,8 @@ struct CubemapSpec {
 
 class Cubemap : public Texture {
 public:
+    Cubemap(const std::string& name);
+
     void Initialize(CubemapSpec spec);
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;

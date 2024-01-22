@@ -19,10 +19,10 @@ MapGenerator::MapGenerator(ResourceManager& manager)
     m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/shadow.glsl");
     m_MipShader       = m_ResourceManager.RequestComputeShader("res/shaders/terrain/maximal_mip.glsl");
 
-    m_Heightmap   = m_ResourceManager.RequestTexture2D();
-    m_Normalmap   = m_ResourceManager.RequestTexture2D();
-    m_Shadowmap   = m_ResourceManager.RequestTexture2D();
-    m_Materialmap = m_ResourceManager.RequestTexture2D();
+    m_Heightmap   = m_ResourceManager.RequestTexture2D("Heightmap");
+    m_Normalmap   = m_ResourceManager.RequestTexture2D("Normalmap");
+    m_Shadowmap   = m_ResourceManager.RequestTexture2D("Shadowmap");
+    m_Materialmap = m_ResourceManager.RequestTexture2D("Materialmap");
 }
 
 void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {

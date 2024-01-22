@@ -44,6 +44,11 @@ static void InitTex3D(uint32_t& id, Texture3DSpec spec)
         glTexParameterfv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, spec.Border);
 }
 
+Texture2D::Texture2D(const std::string& name)
+{
+    m_Name = name;
+}
+
 void Texture2D::Initialize(Texture2DSpec spec) 
 {
     InitTex2D(m_ID, spec);
@@ -81,6 +86,11 @@ void Texture2D::Resize(uint32_t width, uint32_t height)
 void Texture2D::DrawToImGui(float width, float height) 
 {
     ImGui::Image((void*)(intptr_t)m_ID, ImVec2(width, height));
+}
+
+TextureArray::TextureArray(const std::string& name)
+{
+    m_Name = name;
 }
 
 void TextureArray::Initialize(Texture2DSpec spec, int layers) 
@@ -141,6 +151,11 @@ void TextureArray::BindImage(int id, int layer, int mip) const
     glBindImageTexture(id, m_ID, mip, GL_FALSE, layer, GL_READ_WRITE, format);
 }
 
+Texture3D::Texture3D(const std::string& name)
+{
+    m_Name = name;
+}
+
 void Texture3D::Initialize(Texture3DSpec spec) 
 {
     InitTex3D(m_ID, spec);
@@ -158,6 +173,11 @@ void Texture3D::BindImage(int id, int mip) const
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_TRUE, 0, GL_READ_WRITE, format);
+}
+
+Cubemap::Cubemap(const std::string& name)
+{
+    m_Name = name;
 }
 
 void Cubemap::Initialize(CubemapSpec spec) 

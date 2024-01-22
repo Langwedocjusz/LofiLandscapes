@@ -27,8 +27,8 @@ GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& 
 		"res/shaders/grass/present.frag"
 	);
 
-	m_RaycastResult = m_ResourceManager.RequestTexture3D();
-	m_Noise = m_ResourceManager.RequestTexture2D();
+	m_RaycastResult = m_ResourceManager.RequestTexture3D("Raycast result");
+	m_Noise = m_ResourceManager.RequestTexture2D("Noise");
 }
 
 void GrassRenderer::Init()

@@ -18,9 +18,9 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
 {
     m_NormalShader = m_ResourceManager.RequestComputeShader("res/shaders/materials/normal.glsl");
 
-    m_Height = m_ResourceManager.RequestTextureArray();
-    m_Normal = m_ResourceManager.RequestTextureArray();
-    m_Albedo = m_ResourceManager.RequestTextureArray();
+    m_Height = m_ResourceManager.RequestTextureArray("Heightmaps");
+    m_Normal = m_ResourceManager.RequestTextureArray("Normalmaps");
+    m_Albedo = m_ResourceManager.RequestTextureArray("Albedomaps");
 }
 
 void MaterialGenerator::Init(int material_res) {

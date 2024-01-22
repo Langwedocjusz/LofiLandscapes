@@ -14,8 +14,8 @@ PostProcessor::PostProcessor(ResourceManager& manager, const Framebuffer& frameb
 	m_LuminanceShader = m_ResourceManager.RequestComputeShader("res/shaders/post/calc_luminance.glsl");
 	m_ContrastShader = m_ResourceManager.RequestComputeShader("res/shaders/post/fxaa.glsl");
 
-	m_FrontBuffer = m_ResourceManager.RequestTexture2D();
-	m_BackBuffer = m_ResourceManager.RequestTexture2D();
+	m_FrontBuffer = m_ResourceManager.RequestTexture2D("PostFX Frontbuffer");
+	m_BackBuffer = m_ResourceManager.RequestTexture2D("PostFX Backbuffer");
 }
 
 void PostProcessor::Init(uint32_t width, uint32_t height)
