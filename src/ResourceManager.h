@@ -54,12 +54,12 @@ private:
 
 	std::shared_ptr<Texture> m_PreviewPtr;
 
-	int m_PreviewLayer = 0, m_PreviewSide = 0, m_PreviewSlice = 0;
+	int m_PreviewLayer = 0, m_PreviewSide = 0;
 	float m_PreviewDepth = 0.0f;
 
-	bool m_PreviewChannels[4] = { true, true, true, true };
-
+	float m_PreviewScale = 1.0f;
 	glm::vec2 m_PreviewRange = glm::vec2(0.0f, 1.0f);
+	bool m_PreviewChannels[4] = { true, true, true, true };
 
 	ComputeShader m_Tex2DPrevShader, m_CubePrevShader, m_3DPrevShader;
 	Texture2D m_PreviewTexture;

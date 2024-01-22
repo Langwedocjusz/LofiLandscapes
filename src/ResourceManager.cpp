@@ -65,22 +65,23 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	ImGui::Begin("Texture Browser", &open);
 
-	std::shared_ptr<Texture> tmp_ptr;
+	ImGui::BeginChild("#Texture browser settings", ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY);
 
-	static int tex_id = 0, tex_arr_id = 0, cube_id = 0, tex3d_id = 0;
-	static int arr_layer = 0, cube_side = 0, slice_3d = 0;
-	static float depth_3d = 0.0f;
-	static float preview_scale = 1.0f;
-	static glm::vec2 preview_range = glm::vec2(0.0f, 1.0f);
-	static bool channel_flags[4]{ true, true, true, true };
+	ImGui::Columns(2, "###col");
 
 	std::vector<std::string> options{ "Texture", "Texture Array", "Cubemap", "Texture 3D" };
 	int tmp_id = static_cast<int>(m_PrevType);
 
-	ImGui::Columns(2, "###col");
 	ImGuiUtils::ColCombo("Currently previewing", options, tmp_id);
 
 	m_PrevType = static_cast<PreviewType>(tmp_id);
+
+	std::shared_ptr<Texture> tmp_ptr = m_PreviewPtr;
+
+	static int tex_id = 0, tex_arr_id = 0, cube_id = 0, tex3d_id = 0;
+
+	int arr_layer = m_PreviewLayer, cube_side = m_PreviewSide;
+	float depth_3d = m_PreviewDepth;
 
 	switch (m_PrevType)
 	{
@@ -115,7 +116,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 				"Positive Z", "Negative Z"
 			};
 
-			ImGuiUtils::Combo("Selected side", side_names, cube_side);
+			ImGuiUtils::ColCombo("Selected side", side_names, cube_side);
 
 			tmp_ptr = m_CubemapCache.at(cube_id);
 			break;
@@ -132,9 +133,18 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 	}
 
-	ImGui::Separator();
+	ImGui::Columns(1, "###col");
 
-	ImGuiUtils::ColInputFloat("Scale", &preview_scale, 0.1f, 0.1f);
+	ImGuiUtils::BeginGroupPanel("Preview settings");
+	ImGui::Columns(2, "###col");
+
+	glm::vec2 preview_range = m_PreviewRange;
+	bool channel_flags[4];
+
+	for (int i = 0; i < 4; i++)
+		channel_flags[i] = m_PreviewChannels[i];
+
+	ImGuiUtils::ColInputFloat("Scale", &m_PreviewScale, 0.1f, 0.1f);
 	ImGuiUtils::ColDragFloat2("Range", glm::value_ptr(preview_range), 0.01f);
 
 	ImGui::Text("Active channels");
@@ -151,13 +161,21 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	ImGui::NextColumn();
 
 	ImGui::Columns(1, "###col");
+	ImGuiUtils::EndGroupPanel();
 
-	ImGui::BeginChild("#Texture browser display", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::EndChild();
+
+	ImGui::BeginChild("#Texture browser display", ImVec2(0.0f, 0.0f), ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
 
 	const auto avail_region = ImGui::GetContentRegionAvail();
-	const float size = preview_scale * std::min(avail_region.x, avail_region.y);
-	
-	m_PreviewTexture.DrawToImGui(size, size);
+
+	const float aspect = static_cast<float>(m_PreviewTexture.getResolutionY())
+		               / static_cast<float>(m_PreviewTexture.getResolutionX());
+
+	const float size_x = m_PreviewScale * avail_region.x;
+	const float size_y = aspect * size_x;
+
+	m_PreviewTexture.DrawToImGui(size_x, size_y);
 
 	ImGui::EndChild();
 
@@ -165,7 +183,8 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	bool state_changed = false;
 
-	auto CheckIfChanged = [](auto& prev_val, auto& curr_val, bool& state_changed) {
+	auto CheckIfChanged = [&state_changed](auto& prev_val, auto& curr_val)
+	{
 		if (curr_val != prev_val)
 		{
 			prev_val = curr_val;
@@ -173,14 +192,14 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 	};
 
-	CheckIfChanged(m_PreviewPtr, tmp_ptr, state_changed);
-	CheckIfChanged(m_PreviewLayer, arr_layer, state_changed);
-	CheckIfChanged(m_PreviewSide, cube_side, state_changed);
-	CheckIfChanged(m_PreviewDepth, depth_3d, state_changed);
-	CheckIfChanged(m_PreviewRange, preview_range, state_changed);
+	CheckIfChanged(m_PreviewPtr, tmp_ptr);
+	CheckIfChanged(m_PreviewLayer, arr_layer);
+	CheckIfChanged(m_PreviewSide, cube_side);
+	CheckIfChanged(m_PreviewDepth, depth_3d);
+	CheckIfChanged(m_PreviewRange, preview_range);
 
 	for (int i=0; i<4; i++)
-		CheckIfChanged(m_PreviewChannels[i], channel_flags[i], state_changed);
+		CheckIfChanged(m_PreviewChannels[i], channel_flags[i]);
 
 	if (state_changed)
 	{
@@ -209,15 +228,10 @@ void ResourceManager::OnUpdate()
 
 void ResourceManager::UpdatePreview()
 {
-	m_PreviewTexture.BindImage(0, 0);
-
 	const glm::vec4 channel_flags{ 
 		float(m_PreviewChannels[0]), float(m_PreviewChannels[1]), 
 		float(m_PreviewChannels[2]), float(m_PreviewChannels[3])
 	};
-
-	//Assumes square texture
-	const auto res = m_PreviewTexture.getSpec().ResolutionX;
 
 	switch (m_PrevType)
 	{
@@ -227,9 +241,17 @@ void ResourceManager::UpdatePreview()
 			m_Tex2DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
 			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
-			std::dynamic_pointer_cast<Texture2D>(m_PreviewPtr)->Bind();
+			const auto tex_ptr = std::dynamic_pointer_cast<Texture2D>(m_PreviewPtr);
 
-			m_Tex2DPrevShader.Dispatch(res, res, 1);
+			const uint32_t res_x = tex_ptr->getResolutionX();
+			const uint32_t res_y = tex_ptr->getResolutionY();
+
+			m_PreviewTexture.Resize(res_x, res_y);
+			m_PreviewTexture.BindImage(0, 0);
+
+			tex_ptr->Bind();
+
+			m_Tex2DPrevShader.Dispatch(res_x, res_y, 1);
 			break;
 		}
 		case PreviewType::TextureArray:
@@ -238,9 +260,17 @@ void ResourceManager::UpdatePreview()
 			m_Tex2DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
 			m_Tex2DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
-			std::dynamic_pointer_cast<TextureArray>(m_PreviewPtr)->BindLayer(0, m_PreviewLayer);
+			const auto tex_ptr = std::dynamic_pointer_cast<TextureArray>(m_PreviewPtr);
 
-			m_Tex2DPrevShader.Dispatch(res, res, 1);
+			const uint32_t res_x = tex_ptr->getResolutionX();
+			const uint32_t res_y = tex_ptr->getResolutionY();
+
+			m_PreviewTexture.Resize(res_x, res_y);
+			m_PreviewTexture.BindImage(0, 0);
+
+			tex_ptr->BindLayer(0, m_PreviewLayer);
+
+			m_Tex2DPrevShader.Dispatch(res_x, res_y, 1);
 			break;
 		}
 		case PreviewType::Cubemap:
@@ -250,7 +280,14 @@ void ResourceManager::UpdatePreview()
 			m_CubePrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
 			m_CubePrevShader.setUniform4f("uChannelFlags", channel_flags);
 
-			std::dynamic_pointer_cast<Cubemap>(m_PreviewPtr)->Bind();
+			const auto tex_ptr = std::dynamic_pointer_cast<Cubemap>(m_PreviewPtr);
+
+			const uint32_t res = tex_ptr->getResolution();
+
+			m_PreviewTexture.Resize(res, res);
+			m_PreviewTexture.BindImage(0, 0);
+
+			tex_ptr->Bind();
 
 			m_CubePrevShader.Dispatch(res, res, 1);
 			break;
@@ -262,12 +299,20 @@ void ResourceManager::UpdatePreview()
 			m_3DPrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
 			m_3DPrevShader.setUniform4f("uChannelFlags", channel_flags);
 
-			std::dynamic_pointer_cast<Texture3D>(m_PreviewPtr)->Bind();
+			const auto tex_ptr = std::dynamic_pointer_cast<Texture3D>(m_PreviewPtr);
 
-			m_3DPrevShader.Dispatch(res, res, 1);
+			const uint32_t res_x = tex_ptr->getResolutionX();
+			const uint32_t res_y = tex_ptr->getResolutionY();
+
+			m_PreviewTexture.Resize(res_x, res_y);
+			m_PreviewTexture.BindImage(0, 0);
+
+			tex_ptr->Bind();
+
+			m_Tex2DPrevShader.Dispatch(res_x, res_y, 1);
 			break;
 		}
 	}
 
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+	glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 }

@@ -65,6 +65,9 @@ void Texture2D::BindImage(int id, int mip) const
 
 void Texture2D::Resize(uint32_t width, uint32_t height)
 {
+    if (m_Spec.ResolutionX == width && m_Spec.ResolutionY == height)
+        return;
+
     m_Spec.ResolutionX = width;
     m_Spec.ResolutionY = height;
 

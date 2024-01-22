@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdint>
 
+//This polymorphism is currently only needed
+//for the update mechanism in texture browser
 class Texture {
 public:
     virtual ~Texture() = 0;
