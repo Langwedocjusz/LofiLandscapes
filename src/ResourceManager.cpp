@@ -65,7 +65,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	ImGui::Begin("Texture Browser", &open);
 
-	ImGui::BeginChild("#Texture browser settings", ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY);
+	ImGui::BeginChild("#Texture browser settings", ImVec2(0, 250), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeY);
 
 	ImGui::Columns(2, "###col");
 
@@ -87,7 +87,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	{
 		case PreviewType::Texture2D:
 		{
-			int max_id = std::max(0, int(m_Texture2DCache.size()) - 1);
+			const int max_id = std::max(0, int(m_Texture2DCache.size()) - 1);
 
 			ImGuiUtils::ColSliderInt("Texture ID", &tex_id, 0, max_id);
 
@@ -96,17 +96,22 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 		case PreviewType::TextureArray:
 		{
-			int max_id = std::max(0, int(m_TextureArrayCache.size()) - 1);
+			const int max_id = std::max(0, int(m_TextureArrayCache.size()) - 1);
+			
+			const int max_layer = std::max(0, static_cast<int>(m_TextureArrayCache.at(tex_arr_id)->getLayers()) - 1);
+
+			if (arr_layer > max_layer)
+				arr_layer = max_layer;
 
 			ImGuiUtils::ColSliderInt("Texture ID", &tex_arr_id, 0, max_id);
-			ImGuiUtils::ColSliderInt("Texture layer", &arr_layer, 0, 8);
+			ImGuiUtils::ColSliderInt("Texture layer", &arr_layer, 0, max_layer);
 
 			tmp_ptr = m_TextureArrayCache.at(tex_arr_id);
 			break;
 		}
 		case PreviewType::Cubemap:
 		{
-			int max_id = std::max(0, int(m_CubemapCache.size()) - 1);
+			const int max_id = std::max(0, int(m_CubemapCache.size()) - 1);
 
 			ImGuiUtils::ColSliderInt("Texture ID", &cube_id, 0, max_id);
 
@@ -123,7 +128,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		}
 		case PreviewType::Texture3D:
 		{
-			int max_id = std::max(0, int(m_Texture3DCache.size()) - 1);
+			const int max_id = std::max(0, int(m_Texture3DCache.size()) - 1);
 
 			ImGuiUtils::ColSliderInt("Texture ID", &tex3d_id, 0, max_id);
 			ImGuiUtils::ColSliderFloat("Depth", &depth_3d, 0.0, 1.0);

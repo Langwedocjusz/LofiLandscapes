@@ -37,6 +37,9 @@ void PostProcessor::OnRender()
 	m_OutputIsFront = true;
 
 	if (m_EnableFXAA) DoFXAA();
+
+	m_ResourceManager.RequestPreviewUpdate(m_FrontBuffer);
+	m_ResourceManager.RequestPreviewUpdate(m_BackBuffer);
 }
 
 void PostProcessor::DoFXAA()

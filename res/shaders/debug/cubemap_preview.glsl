@@ -27,6 +27,7 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     vec2 uv = 2.0 * vec2(texelCoord)/imageSize(preview) - 1.0;
+    uv.y = -uv.y;
 
     vec3 coord = vec3(0.0);
 

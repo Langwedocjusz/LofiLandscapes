@@ -18,6 +18,7 @@ void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     vec2 uv = vec2(texelCoord)/imageSize(preview);
+    uv.y = 1.0 - uv.y;
 
     vec4 res = texture(source, uv);
 
