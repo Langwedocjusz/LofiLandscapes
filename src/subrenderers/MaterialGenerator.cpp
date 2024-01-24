@@ -58,25 +58,25 @@ void MaterialGenerator::Init(int material_res) {
 
     //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
-    m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0, 1.0, 0.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0f, 1.0f, 0.0f);
 
     m_HeightEditor.RegisterShader("FBM", "res/shaders/materials/fbm.glsl");
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uScale", "Scale", 0, 100, 1);
-    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0, 1.0, 0.5);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
     m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
     m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uScale", "Scale", 0, 100, 1);
-    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0f, 1.0f, 1.0f);
 
     std::vector<std::string> voro_types{ "F1", "F2", "F2_F1" };
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uVoronoiType", "Type", voro_types);
 
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
-    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0, 1.0, 1.0);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
     //Albedo
     m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");
@@ -90,7 +90,7 @@ void MaterialGenerator::Init(int material_res) {
 
     //Roughness
     m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
-    m_RoughnessEditor.Attach<SliderFloatTask>("Const Roughness", "uValue", "Roughness", 0.003, 1.0, 0.7);
+    m_RoughnessEditor.Attach<SliderFloatTask>("Const Roughness", "uValue", "Roughness", 0.003f, 1.0f, 0.7f);
 
     m_RoughnessEditor.RegisterShader("Roughness Ramp", "res/shaders/materials/roughness_ramp.glsl");
     m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
@@ -186,7 +186,7 @@ void MaterialGenerator::OnImGui(bool& open) {
     ImGuiUtils::ColSliderInt("Currently editing", &m_Current, 0, m_Layers-1);
     ImGui::Columns(1, "###col");
 
-    ImGui::Text("Heightmap procedures:");
+    ImGuiUtils::BeginGroupPanel("Heightmap procedures");
 
     if (m_HeightEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Height;
@@ -194,9 +194,9 @@ void MaterialGenerator::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
-    ImGuiUtils::Separator();
+    ImGuiUtils::EndGroupPanel();
 
-    ImGui::Text("Normal/AO map settings:");
+    ImGuiUtils::BeginGroupPanel("Normal/AO map settings");
 
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;  
 
@@ -214,21 +214,23 @@ void MaterialGenerator::OnImGui(bool& open) {
         m_UpdateFlags = m_UpdateFlags | Normal;
     }
 
-    ImGuiUtils::Separator();
+    ImGuiUtils::EndGroupPanel();
 
-    ImGui::Text("Albedo procedures:");
+    ImGuiUtils::BeginGroupPanel("Albedo procedures");
     
     if (m_AlbedoEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
-    ImGuiUtils::Separator();
+    ImGuiUtils::EndGroupPanel();
 
-    ImGui::Text("Roughness procedures:");
+    ImGuiUtils::BeginGroupPanel("Roughness procedures");
 
     if (m_RoughnessEditor.OnImGui(m_Current)) {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
+
+    ImGuiUtils::EndGroupPanel();
 
     ImGui::End();
 

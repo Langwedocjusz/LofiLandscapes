@@ -10,6 +10,12 @@
 
 namespace ImGuiUtils {
 
+	//Adds a hollow square to current window draw list, meant to debug positions/sizes of things
+	void DebugRect(ImVec2 min, ImVec2 max, ImU32 color = IM_COL32(0, 255, 0, 255));
+
+	//Returns the width of the rectangle of the last item drawn
+	float GetLastItemRectWidth();
+
 	//Makes combo use std containers and makes it visually consistent with a button
 	void Combo(const std::string& label, const std::vector<std::string>& options, int& selected_id);
 

@@ -1,125 +1,12 @@
 #pragma once
 
-#include "Shader.h"
 #include "ResourceManager.h"
+#include "EditorTask.h"
 
-#include <fstream>
-#include <variant>
 #include <memory>
 #include <unordered_map>
 
-#include "nlohmann/json.hpp"
-
-typedef std::variant<int, float, glm::vec3> InstanceData;
-
-class EditorTask{
-public:
-
-    virtual void OnDispatch(Shader& shader, const InstanceData& data) = 0;
-    virtual void OnImGui(InstanceData& data, bool& state, const std::string& suffix) {}
-    virtual void OnSerialize(nlohmann::ordered_json& output, InstanceData data) = 0;
-
-    virtual void ProvideDefaultData(std::vector<InstanceData>& data) = 0;
-    virtual void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) = 0;
-};
-
-class ConstIntTask : public EditorTask{
-public:
-    ConstIntTask(const std::string& uniform_name, int val);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName;
-    const int Value;
-};
-
-class ConstFloatTask : public EditorTask{
-public:
-    ConstFloatTask(const std::string& uniform_name, float val);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName;
-    const float Value;
-};
-
-class SliderIntTask : public EditorTask {
-public:
-    SliderIntTask(const std::string& uniform_name,
-                  const std::string& ui_name,
-                  int min, int max, int def);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName, UiName;
-    int Min, Max, Def;
-};
-
-class SliderFloatTask : public EditorTask {
-public:
-    SliderFloatTask(const std::string& uniform_name,
-                    const std::string& ui_name,
-                    float min, float max, float def);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName, UiName;
-    float Min, Max, Def;
-};
-
-class ColorEdit3Task : public EditorTask {
-public:
-    ColorEdit3Task(const std::string& uniform_name,
-                   const std::string& ui_name,
-                   glm::vec3 def);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName, UiName;
-    glm::vec3 Def;
-};
-
-class GLEnumTask : public EditorTask {
-public:
-    GLEnumTask(const std::string& uniform_name,
-               const std::string& ui_name,
-               const std::vector<std::string>& labels);
-
-    void OnDispatch(Shader& shader, const InstanceData& data) override;
-    void OnImGui(InstanceData& data, bool& state, const std::string& suffix) override;
-    void OnSerialize(nlohmann::ordered_json& output, InstanceData data) override;
-
-    void ProvideDefaultData(std::vector<InstanceData>& data) override;
-    void ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input) override;
-
-    std::string UniformName, UiName;
-    std::vector<std::string> Labels;
-};
-
-class Procedure{
+class Procedure {
 public:
     Procedure(ResourceManager& manager);
 
@@ -127,17 +14,16 @@ public:
 
     template<class T, typename ... Args>
     void Add(Args ... args) {
-        static_assert(std::is_base_of<EditorTask, T>::value, 
+        static_assert(
+            std::is_base_of<EditorTask, T>::value,
             "Add template argument not derived from EditorTask"
-        );
+            );
 
-        m_Tasks.push_back(std::unique_ptr<EditorTask>(
-            new T(args...)
-        ));
+        m_Tasks.push_back(std::make_unique<T>(args...));
     }
 
-    void OnDispatch(int res, const std::vector<InstanceData>& data);
-    bool OnImGui(std::vector<InstanceData>& data, unsigned int id);
+    void OnDispatch(int res, const std::vector<InstanceData>& v_data);
+    bool OnImGui(std::vector<InstanceData>& v_data, uint32_t id);
 
     std::shared_ptr<ComputeShader> m_Shader;
     std::vector<std::unique_ptr<EditorTask>> m_Tasks;
@@ -145,10 +31,10 @@ public:
     ResourceManager& m_ResourceManager;
 };
 
-class ProcedureInstance{
+class ProcedureInstance {
 public:
     ProcedureInstance(const std::string& name);
-    
+
     std::string Name;
     std::vector<InstanceData> Data;
 
@@ -164,9 +50,10 @@ public:
     template<class T, typename ... Args>
     void Attach(const std::string& name, Args ... args)
     {
-        static_assert(std::is_base_of<EditorTask, T>::value, 
+        static_assert(
+            std::is_base_of<EditorTask, T>::value,
             "Attach template argument not derived from EditorTask"
-        );
+            );
 
         if (m_Procedures.count(name))
             m_Procedures.at(name).Add<T>(args...);
@@ -178,7 +65,7 @@ protected:
     ResourceManager& m_ResourceManager;
 };
 
-class TextureEditor : public EditorBase{
+class TextureEditor : public EditorBase {
 public:
     TextureEditor(ResourceManager& manager, const std::string& name);
 
@@ -195,13 +82,13 @@ private:
     void AddProcedureInstance(const std::string& name, nlohmann::ordered_json& input);
 
     std::vector<ProcedureInstance> m_Instances;
-    
+
     std::string m_Name;
 
     bool m_PopupOpen = true;
 
-    unsigned int m_InstanceID;
-    static unsigned int s_InstanceCount;
+    uint32_t m_InstanceID;
+    static uint32_t s_InstanceCount;
 };
 
 class TextureArrayEditor : public EditorBase {
@@ -225,6 +112,6 @@ private:
 
     bool m_PopupOpen = true;
 
-    unsigned int m_InstanceID;
-    static unsigned int s_InstanceCount;
+    uint32_t m_InstanceID;
+    static uint32_t s_InstanceCount;
 };

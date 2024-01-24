@@ -4,6 +4,25 @@
 
 #include "imgui_internal.h"
 
+void ImGuiUtils::DebugRect(ImVec2 min, ImVec2 max, ImU32 color)
+{
+	auto flist = ImGui::GetForegroundDrawList();
+
+	flist->AddRect(min, max, color);
+}
+
+float GetLastItemRectWidth()
+{
+	ImGuiContext& g = *GImGui;
+
+	const ImVec2 rmax = g.LastItemData.Rect.Max;
+	const ImVec2 rmin = g.LastItemData.Rect.Min;
+
+	ImGuiUtils::DebugRect(rmin, rmax);
+
+	return std::abs(rmax.x - rmin.x);
+}
+
 void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string>& options, int& selected_id) 
 {
 	ImGuiStyle& style = ImGui::GetStyle();

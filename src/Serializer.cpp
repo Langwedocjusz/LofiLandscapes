@@ -68,7 +68,7 @@ void Serializer::LoadPopup()
 {
     ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
 
-    if (ImGui::BeginPopupModal("Load...", &m_SaveDialogOpen)) {
+    if (ImGui::BeginPopupModal("Load...", &m_LoadDialogOpen)) {
 
         const std::string button_text{ "Load" };
 
