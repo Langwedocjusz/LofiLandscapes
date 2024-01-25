@@ -70,13 +70,16 @@ void EditorBase::RegisterShader(const std::string& name,
 
     m_Procedures.emplace(name, m_ResourceManager);
     m_Procedures.at(name).CompileShader(filepath);
+
+    m_ProcedureNames.push_back(name);
+    std::sort(m_ProcedureNames.begin(), m_ProcedureNames.end());
 }
 
 //===========================================================================
 
 static void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
-    std::vector<ProcedureInstance>& instances,
-    const std::string& name)
+                                     std::vector<ProcedureInstance>& instances,
+                                     const std::string& name)
 {
     if (procedures.count(name))
     {
@@ -93,8 +96,8 @@ static void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>&
 }
 
 static void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>& procedures,
-    std::vector<ProcedureInstance>& instances,
-    const std::string& name, nlohmann::ordered_json& input)
+                                     std::vector<ProcedureInstance>& instances,
+                                     const std::string& name, nlohmann::ordered_json& input)
 {
     if (procedures.count(name))
     {
@@ -111,8 +114,8 @@ static void AddProcedureInstanceImpl(std::unordered_map<std::string, Procedure>&
 }
 
 static void OnDispatchImpl(std::unordered_map<std::string, Procedure>& procedures,
-    std::vector<ProcedureInstance>& instances,
-    int res)
+                           std::vector<ProcedureInstance>& instances,
+                           int res)
 {
     for (auto& instance : instances)
     {
@@ -124,8 +127,59 @@ static void OnDispatchImpl(std::unordered_map<std::string, Procedure>& procedure
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
-                 std::vector<ProcedureInstance>& instances, unsigned int id)
+
+static bool AddProcedureButtonImpl(std::vector<std::string>& names,
+                                   std::unordered_map<std::string, Procedure>& procedures,
+                                   std::vector<ProcedureInstance>& instances,
+                                   uint32_t id)
+{
+    bool state_changed = false;
+
+    size_t selected_id = 0;
+
+    const std::string name = "Add procedure:";
+
+    ImGui::Columns(2, "###col", false);
+    ImGui::TextUnformatted(name.c_str());
+    ImGui::NextColumn();
+    ImGui::PushItemWidth(-1);
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, style.Colors[ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, style.Colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, style.Colors[ImGuiCol_ButtonActive]);
+
+    if (ImGui::BeginCombo(("##"+name+std::to_string(id)).c_str(), names.at(selected_id).c_str()))
+    {
+        for (size_t n = 0; n < names.size(); n++)
+        {
+            bool is_selected = (selected_id == n);
+
+            if (ImGui::Selectable(names.at(n).c_str(), is_selected))
+            {
+                selected_id = n;
+                AddProcedureInstanceImpl(procedures, instances, names.at(selected_id));
+                state_changed = true;
+            }
+
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::PopStyleColor(3);
+
+    ImGui::PopItemWidth();
+    ImGui::NextColumn();
+    ImGui::Columns(1, "###col");
+
+    return state_changed;
+}
+
+static bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
+                        std::vector<ProcedureInstance>& instances, uint32_t id)
 {
     bool res = false;
 
@@ -185,46 +239,6 @@ bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
     return res;
 }
 
-
-bool PopupImpl(std::unordered_map<std::string, Procedure>& procedures,
-               std::vector<ProcedureInstance>& instances,
-               const std::string& editor_name, bool& popup_open) 
-{
-    bool res = false;
-
-    std::string name = "Choose procedure##" + editor_name;
-
-    if (ImGuiUtils::ButtonCentered(("Add procedure##" + editor_name).c_str())) {
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f - 250.0f, io.DisplaySize.y * 0.5f - 250.0f));
-        ImGui::SetNextWindowSize(ImVec2(500.0f, 500.0f));
-
-        ImGui::OpenPopup(name.c_str());
-    }
-
-    ImGuiWindowFlags popup_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-
-    if (ImGui::BeginPopupModal(name.c_str(), &popup_open, popup_flags)) {
-
-        for (auto& it : procedures)
-        {
-            if (ImGuiUtils::ButtonCentered(it.first.c_str()))
-            {
-                res = true;
-                AddProcedureInstanceImpl(procedures, instances, it.first);
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::EndPopup();
-    }
-
-    popup_open = true;
-
-    return res;
-}
-
 //===========================================================================
 
 uint32_t TextureEditor::s_InstanceCount = 0;
@@ -252,8 +266,8 @@ void TextureEditor::OnDispatch(int res)
 
 bool TextureEditor::OnImGui()
 {
-    bool res = OnImGuiImpl(m_Procedures, m_Instances, m_InstanceID);
-    res |= PopupImpl(m_Procedures, m_Instances, m_Name, m_PopupOpen);
+    bool res = AddProcedureButtonImpl(m_ProcedureNames, m_Procedures, m_Instances, m_InstanceID);
+    res |= OnImGuiImpl(m_Procedures, m_Instances, m_InstanceID);
 
     return res;
 }
@@ -327,8 +341,8 @@ bool TextureArrayEditor::OnImGui(int layer)
 {
     auto& instances = m_InstanceLists[layer];
 
-    bool res = OnImGuiImpl(m_Procedures, instances, m_InstanceID);
-    res |= PopupImpl(m_Procedures, instances, m_Name, m_PopupOpen);
+    bool res = AddProcedureButtonImpl(m_ProcedureNames, m_Procedures, instances, m_InstanceID);
+    res |= OnImGuiImpl(m_Procedures, instances, m_InstanceID);
 
     return res;
 }

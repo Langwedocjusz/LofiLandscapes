@@ -61,6 +61,7 @@ public:
 
 protected:
     std::unordered_map<std::string, Procedure> m_Procedures;
+    std::vector<std::string> m_ProcedureNames;
 
     ResourceManager& m_ResourceManager;
 };
