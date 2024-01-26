@@ -99,6 +99,11 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.RegisterShader("Curves", "res/shaders/terrain/curves.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Curves", "uExponent", "Exponent", 0.1f, 4.0f, 1.0f);
 
+    m_HeightEditor.RegisterShader("Terrace", "res/shaders/terrain/terrace.glsl");
+    m_HeightEditor.Attach<SliderIntTask>("Terrace", "uNumTerrace", "Number", 1, 10, 4);
+    m_HeightEditor.Attach<SliderFloatTask>("Terrace", "uFlatness", "Flatness", 0.0f, 1.0f, 0.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Terrace", "uStrength", "Strength", 0.0f, 1.0f, 0.0f);
+
     m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uBias", "Bias", 0.0f, 1.0f, 0.5f);
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uSlope", "Slope", 0.0f, 10.0f, 4.0f);
