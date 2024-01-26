@@ -86,6 +86,16 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
+    m_HeightEditor.RegisterShader("Advanced FBM", "res/shaders/terrain/advanced_fbm.glsl");
+    m_HeightEditor.Attach<SliderIntTask>("Advanced FBM", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uScale", "Scale", 1.0f, 64.0f, 32.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uLacunarity", "Lacunarity", 0.0f, 5.0f, 2.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uAltitudeErosion", "Altitude Erosion", 0.0f, 1.0f, 0.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uSlopeErosion", "Slope Erosion", 0.0f, 1.0f, 0.0f);
+    m_HeightEditor.Attach<GLEnumTask>("Advanced FBM", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uScale", "Scale", 1.0f, 64.0f, 8.0f);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0f, 1.0f, 1.0f);
