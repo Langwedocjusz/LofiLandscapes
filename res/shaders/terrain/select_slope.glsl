@@ -27,13 +27,16 @@ vec3 getNorm(vec2 uv) {
 
 #define SUM_COMPONENTS(v) (v.x + v.y + v.z + v.w)
 
+#define PI 3.1415926535
+
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     //Slope
     vec2 uv = vec2(texelCoord)/imageSize(materialmap);
     vec3 norm = getNorm(uv);
-    float slope = 1.0 - norm.y;
+
+    float slope = (2.0/PI)*asin(1.0 - norm.y);
 
     //Mask
     float mask = smoothstep(uSlopeLower - uBlend, uSlopeLower + uBlend, slope)

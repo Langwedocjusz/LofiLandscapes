@@ -208,13 +208,13 @@
                 "Material id": 0
             },
             "1_Select slope": {
-                "Upper": 0.9629999995231628,
+                "Upper": 0.8262822333067258,
                 "Lower": 0.0,
                 "Blending": 0.009999999776482582,
                 "Material id": 1
             },
             "2_Select slope": {
-                "Upper": 0.9449999928474426,
+                "Upper": 0.7878771803795939,
                 "Lower": 0.0,
                 "Blending": 0.009999999776482582,
                 "Material id": 2
