@@ -146,6 +146,22 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
     m_MaterialEditor.Attach<SliderIntTask>("Select slope", "uID", "Material id", 0, max_layer_id, 0);
 
+    m_MaterialEditor.RegisterShader("Select curvature", "res/shaders/terrain/select_curvature.glsl");
+    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uCurvatureUpper", "Upper", 0.0f, 1.0f, 1.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uCurvatureLower", "Lower", 0.0f, 1.0f, 0.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
+    m_MaterialEditor.Attach<SliderIntTask>("Select curvature", "uID", "Material id", 0, max_layer_id, 0);
+
+    m_MaterialEditor.RegisterShader("Select all", "res/shaders/terrain/select_all.glsl");
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uHeightUpper", "Height Upper", 0.0f, 1.0f, 1.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uHeightLower", "Height Lower", 0.0f, 1.0f, 0.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uSlopeUpper", "Slope Upper", 0.0f, 1.0f, 1.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uSlopeLower", "Slope Lower", 0.0f, 1.0f, 0.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uCurvatureLower", "Curvature Lower", 0.0f, 1.0f, 0.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uCurvatureUpper", "Curvature Upper", 0.0f, 1.0f, 1.0f);
+    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
+    m_MaterialEditor.Attach<SliderIntTask>("Select all", "uID", "Material id", 0, max_layer_id, 0);
+
     //Initial procedures:
     m_MaterialEditor.AddProcedureInstance("One material");
 
