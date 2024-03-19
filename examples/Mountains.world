@@ -66,6 +66,20 @@
             "4": {
                 "0_Const Value": {
                     "Value": 0.0
+                },
+                "1_FBM": {
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 0.23199999332427979,
+                    "Blend Mode": 0,
+                    "Weight": 0.029999999329447746
+                },
+                "2_FBM": {
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 1.0,
+                    "Blend Mode": 0,
+                    "Weight": 0.012000000104308128
                 }
             }
         },
@@ -128,11 +142,18 @@
                 }
             },
             "4": {
-                "0_Const Albedo": {
-                    "Albedo": [
-                        0.004999999888241291,
-                        0.004999999888241291,
-                        0.004999999888241291
+                "0_Albedo Ramp": {
+                    "Edge 1": 0.0,
+                    "Edge 2": 0.15299999713897705,
+                    "Albedo 1": [
+                        0.8825622797012329,
+                        0.9912235140800476,
+                        1.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
                     ]
                 }
             }
@@ -140,27 +161,33 @@
         "Roughness": {
             "0": {
                 "0_Const Roughness": {
-                    "Roughness": 0.699999988079071
+                    "Roughness": 1.0
                 }
             },
             "1": {
-                "0_Const Roughness": {
-                    "Roughness": 0.699999988079071
+                "0_Roughness Ramp": {
+                    "Edge 1": 0.08100000023841858,
+                    "Edge 2": 0.210999995470047,
+                    "Value 1": 0.5220000147819519,
+                    "Value 2": 1.0
                 }
             },
             "2": {
                 "0_Const Roughness": {
-                    "Roughness": 0.699999988079071
+                    "Roughness": 0.5950000286102295
                 }
             },
             "3": {
                 "0_Const Roughness": {
-                    "Roughness": 0.699999988079071
+                    "Roughness": 0.8700000047683716
                 }
             },
             "4": {
-                "0_Const Roughness": {
-                    "Roughness": 0.699999988079071
+                "0_Roughness Ramp": {
+                    "Edge 1": 0.0,
+                    "Edge 2": 0.0729999989271164,
+                    "Value 1": 0.003000000026077032,
+                    "Value 2": 1.0
                 }
             }
         }
@@ -199,10 +226,14 @@
             "0_One material": {
                 "Material id": 0
             },
-            "1_Select curvature": {
-                "Upper": 1.0,
-                "Lower": 0.5040000081062317,
-                "Blending": 0.00800000037997961,
+            "1_Select all": {
+                "Height Upper": 1.0,
+                "Height Lower": 0.0,
+                "Slope Upper": 1.0,
+                "Slope Lower": 0.5860000252723694,
+                "Curvature Lower": 0.48899999260902405,
+                "Curvature Upper": 1.0,
+                "Blending": 0.009999999776482582,
                 "Material id": 1
             },
             "2_Select slope": {
@@ -220,6 +251,16 @@
                 "Curvature Upper": 1.0,
                 "Blending": 0.009999999776482582,
                 "Material id": 3
+            },
+            "4_Select all": {
+                "Height Upper": 1.0,
+                "Height Lower": 0.42100000381469727,
+                "Slope Upper": 0.7639999985694885,
+                "Slope Lower": 0.0,
+                "Curvature Lower": 0.46000000834465027,
+                "Curvature Upper": 1.0,
+                "Blending": 0.009999999776482582,
+                "Material id": 4
             }
         }
     }

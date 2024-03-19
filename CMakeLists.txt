@@ -35,6 +35,24 @@ target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources} ${imgui_impl})
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 target_include_directories(${PROJECT_NAME} PUBLIC src/gui)
 
+#Add glfw
+add_subdirectory(vendor/glfw)
+target_link_libraries(${PROJECT_NAME} glfw)
+
+#Add glad
+add_subdirectory(vendor/glad)
+target_link_libraries(${PROJECT_NAME} glad)
+
+#Add imgui
+add_subdirectory(vendor/imgui)
+target_link_libraries(${PROJECT_NAME} imgui)
+
+#Add glm
+target_include_directories(${PROJECT_NAME} PUBLIC vendor/glm)
+
+#Add nlohmann json
+target_include_directories(${PROJECT_NAME} PUBLIC vendor/json/single_include)
+
 #Directory structure for IDEs like Visual Studio
 source_group(src REGULAR_EXPRESSION "src/*")
 source_group(src/subrenderers REGULAR_EXPRESSION "src/subrenderers/*")
@@ -45,27 +63,3 @@ source_group(imgui_impl FILES ${imgui_impl})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 #Set Visual Studio Debugger working directory
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
-#Add glfw
-add_subdirectory(vendor/glfw)
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/glfw/include)
-target_link_directories(${PROJECT_NAME} PRIVATE vendor/glfw/src)
-target_link_libraries(${PROJECT_NAME} glfw)
-
-#Add glad
-add_subdirectory(vendor/glad)
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/glad/include)
-target_link_directories(${PROJECT_NAME} PRIVATE vendor/glad/src)
-target_link_libraries(${PROJECT_NAME} glad)
-
-#Add imgui
-add_subdirectory(vendor/imgui)
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/imgui)
-target_link_directories(${PROJECT_NAME} PRIVATE vendor/imgui)
-target_link_libraries(${PROJECT_NAME} imgui)
-
-#Add glm
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/glm)
-
-#Add nlohmann json
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/json/single_include)
