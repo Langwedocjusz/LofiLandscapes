@@ -31,23 +31,26 @@ void main() {
     float prev[5] = float[5](prev03.x, prev03.y, prev03.z, prev03.w, prev4);
 
     //Overlay
-    float sum = 0.0;
-
-    for (int i=0; i<5; i++)
+    if (mask > 0.0)
     {
-        if (i != uID)
-            sum += prev[i];
-    }
+        float sum = 0.0;
 
-    for (int i=0; i<5; i++)
-    {
-        if (i == uID)
+        for (int i=0; i<5; i++)
         {
-            prev[i] = mask;
+            if (i != uID)
+                sum += prev[i];
         }
-        else
+
+        for (int i=0; i<5; i++)
         {
-            prev[i] = (1-mask)*prev[i]/sum;
+            if (i == uID)
+            {
+                prev[i] = mask;
+            }
+            else
+            {
+                prev[i] = (1-mask)*prev[i]/sum;
+            }
         }
     }
 
