@@ -21,23 +21,7 @@ uniform int uBlendMode;
 
 uniform float uWeight;
 
-//High-quality hash function by nojima:
-//https://www.shadertoy.com/view/ttc3zr
-uvec2 murmurHash22(uvec2 src) {
-    const uint M = 0x5bd1e995u;
-    uvec2 h = uvec2(1190494759u, 2147483647u);
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-vec2 hash22(vec2 src) {
-    src = mod(src, vec2(uScale));
-
-    uvec2 h = murmurHash22(floatBitsToUint(src));
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
+#include "../common/hash.glsl"
 
 vec2 voronoi(vec2 x){
     vec2 p = floor(x);
@@ -48,7 +32,7 @@ vec2 voronoi(vec2 x){
     for (int i=-1; i<=1; i++) {
         for (int j=-1; j<=1; j++) {
             vec2 v = p + vec2(i,j);
-            vec2 r = v + uRandomness*hash22(v);
+            vec2 r = v + uRandomness*hash22(v, uScale);
 
             float d2 = dot(x-r, x-r);
 

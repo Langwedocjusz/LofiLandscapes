@@ -42,25 +42,6 @@ uniform float uMultiWeight;
 uniform vec3 uPos;
 uniform int uShadows;
 
-float MiePhase(float cosTheta) {
-    const float g = 0.8;
-    const float scale = 3.0/(8.0*PI);
-    
-    float num = (1.0-g*g)*(1.0+cosTheta*cosTheta);
-    float denom = (2.0+g*g)*pow((1.0 + g*g - 2.0*g*cosTheta), 1.5);
-    
-    return scale*num/denom;
-}
-
-float RayleighPhase(float cosTheta) {
-    const float k = 3.0/(16.0*PI);
-    return k*(1.0+cosTheta*cosTheta);
-}
-
-float mean(vec3 v){
-    return 0.33*(v.x + v.y + v.z);
-}
-
 void main() {
     ivec3 texelCoord = ivec3(gl_GlobalInvocationID.xyz);
 

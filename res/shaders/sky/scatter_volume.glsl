@@ -7,8 +7,6 @@ layout(rgba16, binding = 0) uniform image3D scatterVolume;
 uniform sampler2D transLUT;
 uniform sampler2D multiLUT;
 
-#include "common.glsl"
-
 uniform float uHeight;
 
 uniform vec3 uSunDir;
@@ -30,24 +28,7 @@ uniform float uDistScale;
 uniform int uMultiscatter;
 uniform float uMultiWeight;
 
-float MiePhase(float cosTheta) {
-    const float g = 0.8;
-    const float scale = 3.0/(8.0*PI);
-    
-    float num = (1.0-g*g)*(1.0+cosTheta*cosTheta);
-    float denom = (2.0+g*g)*pow((1.0 + g*g - 2.0*g*cosTheta), 1.5);
-    
-    return scale*num/denom;
-}
-
-float RayleighPhase(float cosTheta) {
-    const float k = 3.0/(16.0*PI);
-    return k*(1.0+cosTheta*cosTheta);
-}
-
-float mean(vec3 v){
-    return 0.33*(v.x + v.y + v.z);
-}
+#include "common.glsl"
 
 void main() {
     ivec3 texelCoord = ivec3(gl_GlobalInvocationID.xyz);

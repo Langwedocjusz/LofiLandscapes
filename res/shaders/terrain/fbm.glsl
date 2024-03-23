@@ -17,30 +17,16 @@ uniform int uBlendMode;
 
 uniform float uWeight;
 
-//High-quality hash function by nojima:
-//https://www.shadertoy.com/view/ttc3zr
-uint murmurHash12(uvec2 src) {
-    const uint M = 0x5bd1e995u;
-    uint h = 1190494759u;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-float hash(vec2 src) {
-    uint h = murmurHash12(floatBitsToUint(src));
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
+#include "../common/hash.glsl"
 
 float noise(vec2 p) {
     vec2 id = floor(p);
     vec2 u = fract(p);
 
-    float a = hash(id+vec2(0,0));
-    float b = hash(id+vec2(1,0));
-    float c = hash(id+vec2(0,1));
-    float d = hash(id+vec2(1,1));
+    float a = hash12(id+vec2(0,0));
+    float b = hash12(id+vec2(1,0));
+    float c = hash12(id+vec2(0,1));
+    float d = hash12(id+vec2(1,1));
 
     u = u*u*u*(u*(6.0*u-15.0)+10.0);
 
