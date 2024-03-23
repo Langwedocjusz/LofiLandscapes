@@ -251,7 +251,7 @@ void GrassRenderer::Render()
 	m_PresentShader->setUniform1f("uSunStr", m_SunStr);
 	m_PresentShader->setUniform1f("uSkyDiff", m_SkyDiff);
 	m_PresentShader->setUniform1f("uSkySpec", m_SkySpec);
-	m_PresentShader->setUniform1f("uRefStr", m_RefStr);
+	//m_PresentShader->setUniform1f("uRefStr", m_RefStr);
 	m_PresentShader->setUniform1i("uShadow", int(m_Shadows));
 	
 	m_PresentShader->setUniform1f("uGrassHeight", m_GrassHeight);

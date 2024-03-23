@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class Shader{
 public:
@@ -33,11 +34,19 @@ public:
     void setUniformMatrix4fv(const std::string& name, glm::mat4 mat);
 protected:
     virtual void Build() = 0;
+    virtual void LogFilepaths() = 0;
+
+    void RetrieveActiveUniforms(const std::vector<std::string>& source_names);
+    int getUniformLocation(const std::string& name);
+
+    struct ShaderUniformInfo{
+        int Location;
+        uint32_t Type; //GL Enum
+        int Size; //Number of elements for array uniforms
+    };
 
     uint32_t m_ID = 0;
-
-    uint32_t getUniformLocation(const std::string& name);
-    std::vector<std::pair<std::string, uint32_t>> m_UniformCache;
+    std::unordered_map<std::string, ShaderUniformInfo> m_UniformCache;
 };
 
 class VertFragShader : public Shader {
@@ -47,6 +56,7 @@ public:
 
 private:
     void Build() override;
+    void LogFilepaths() override;
 
     std::string m_VertPath, m_FragPath;
 };
@@ -62,6 +72,7 @@ public:
 
 private:
     void Build() override;
+    void LogFilepaths() override;
 
     void RetrieveLocalSizes(const std::string& source_code);
 

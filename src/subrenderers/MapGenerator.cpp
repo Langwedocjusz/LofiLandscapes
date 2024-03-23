@@ -206,7 +206,6 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir)
     m_ShadowmapShader->setUniform1f("uScaleXZ", m_ScaleXZ);
     m_ShadowmapShader->setUniform1f("uScaleY", m_ScaleY);
     
-    m_ShadowmapShader->setUniform1i("uMips", m_MipLevels);
     m_ShadowmapShader->setUniform1i("uMipOffset", m_ShadowSettings.MipOffset);
     m_ShadowmapShader->setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
     m_ShadowmapShader->setUniform1i("uStartCell", m_ShadowSettings.StartCell);

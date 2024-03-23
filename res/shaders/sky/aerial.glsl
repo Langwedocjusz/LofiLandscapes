@@ -13,7 +13,7 @@ layout(rgba16, binding = 0) uniform image3D aerialLUT;
 uniform sampler2D transLUT;
 uniform sampler2D multiLUT;
 
-uniform sampler2D shadowmap;
+//uniform sampler2D shadowmap;
 
 #include "common.glsl"
 
@@ -39,8 +39,7 @@ uniform float uDistScale;
 uniform int uMultiscatter;
 uniform float uMultiWeight;
 
-uniform vec3 uPos;
-uniform int uShadows;
+//uniform int uShadows;
 
 void main() {
     ivec3 texelCoord = ivec3(gl_GlobalInvocationID.xyz);

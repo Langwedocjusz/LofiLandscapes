@@ -18,7 +18,6 @@ uniform float uScaleXZ;
 uniform float uScaleY;
 uniform vec3 uSunDir;
 
-uniform int uMips;
 uniform int uMipOffset;
 uniform int uMinLvl;
 uniform int uStartCell;

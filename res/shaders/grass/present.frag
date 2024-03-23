@@ -13,12 +13,11 @@ uniform vec3 uSunCol;
 uniform float uSunStr;
 uniform float uSkyDiff;
 uniform float uSkySpec;
-uniform float uRefStr;
+//uniform float uRefStr;
 
 uniform int uShadow;
 
 uniform float uTilingFactor;
-uniform float uMaxDepth;
 uniform float uStrength;
 uniform float uSway;
 uniform float uTime;
@@ -108,7 +107,7 @@ void main() {
     if(uShadow == 1) shadow = texture(shadowmap, world_uv).r;
 
     vec3 sun_col = uSunStr * uSunCol;
-    vec3 ref_col = uRefStr * uSunCol;
+    //vec3 ref_col = uRefStr * uSunCol;
 
     //vec3 albedo = uAlbedo;//vec3(0.9); 
     //float roughness = uRoughness;//0.7f;

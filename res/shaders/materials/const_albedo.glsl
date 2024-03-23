@@ -6,8 +6,6 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba8, binding = 0) uniform image2D albedo;
 
-uniform sampler2D heightmap;
-
 uniform vec3 uCol;
 
 void main() {
