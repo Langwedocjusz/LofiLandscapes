@@ -25,10 +25,10 @@ float Profiler::s_MaxHeight = 17.0f;
 std::vector<std::string> Profiler::s_CPUEventLabels, Profiler::s_GPUEventLabels;
 std::deque<FrameData> Profiler::s_CPUFrames, Profiler::s_GPUFrames;
 
-std::vector<unsigned int> Profiler::s_QueryIDs1, Profiler::s_QueryIDs2;
+std::vector<uint32_t> Profiler::s_QueryIDs1, Profiler::s_QueryIDs2;
 
-std::vector<unsigned int>* Profiler::s_FrontBuffer = &s_QueryIDs1;
-std::vector<unsigned int>* Profiler::s_BackBuffer = &s_QueryIDs2;
+std::vector<uint32_t>* Profiler::s_FrontBuffer = &s_QueryIDs1;
+std::vector<uint32_t>* Profiler::s_BackBuffer = &s_QueryIDs2;
 
 //===================================================
 
@@ -127,12 +127,12 @@ void Profiler::OnInit()
 	glGenQueries(s_MaxGPUQueries, &s_QueryIDs2[0]);
 }
 
-unsigned int Profiler::GetFrontbufferQueryID(size_t id)
+uint32_t Profiler::GetFrontbufferQueryID(size_t id)
 {
 	return s_FrontBuffer->at(id);
 }
 
-unsigned int Profiler::GetBackbufferQueryID(size_t id)
+uint32_t Profiler::GetBackbufferQueryID(size_t id)
 {
 	return s_BackBuffer->at(id);
 }

@@ -24,8 +24,8 @@ public:
 	static size_t GetCPUEventID(const std::string& name);
 	static size_t GetGPUEventID(const std::string& name);
 
-	static unsigned int GetFrontbufferQueryID(size_t id);
-	static unsigned int GetBackbufferQueryID(size_t id);
+	static uint32_t GetFrontbufferQueryID(size_t id);
+	static uint32_t GetBackbufferQueryID(size_t id);
 
 	static void NextFrame();
 	static void SwapBuffers();
@@ -52,8 +52,8 @@ private:
 
 	static const int s_MaxGPUQueries = 32;
 
-	static std::vector<unsigned int> s_QueryIDs1, s_QueryIDs2;
-	static std::vector<unsigned int> *s_FrontBuffer, *s_BackBuffer;
+	static std::vector<uint32_t> s_QueryIDs1, s_QueryIDs2;
+	static std::vector<uint32_t> *s_FrontBuffer, *s_BackBuffer;
 };
 
 

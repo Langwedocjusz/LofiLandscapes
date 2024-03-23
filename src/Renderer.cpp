@@ -101,8 +101,8 @@ void Renderer::Init(StartSettings settings)
     //Framebuffer setup
     m_InternalResScale = settings.InternalResScale;
 
-    m_InternalWidth  = static_cast<uint32_t>(m_InternalResScale * static_cast<float>(m_WindowWidth));
-    m_InternalHeight = static_cast<uint32_t>(m_InternalResScale * static_cast<float>(m_WindowHeight));
+    m_InternalWidth  = static_cast<int>(m_InternalResScale * static_cast<float>(m_WindowWidth));
+    m_InternalHeight = static_cast<int>(m_InternalResScale * static_cast<float>(m_WindowHeight));
 
     Texture2DSpec framebuffer_spec{
         m_InternalWidth, m_InternalHeight, GL_RGBA8, GL_RGBA,

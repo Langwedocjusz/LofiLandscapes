@@ -53,7 +53,7 @@ void Framebuffer::BindColorImage(int id, int mip) const
     m_ColorAttachment->BindImage(id, mip);
 }
 
-void Framebuffer::Resize(uint32_t width, uint32_t height)
+void Framebuffer::Resize(int width, int height)
 {
     m_ColorAttachment->Resize(width, height);
 

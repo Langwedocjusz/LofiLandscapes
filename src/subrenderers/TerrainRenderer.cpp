@@ -155,7 +155,8 @@ void TerrainRenderer::RenderShaded()
     m_Clipmap.Draw(m_Camera, scale_y);
 }
 
-void TerrainRenderer::OnImGui(bool& open) {
+void TerrainRenderer::OnImGui(bool& open) 
+{
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(LOFI_ICONS_LIGHTING "Lighting", &open, ImGuiWindowFlags_NoFocusOnAppearing);
@@ -174,10 +175,8 @@ void TerrainRenderer::OnImGui(bool& open) {
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
-    if (shadows != m_Shadows) {
-        if (m_Shadows)
-            m_Map.RequestShadowUpdate();
-    }
+    if ((shadows != m_Shadows) && m_Shadows) 
+        m_Map.RequestShadowUpdate();
 
     ImGuiUtils::BeginGroupPanel("Material options:");
     ImGui::Columns(2, "###col");

@@ -11,11 +11,13 @@ Procedure::Procedure(ResourceManager& manager)
     : m_ResourceManager(manager)
 {}
 
-void Procedure::CompileShader(const std::string& filepath) {
+void Procedure::CompileShader(const std::string& filepath) 
+{
     m_Shader = m_ResourceManager.RequestComputeShader(filepath);
 }
 
-void Procedure::OnDispatch(int res, const std::vector<InstanceData>& v_data) {
+void Procedure::OnDispatch(int res, const std::vector<InstanceData>& v_data) 
+{
     m_Shader->Bind();
 
     for (size_t i = 0; i < m_Tasks.size(); i++)

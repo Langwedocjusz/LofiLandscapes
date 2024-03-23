@@ -68,7 +68,8 @@ void MaterialMapGenerator::Init(int res, int wrap_type)
     m_MaterialEditor.AddProcedureInstance("One material");
 }
 
-void MaterialMapGenerator::OnUpdate() {
+void MaterialMapGenerator::OnUpdate() 
+{
     if (!m_UpdateQueued) return;
 
     ProfilerGPUEvent we("Map::UpdateMaterial");
@@ -88,11 +89,13 @@ void MaterialMapGenerator::OnUpdate() {
     m_UpdateQueued = false;
 }
 
-void MaterialMapGenerator::BindMaterialmap(int id) const {
+void MaterialMapGenerator::BindMaterialmap(int id) const 
+{
     m_Materialmap->Bind(id);
 }
 
-void MaterialMapGenerator::OnImGui(bool& open) {
+void MaterialMapGenerator::OnImGui(bool& open) 
+{
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(LOFI_ICONS_MATERIALMAP "Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);

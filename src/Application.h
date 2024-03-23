@@ -6,7 +6,7 @@
 
 class Application{
 public:
-    Application(const std::string& title, unsigned int width, unsigned int height);
+    Application(const std::string& title, uint32_t width, uint32_t height);
     ~Application();
 
     void StartMenu();

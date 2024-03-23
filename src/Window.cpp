@@ -4,7 +4,8 @@
 
 #include <iostream>
 
-Window::Window(const std::string& title, uint32_t width, uint32_t height) {
+Window::Window(const std::string& title, uint32_t width, uint32_t height) 
+{
     m_WindowData.Title  = title;
     m_WindowData.Width  = width;
     m_WindowData.Height = height;
@@ -17,9 +18,10 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
 
     //Immediately set error callback:
     glfwSetErrorCallback([](int code, const char* message) {
-        std::cerr << "Glfw Error: \n" << "Code: " << code
-            << "Message: " << message << '\n';
-        });
+        std::cerr << "Glfw Error: \n" 
+                  << "Code: " << code << '\n'
+                  << "Message: " << message << '\n';
+    });
 
     //Try to create a window
     m_Window = glfwCreateWindow(m_WindowData.Width, m_WindowData.Height,
@@ -38,17 +40,20 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
     glfwSetWindowUserPointer(m_Window, &m_WindowData);
 
     //Set OpenGL error callback:
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, 
-                              GLenum severity, GLsizei length, const GLchar* message,
-                              const void* userParam) 
+    auto gl_debug_callback = [](GLenum source, GLenum type, GLuint id, 
+            GLenum severity, GLsizei length, const GLchar* message,
+            const void* userParam)
     {
         if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
-        std::cout << "GL CALLBACK: type = " << type 
-                  << ", severity = " << severity 
-                  << ", message = " << message << '\n';
-    }, 0);
+        std::cout << "GL CALLBACK:" << '\n' 
+                  << "Type: " << type << '\n' 
+                  << "Severity: " << severity << '\n' 
+                  << "Message: " << message << '\n';
+    };
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(gl_debug_callback, 0);
 
     //Set the rest of Glfw callbacks:
     glfwSetFramebufferSizeCallback(m_Window, 
@@ -60,7 +65,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
 
             WindowResizeEvent event(width, height);
             data.EventCallback(event);
-        });
+        }
+    );
 
     glfwSetKeyCallback(m_Window, 
         [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -84,7 +90,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
                     break;
                 }
             }
-        });
+        }
+    );
 
     glfwSetCursorPosCallback(m_Window, 
         [](GLFWwindow* window, double xPos, double yPos)
@@ -93,7 +100,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
 
             MouseMovedEvent event(xPos, yPos);
             data.EventCallback(event);
-        });
+        }
+    );
 
     glfwSetMouseButtonCallback(m_Window, 
         [](GLFWwindow* window, int button, int action, int mods) 
@@ -115,7 +123,8 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
                     break;
                 }
             }
-        });
+        }
+    );
 
     //Enable vsync
     glfwSwapInterval(1);
@@ -124,29 +133,35 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height) {
     glViewport(0, 0, m_WindowData.Width, m_WindowData.Height);
 }
 
-Window::~Window() {
+Window::~Window() 
+{
     glfwDestroyWindow(m_Window);
     glfwTerminate();
 }
 
-void Window::OnUpdate() {
+void Window::OnUpdate() 
+{
     glfwSwapBuffers(m_Window);
     glfwPollEvents();
 }
 
-void Window::CaptureCursor() {
+void Window::CaptureCursor() 
+{
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void Window::FreeCursor() {
+void Window::FreeCursor() 
+{
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-bool Window::ShouldClose() {
+bool Window::ShouldClose() 
+{
     return glfwWindowShouldClose(m_Window);
 }
 
-void Window::setEventCallback(std::function<void(Event&)> callback) {
+void Window::setEventCallback(std::function<void(Event&)> callback) 
+{
     m_WindowData.EventCallback = callback;
 }
 

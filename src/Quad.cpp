@@ -2,7 +2,8 @@
 
 #include "glad/glad.h"
 
-Quad::Quad() {
+Quad::Quad() 
+{
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
     glGenBuffers(1, &m_EBO);
@@ -21,13 +22,15 @@ Quad::Quad() {
     glEnableVertexAttribArray(0);
 }
 
-Quad::~Quad() {
+Quad::~Quad() 
+{
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteBuffers(1, &m_VBO);
     glDeleteBuffers(1, &m_EBO);
 }
 
-void Quad::Draw() {
+void Quad::Draw() 
+{
     glBindVertexArray(m_VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

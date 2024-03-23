@@ -46,7 +46,7 @@ uint32_t Shader::getUniformLocation(const std::string& name)
 }
 
 //Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
-static void compileShaderCode(const std::string& source, unsigned int& id, int program_type)
+static void compileShaderCode(const std::string& source, uint32_t& id, int program_type)
 {
     const char* source_c = source.c_str();
 
@@ -120,7 +120,7 @@ void VertFragShader::Build()
     std::string frag_code = loadSource(current_path / m_FragPath);
 
     //Compile shaders
-    unsigned int vert_id = 0, frag_id = 0;
+    uint32_t vert_id = 0, frag_id = 0;
 
     try 
     {
@@ -194,7 +194,7 @@ void ComputeShader::Build()
     RetrieveLocalSizes(compute_code);
 
     //Compile shader
-    unsigned int compute_id = 0;
+    uint32_t compute_id = 0;
 
     try 
     {
@@ -310,84 +310,100 @@ void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
 
 //=====Uniform setting==================================================
 
-void Shader::setUniform1i(const std::string& name, int x) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform1i(const std::string& name, int x) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform1i(location, x);
 }
 
-void Shader::setUniform2i(const std::string& name, int x, int y) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform2i(const std::string& name, int x, int y) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform2i(location, x, y);
 }
 
-void Shader::setUniform3i(const std::string& name, int x, int y, int z) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform3i(const std::string& name, int x, int y, int z) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform3i(location, x, y, z);
 }
 
-void Shader::setUniform4i(const std::string& name, int x, int y, int z, int w) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform4i(const std::string& name, int x, int y, int z, int w) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform4i(location, x, y, z, w);
 }
 
-void Shader::setUniform1f(const std::string& name, float x) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform1f(const std::string& name, float x) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform1f(location, x);
 }
 
-void Shader::setUniform2f(const std::string& name, float x, float y) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform2f(const std::string& name, float x, float y) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform2f(location, x, y);
 }
 
-void Shader::setUniform3f(const std::string& name, float x, float y, float z) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform3f(const std::string& name, float x, float y, float z) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform3f(location, x, y, z);
 }
 
-void Shader::setUniform4f(const std::string& name, float x, float y, float z, float w) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform4f(const std::string& name, float x, float y, float z, float w) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform4f(location, x, y, z, w);
 }
 
-void Shader::setUniformMatrix4fv(const std::string& name, float data[16]) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniformMatrix4fv(const std::string& name, float data[16]) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniformMatrix4fv(location, 1, GL_FALSE, data);
 }
 
 //=====GLM overrides===================================================
 
-void Shader::setUniform2i(const std::string& name, glm::ivec2 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform2i(const std::string& name, glm::ivec2 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform2i(location, v.x, v.y);
 }
 
-void Shader::setUniform3i(const std::string& name, glm::ivec3 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform3i(const std::string& name, glm::ivec3 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform3i(location, v.x, v.y, v.z);
 }
 
-void Shader::setUniform4i(const std::string& name, glm::ivec4 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform4i(const std::string& name, glm::ivec4 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform4i(location, v.x, v.y, v.z, v.w);
 }
 
-void Shader::setUniform2f(const std::string& name, glm::vec2 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform2f(const std::string& name, glm::vec2 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform2f(location, v.x, v.y);
 }
 
-void Shader::setUniform3f(const std::string& name, glm::vec3 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform3f(const std::string& name, glm::vec3 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform3f(location, v.x, v.y, v.z);
 }
 
-void Shader::setUniform4f(const std::string& name, glm::vec4 v) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniform4f(const std::string& name, glm::vec4 v) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniform4f(location, v.x, v.y, v.z, v.w);
 }
 
-void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) {
-    const unsigned int location = getUniformLocation(name.c_str());
+void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) 
+{
+    const uint32_t location = getUniformLocation(name.c_str());
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
 }

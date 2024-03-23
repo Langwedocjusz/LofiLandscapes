@@ -57,7 +57,7 @@ private:
          m_ShowLightMenu   = false,  m_ShowShadowMenu      = false,
          m_ShowCamMenu     = false,  m_ShowMaterialMenu    = false,
          m_ShowSkyMenu     = false,  m_ShowMapMaterialMenu = false,
-         m_ShowGrassMenu   = false, m_ShowPostMenu = false;
+         m_ShowGrassMenu   = false,  m_ShowPostMenu        = false;
 
     bool m_ShowTexBrowser = false, m_ShowProfiler = false;
 
@@ -81,7 +81,7 @@ private:
     PostProcessor m_PostProcessor;
 
     float m_InternalResScale = 1.0f;
-    uint32_t m_InternalWidth, m_InternalHeight;
+    int m_InternalWidth, m_InternalHeight;
     bool m_ResizeFramebuffer = true;
     Framebuffer m_Framebuffer;
     Quad m_Quad;

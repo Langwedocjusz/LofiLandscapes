@@ -7,11 +7,11 @@ class PostProcessor {
 public:
 	PostProcessor(ResourceManager& manager, const Framebuffer& framebuffer);
 
-	void Init(uint32_t width, uint32_t height);
+	void Init(int width, int height);
 	void OnRender();
 	void OnImGui(bool& open);
 	
-	void ResizeBuffers(uint32_t width, uint32_t height);
+	void ResizeBuffers(int width, int height);
 
 	void BindOutput(int id);
 

@@ -23,7 +23,8 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
     m_Albedo = m_ResourceManager.RequestTextureArray("Albedomaps");
 }
 
-void MaterialGenerator::Init(int material_res) {
+void MaterialGenerator::Init(int material_res) 
+{
     //=====Initialize the textures:
 
     m_Height->Initialize(Texture2DSpec{
@@ -99,7 +100,8 @@ void MaterialGenerator::Init(int material_res) {
     m_RoughnessEditor.Attach<SliderFloatTask>("Roughness Ramp", "uVal2", "Value 2", 0.003f, 1.0f, 1.0f);
 
     //Initial procedures
-    for (int i = 0; i < m_Layers; i++) {
+    for (int i = 0; i < m_Layers; i++) 
+    {
         m_HeightEditor.AddProcedureInstance(i, "Const Value");
         m_AlbedoEditor.AddProcedureInstance(i, "Const Albedo");
         m_RoughnessEditor.AddProcedureInstance(i, "Const Roughness");
@@ -116,7 +118,8 @@ void MaterialGenerator::Init(int material_res) {
     m_Current = 0;
 }
 
-void MaterialGenerator::Update() { 
+void MaterialGenerator::Update() 
+{ 
 
     //Draw to heightmap:
     if ((m_UpdateFlags & Height) != None)
@@ -177,7 +180,8 @@ void MaterialGenerator::Update() {
     m_UpdateFlags = None;
 }
 
-void MaterialGenerator::OnImGui(bool& open) {
+void MaterialGenerator::OnImGui(bool& open) 
+{
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(LOFI_ICONS_MATERIAL "Material editor", &open, ImGuiWindowFlags_NoFocusOnAppearing);
@@ -188,7 +192,8 @@ void MaterialGenerator::OnImGui(bool& open) {
 
     ImGuiUtils::BeginGroupPanel("Heightmap procedures");
 
-    if (m_HeightEditor.OnImGui(m_Current)) {
+    if (m_HeightEditor.OnImGui(m_Current)) 
+    {
         m_UpdateFlags = m_UpdateFlags | Height;
         m_UpdateFlags = m_UpdateFlags | Normal;
         m_UpdateFlags = m_UpdateFlags | Albedo;
@@ -206,7 +211,8 @@ void MaterialGenerator::OnImGui(bool& open) {
     ImGuiUtils::ColSliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
     ImGui::Columns(1, "###col");
 
-    if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) {
+    if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast) 
+    {
         m_AOStrength = tmp_str;
         m_AOSpread   = tmp_spr;
         m_AOContrast = tmp_c;
@@ -218,7 +224,8 @@ void MaterialGenerator::OnImGui(bool& open) {
 
     ImGuiUtils::BeginGroupPanel("Albedo procedures");
     
-    if (m_AlbedoEditor.OnImGui(m_Current)) {
+    if (m_AlbedoEditor.OnImGui(m_Current)) 
+    {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
@@ -226,7 +233,8 @@ void MaterialGenerator::OnImGui(bool& open) {
 
     ImGuiUtils::BeginGroupPanel("Roughness procedures");
 
-    if (m_RoughnessEditor.OnImGui(m_Current)) {
+    if (m_RoughnessEditor.OnImGui(m_Current)) 
+    {
         m_UpdateFlags = m_UpdateFlags | Albedo;
     }
 
@@ -237,21 +245,25 @@ void MaterialGenerator::OnImGui(bool& open) {
     Update();
 }
 
-void MaterialGenerator::BindAlbedo(int id) const {
+void MaterialGenerator::BindAlbedo(int id) const 
+{
     m_Albedo->Bind(id);
 }
 
-void MaterialGenerator::BindNormal(int id) const {
+void MaterialGenerator::BindNormal(int id) const 
+{
     m_Normal->Bind(id);
 }
 
-void MaterialGenerator::OnSerialize(nlohmann::ordered_json& output) {
+void MaterialGenerator::OnSerialize(nlohmann::ordered_json& output) 
+{
     m_HeightEditor.OnSerialize(output);
     m_AlbedoEditor.OnSerialize(output);
     m_RoughnessEditor.OnSerialize(output);
 }
 
-void MaterialGenerator::OnDeserialize(nlohmann::ordered_json& input) {
+void MaterialGenerator::OnDeserialize(nlohmann::ordered_json& input) 
+{
     m_HeightEditor.OnDeserialize(input[m_HeightEditor.getName()]);
     m_AlbedoEditor.OnDeserialize(input[m_AlbedoEditor.getName()]);
     m_RoughnessEditor.OnDeserialize(input[m_RoughnessEditor.getName()]);

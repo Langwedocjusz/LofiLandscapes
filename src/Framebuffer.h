@@ -15,7 +15,7 @@ public:
     void BindColorTex(int id = 0) const;
     void BindColorImage(int id, int mip) const;
 
-    void Resize(uint32_t width, uint32_t height);
+    void Resize(int width, int height);
     void RequestPreviewUpdate();
 
     int getResolutionX() const { return m_ColorAttachment->m_Spec.ResolutionX; }

@@ -23,7 +23,8 @@ MapGenerator::MapGenerator(ResourceManager& manager)
     m_Shadowmap   = m_ResourceManager.RequestTexture2D("Shadowmap");
 }
 
-void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
+void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) 
+{
     //-----Initialize Textures
     //-----Heightmap
 
@@ -124,11 +125,13 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     //Nice utilities:
     //http://www.graphics.stanford.edu/~seander/bithacks.html
 
-    auto isPowerOf2 = [](int value) {
+    auto isPowerOf2 = [](int value) 
+    {
         return (value & (value - 1)) == 0;
     };
 
-    auto log2 = [](int value) {
+    auto log2 = [](int value) 
+    {
         int copy = value, result = 0;
         while (copy >>= 1) ++result;
         return result;
@@ -146,7 +149,8 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_ShadowSettings.MipOffset = log2(height_res / shadow_res);
 }
 
-void MapGenerator::UpdateHeight() {
+void MapGenerator::UpdateHeight() 
+{
     ProfilerGPUEvent we("Map::UpdateHeight");
 
     const int res = m_Heightmap->getResolutionX();
@@ -161,7 +165,8 @@ void MapGenerator::UpdateHeight() {
     m_ResourceManager.RequestPreviewUpdate(m_Heightmap);
 }
 
-void MapGenerator::UpdateNormal() {
+void MapGenerator::UpdateNormal() 
+{
     ProfilerGPUEvent we("Map::UpdateNormal");
 
     const int res = m_Normalmap->getResolutionX();
@@ -186,7 +191,8 @@ void MapGenerator::UpdateNormal() {
     m_ResourceManager.RequestPreviewUpdate(m_Normalmap);
 }
 
-void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
+void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) 
+{
     ProfilerGPUEvent we("Map::UpdateShadow");
 
     const int res = m_Shadowmap->getResolutionX();
@@ -219,7 +225,8 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
 }
 
 
-void MapGenerator::GenMaxMips() {
+void MapGenerator::GenMaxMips() 
+{
     if (m_MipLevels == 0) return;
 
     const int res = m_Heightmap->getResolutionX();
@@ -242,7 +249,8 @@ void MapGenerator::GenMaxMips() {
     }
 }
 
-void MapGenerator::Update(const glm::vec3& sun_dir) {
+void MapGenerator::Update(const glm::vec3& sun_dir) 
+{
     if ((m_UpdateFlags & Height) != None)
         UpdateHeight();
 
@@ -255,19 +263,23 @@ void MapGenerator::Update(const glm::vec3& sun_dir) {
     m_UpdateFlags = None;
 }
 
-void MapGenerator::BindHeightmap(int id) const {
+void MapGenerator::BindHeightmap(int id) const 
+{
     m_Heightmap->Bind(id);
 }
 
-void MapGenerator::BindNormalmap(int id) const {
+void MapGenerator::BindNormalmap(int id) const 
+{
     m_Normalmap->Bind(id);
 }
 
-void MapGenerator::BindShadowmap(int id) const {
+void MapGenerator::BindShadowmap(int id) const 
+{
     m_Shadowmap->Bind(id);
 }
 
-void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
+void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) 
+{
     float scale_xz = m_ScaleXZ;
     float scale_y = m_ScaleY;
 
@@ -292,14 +304,16 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
 
     ImGui::End();
 
-    if (height_changed) {
+    if (height_changed) 
+    {
         m_UpdateFlags = m_UpdateFlags | Height | Normal;
 
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | Shadow;
     }
 
-    else if (scale_changed) {
+    else if (scale_changed) 
+    {
         m_ScaleXZ = scale_xz;
         m_ScaleY = scale_y;
 
@@ -311,7 +325,8 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
 
 }
 
-void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
+void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) 
+{
     ShadowmapSettings temp = m_ShadowSettings;
     AOSettings temp2 = m_AOSettings;
 
@@ -337,12 +352,14 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
 
     ImGui::End();
 
-    if (temp2 != m_AOSettings) {
+    if (temp2 != m_AOSettings) 
+    {
         m_AOSettings = temp2;
         m_UpdateFlags = m_UpdateFlags | Normal;
     }
 
-    if (temp != m_ShadowSettings) {
+    if (temp != m_ShadowSettings) 
+    {
         temp.StartCell = pow(2, temp.MinLevel);
 
         m_ShadowSettings = temp;
@@ -352,11 +369,13 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     }
 }
 
-void MapGenerator::RequestShadowUpdate() const {
+void MapGenerator::RequestShadowUpdate() const 
+{
     m_UpdateFlags = m_UpdateFlags | Shadow;
 }
 
-bool MapGenerator::GeometryShouldUpdate() {
+bool MapGenerator::GeometryShouldUpdate() 
+{
     //If height changed, then normal must also change, but it is possible
     //to change normals without height by changing the scale
     return (m_UpdateFlags & Normal) != None;
@@ -382,20 +401,24 @@ void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
 
 //Settings structs operator overloads:
 
-bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
+bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) 
+{
     return (lhs.MinLevel == rhs.MinLevel) && (lhs.StartCell == rhs.StartCell)
         && (lhs.NudgeFac == rhs.NudgeFac) && (lhs.Soft == rhs.Soft)
         && (lhs.Sharpness == rhs.Sharpness);
 }
 
-bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) {
+bool operator!=(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs) 
+{
     return !(lhs==rhs);
 }
 
-bool operator==(const AOSettings& lhs, const AOSettings& rhs) {
+bool operator==(const AOSettings& lhs, const AOSettings& rhs) 
+{
     return (lhs.Samples == rhs.Samples) && (lhs.R == rhs.R);
 }
 
-bool operator!=(const AOSettings& lhs, const AOSettings& rhs) {
+bool operator!=(const AOSettings& lhs, const AOSettings& rhs) 
+{
     return !(lhs==rhs);
 }

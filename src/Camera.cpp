@@ -242,7 +242,7 @@ void FPCamera::OnKeyReleased(int keycode)
     }
 }
 
-void FPCamera::OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect) 
+void FPCamera::OnMouseMoved(float x, float y, uint32_t width, uint32_t height, float aspect) 
 {
     float xpos = x/width;
     float ypos = y/height;

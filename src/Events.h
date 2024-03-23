@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 
 enum class EventType {
     None = 0,
@@ -16,15 +17,15 @@ public:
 
 class WindowResizeEvent : public Event {
 public:
-    WindowResizeEvent(unsigned int width, unsigned int height)
+    WindowResizeEvent(uint32_t width, uint32_t height)
         : m_Width(width), m_Height(height) {}
 
     virtual EventType getEventType() override {return EventType::WindowResize;}
 
-    unsigned int getWidth() {return m_Width;}
-    unsigned int getHeight() {return m_Height;}
+    uint32_t getWidth() {return m_Width;}
+    uint32_t getHeight() {return m_Height;}
 private:
-    unsigned int m_Width, m_Height;
+    uint32_t m_Width, m_Height;
 };
 
 class KeyPressedEvent : public Event {

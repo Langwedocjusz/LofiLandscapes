@@ -21,4 +21,4 @@ do
 done
 
 cmake -S . -B ./build "${build}"
-(cd build && make)
+(cd build && make -j)

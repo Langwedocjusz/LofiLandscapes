@@ -127,7 +127,7 @@ public:
 
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
-    void OnMouseMoved(float x, float y, unsigned int width, unsigned int height, float aspect);
+    void OnMouseMoved(float x, float y, uint32_t width, uint32_t height, float aspect);
 
     void OnImGui(bool& open) override;
 private:

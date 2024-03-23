@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-Application::Application(const std::string& title, unsigned int width, unsigned int height) 
+Application::Application(const std::string& title, uint32_t width, uint32_t height) 
     : m_Window(title, width, height), m_Renderer(width, height) 
 {
     //Initialize ImGui:
@@ -57,19 +57,22 @@ Application::Application(const std::string& title, unsigned int width, unsigned 
     m_Window.setEventCallback(std::bind(&Application::OnEvent, this, std::placeholders::_1));
 }
 
-Application::~Application() {
+Application::~Application() 
+{
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
-void Application::StartFrame() {
+void Application::StartFrame() 
+{
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void Application::EndFrame() {
+void Application::EndFrame() 
+{
     ProfilerCPUEvent we("Application::EndFrame");
 
     ImGuiIO& io = ImGui::GetIO();
@@ -81,8 +84,10 @@ void Application::EndFrame() {
     m_Window.OnUpdate();
 }
 
-void Application::StartMenu() {
-    while (!m_Window.ShouldClose() && m_ShowStartMenu) {
+void Application::StartMenu() 
+{
+    while (!m_Window.ShouldClose() && m_ShowStartMenu) 
+    {
         StartFrame();
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
@@ -174,14 +179,17 @@ void Application::StartMenu() {
     }
 }
 
-void Application::Init() {
+void Application::Init() 
+{
     Profiler::OnInit();
 
     m_Renderer.Init(m_StartSettings);
 }
 
-void Application::Run() {
-    while (!m_Window.ShouldClose()) {
+void Application::Run() 
+{
+    while (!m_Window.ShouldClose()) 
+    {
         Profiler::NextFrame();
 
         m_Timer.Update();
@@ -198,10 +206,12 @@ void Application::Run() {
     }
 }
 
-void Application::OnEvent(Event& e) {
+void Application::OnEvent(Event& e) 
+{
    EventType type = e.getEventType();
 
-   switch(type) {
+   switch(type) 
+   {
         case EventType::WindowResize: 
         {
             WindowResizeEvent* ptr = dynamic_cast<WindowResizeEvent*>(&e);
@@ -212,8 +222,10 @@ void Application::OnEvent(Event& e) {
         {
             KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
 
-            if(ptr->getKeycode() == LOFI_KEY_ESCAPE) {
-                if (m_ShowMenu) {
+            if(ptr->getKeycode() == LOFI_KEY_ESCAPE) 
+            {
+                if (m_ShowMenu) 
+                {
                     m_Renderer.RestartMouse();
                     m_Window.CaptureCursor();
                 }
@@ -230,7 +242,8 @@ void Application::OnEvent(Event& e) {
         }
         case EventType::KeyReleased: 
         {
-            if (!m_ShowMenu) {
+            if (!m_ShowMenu) 
+            {
                 KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
                 m_Renderer.OnKeyReleased(ptr->getKeycode());
             }
@@ -238,7 +251,8 @@ void Application::OnEvent(Event& e) {
         }
         case EventType::MouseMoved: 
         {
-            if (!m_ShowMenu) {
+            if (!m_ShowMenu) 
+            {
                 MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
                 m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
             }

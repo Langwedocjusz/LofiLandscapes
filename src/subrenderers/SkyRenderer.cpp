@@ -49,7 +49,8 @@ SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
     Init();
 }
 
-void SkyRenderer::Init() {
+void SkyRenderer::Init() 
+{
     //Resolutions
     const int trans_res = 256, multi_res = 32, sky_res = 128; //Regular square
     const int irr_res = 32, pref_res = 128; //Cubemap
@@ -145,7 +146,8 @@ void SkyRenderer::Init() {
     m_UpdateFlags = Transmittance;
 }
 
-void SkyRenderer::Update(bool aerial) {
+void SkyRenderer::Update(bool aerial) 
+{
 
     if ((m_UpdateFlags & Transmittance) != None)
     {
@@ -178,7 +180,8 @@ void SkyRenderer::Update(bool aerial) {
     m_SunDirChanged = false;
 }
 
-void SkyRenderer::UpdateTrans() {
+void SkyRenderer::UpdateTrans() 
+{
     ProfilerGPUEvent we("Sky::UpdateTransLUT");
 
     m_TransLUT->BindImage(0, 0);
@@ -195,7 +198,8 @@ void SkyRenderer::UpdateTrans() {
     m_ResourceManager.RequestPreviewUpdate(m_TransLUT);
 }
 
-void SkyRenderer::UpdateMulti() {
+void SkyRenderer::UpdateMulti() 
+{
     ProfilerGPUEvent we("Sky::UpdateMultiLUT");
 
     m_TransLUT->Bind(0);
@@ -215,7 +219,8 @@ void SkyRenderer::UpdateMulti() {
     m_ResourceManager.RequestPreviewUpdate(m_MultiLUT);
 }
 
-void SkyRenderer::UpdateSky() {
+void SkyRenderer::UpdateSky() 
+{
     ProfilerGPUEvent we("Sky::UpdateSkyLUT");
 
     //Update sky lut
@@ -402,7 +407,8 @@ void SkyRenderer::UpdateAerialWithShadows()
 }
 
 //Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
-void SkyRenderer::Render() {
+void SkyRenderer::Render() 
+{
     ProfilerGPUEvent we("Sky::Render");
 
     const FrustumExtents extents = m_Camera.getFrustumExtents();
@@ -425,7 +431,8 @@ void SkyRenderer::Render() {
     m_Quad.Draw();
 }
 
-void SkyRenderer::OnImGui(bool& open) {
+void SkyRenderer::OnImGui(bool& open) 
+{
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(LOFI_ICONS_SKY "Sky settings", &open, ImGuiWindowFlags_NoFocusOnAppearing);
@@ -486,7 +493,8 @@ void SkyRenderer::OnImGui(bool& open) {
 
     ImGuiUtils::ColColorEdit3("Ground Albedo", &albedo);
 
-    if (albedo != m_GroundAlbedo) {
+    if (albedo != m_GroundAlbedo) 
+    {
         m_GroundAlbedo = albedo;
         m_UpdateFlags = m_UpdateFlags | SkyView;
         m_UpdateFlags = m_UpdateFlags | MultiScatter;
@@ -514,19 +522,23 @@ void SkyRenderer::OnImGui(bool& open) {
     ImGui::End();
 }
 
-void SkyRenderer::BindSkyLUT(int id) const {
+void SkyRenderer::BindSkyLUT(int id) const 
+{
     m_SkyLUT->Bind(id);
 }
 
-void SkyRenderer::BindIrradiance(int id) const {
+void SkyRenderer::BindIrradiance(int id) const 
+{
     m_IrradianceMap->Bind(id);
 }
 
-void SkyRenderer::BindPrefiltered(int id) const {
+void SkyRenderer::BindPrefiltered(int id) const 
+{
     m_PrefilteredMap->Bind(id);
 }
 
-void SkyRenderer::BindAerial(int id) const {
+void SkyRenderer::BindAerial(int id) const 
+{
     m_AerialLUT->Bind(id);
 }
 

@@ -18,7 +18,7 @@ PostProcessor::PostProcessor(ResourceManager& manager, const Framebuffer& frameb
 	m_BackBuffer = m_ResourceManager.RequestTexture2D("PostFX Backbuffer");
 }
 
-void PostProcessor::Init(uint32_t width, uint32_t height)
+void PostProcessor::Init(int width, int height)
 {
 	Texture2DSpec buffer_spec{
 		width, height, GL_RGBA8, GL_RGBA,
@@ -103,7 +103,7 @@ void PostProcessor::OnImGui(bool& open)
 	ImGui::End();
 }
 
-void PostProcessor::ResizeBuffers(uint32_t width, uint32_t height)
+void PostProcessor::ResizeBuffers(int width, int height)
 {
 	m_FrontBuffer->Resize(width, height);
 	m_BackBuffer->Resize(width, height);
