@@ -19,8 +19,9 @@ Renderer::Renderer(uint32_t width, uint32_t height)
     , m_Framebuffer(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
+    , m_MaterialMap(m_ResourceManager, m_Map)
     , m_SkyRenderer(m_ResourceManager, m_Camera, m_Map)
-    , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
+    , m_TerrainRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_MaterialMap, m_SkyRenderer)
     , m_GrassRenderer(m_ResourceManager, m_Camera, m_Map, m_Material, m_SkyRenderer)
     , m_PostProcessor(m_ResourceManager, m_Framebuffer)
 {
@@ -41,6 +42,14 @@ Renderer::Renderer(uint32_t width, uint32_t height)
         std::bind(&MaterialGenerator::OnSerialize, &m_Material, std::placeholders::_1)
     );
 
+    m_Serializer.RegisterLoadCallback("MaterialMap Editor",
+        std::bind(&MaterialMapGenerator::OnDeserialize, &m_MaterialMap, std::placeholders::_1)
+    );
+
+    m_Serializer.RegisterSaveCallback("MaterialMap Editor", 
+        std::bind(&MaterialMapGenerator::OnSerialize, &m_MaterialMap, std::placeholders::_1)
+    );
+
     //Initialize present shader
     m_PresentShader = m_ResourceManager.RequestVertFragShader(
         "res/shaders/present.vert", "res/shaders/present.frag"
@@ -54,6 +63,7 @@ void Renderer::Init(StartSettings settings)
     m_TerrainRenderer.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
     m_Material.Init(settings.MaterialRes);
+    m_MaterialMap.Init(settings.HeightRes, settings.WrapType);
 
     if (settings.IncludeGrass)
     {
@@ -81,6 +91,9 @@ void Renderer::Init(StartSettings settings)
 
     //Update Material
     m_Material.Update();
+
+    //Update Material Map
+    m_MaterialMap.OnUpdate();
 
     //Initial geometry displacement
     m_TerrainRenderer.Update();
@@ -120,6 +133,7 @@ void Renderer::OnUpdate(float deltatime)
 
     if (m_Map.GeometryShouldUpdate())
     {
+        m_MaterialMap.RequestUpdate();
         m_TerrainRenderer.RequestFullUpdate();
         m_GrassRenderer.RequestGeometryUpdate();
     }
@@ -132,6 +146,8 @@ void Renderer::OnUpdate(float deltatime)
     m_Camera.Update(m_Aspect, deltatime);
 
     m_Map.Update(m_SkyRenderer.getSunDir());
+
+    m_MaterialMap.OnUpdate();
 
     if (m_IncludeGrass)
         m_GrassRenderer.OnUpdate(deltatime);
@@ -288,7 +304,7 @@ void Renderer::OnImGuiRender()
         m_GrassRenderer.OnImGui(m_ShowGrassMenu);
 
     if (m_ShowMapMaterialMenu)
-        m_Map.ImGuiMaterials(m_ShowMapMaterialMenu);
+        m_MaterialMap.OnImGui(m_ShowMapMaterialMenu);
 
     if(m_ShowShadowMenu)
         m_Map.ImGuiShadowmap(m_ShowShadowMenu, m_TerrainRenderer.DoShadows());

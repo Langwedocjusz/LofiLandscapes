@@ -33,12 +33,11 @@ public:
     void BindHeightmap(int id=0) const;
     void BindNormalmap(int id=0) const;
     void BindShadowmap(int id=0) const;
-    void BindMaterialmap(int id=0) const;
+
     void RequestShadowUpdate() const;
 
     void ImGuiTerrain(bool &open, bool update_shadows);
     void ImGuiShadowmap(bool &open, bool update_shadows);
-    void ImGuiMaterials(bool& open);
 
     bool GeometryShouldUpdate();
 
@@ -52,7 +51,6 @@ private:
     void UpdateHeight();
     void UpdateNormal();
     void UpdateShadow(const glm::vec3& sun_dir);
-    void UpdateMaterial();
 
     void GenMaxMips();
 
@@ -61,11 +59,10 @@ private:
         Height   = (1 << 0),
         Normal   = (1 << 1),
         Shadow   = (1 << 2),
-        Material = (1 << 3)
     };
 
-    TextureEditor m_HeightEditor, m_MaterialEditor;
-    std::shared_ptr<Texture2D> m_Heightmap, m_Normalmap, m_Shadowmap, m_Materialmap;
+    TextureEditor m_HeightEditor;
+    std::shared_ptr<Texture2D> m_Heightmap, m_Normalmap, m_Shadowmap;
 
     std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
     std::shared_ptr<ComputeShader> m_MipShader;

@@ -3,6 +3,7 @@
 #include "subrenderers/Clipmap.h"
 #include "subrenderers/MapGenerator.h"
 #include "subrenderers/MaterialGenerator.h"
+#include "subrenderers/MaterialMapGenerator.h"
 #include "subrenderers/TerrainRenderer.h"
 #include "subrenderers/GrassRenderer.h"
 #include "subrenderers/SkyRenderer.h"
@@ -73,6 +74,7 @@ private:
 
     MapGenerator m_Map;
     MaterialGenerator m_Material;
+    MaterialMapGenerator m_MaterialMap;
     TerrainRenderer m_TerrainRenderer;
     GrassRenderer m_GrassRenderer;
     SkyRenderer m_SkyRenderer;

@@ -202,7 +202,9 @@
                 "Blend Mode": 1,
                 "Weight": 0.008999999612569809
             }
-        },
+        }
+    },
+    "MaterialMap Editor": {
         "Material": {
             "0_One material": {
                 "Material id": 0

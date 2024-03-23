@@ -13,7 +13,6 @@
 MapGenerator::MapGenerator(ResourceManager& manager)
     : m_ResourceManager(manager)
     , m_HeightEditor(manager, "Height")
-    , m_MaterialEditor(manager, "Material")
 {
     m_NormalmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/normal.glsl");
     m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/shadow.glsl");
@@ -22,7 +21,6 @@ MapGenerator::MapGenerator(ResourceManager& manager)
     m_Heightmap   = m_ResourceManager.RequestTexture2D("Heightmap");
     m_Normalmap   = m_ResourceManager.RequestTexture2D("Normalmap");
     m_Shadowmap   = m_ResourceManager.RequestTexture2D("Shadowmap");
-    m_Materialmap = m_ResourceManager.RequestTexture2D("Materialmap");
 }
 
 void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
@@ -62,16 +60,6 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_Shadowmap->Bind();
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    //--Material map
-    m_Materialmap->Initialize(Texture2DSpec{
-        height_res, height_res, GL_RGBA8, GL_RGBA,
-        GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
-        wrap_type,
-        {1.0f, 0.0f, 0.0f, 0.0f}
-    });
-
-    m_Materialmap->Bind();
-    glGenerateMipmap(GL_TEXTURE_2D);
 
     //-----Setup heightmap editor:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
@@ -128,45 +116,8 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type) {
     m_HeightEditor.AddProcedureInstance("FBM");
     m_HeightEditor.AddProcedureInstance("Radial cutoff");
 
-    //-----Setup material editor:
-    const int max_layer_id = 4;
-
-    m_MaterialEditor.RegisterShader("One material", "res/shaders/terrain/one_material.glsl");
-    m_MaterialEditor.Attach<SliderIntTask>("One material", "uID", "Material id", 0, max_layer_id, 0);
-
-    m_MaterialEditor.RegisterShader("Select height", "res/shaders/terrain/select_height.glsl");
-    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightUpper", "Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uHeightLower", "Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select height", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
-    m_MaterialEditor.Attach<SliderIntTask>("Select height", "uID", "Material id", 0, max_layer_id, 0);
-
-    m_MaterialEditor.RegisterShader("Select slope", "res/shaders/terrain/select_slope.glsl");
-    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeUpper", "Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uSlopeLower", "Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select slope", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
-    m_MaterialEditor.Attach<SliderIntTask>("Select slope", "uID", "Material id", 0, max_layer_id, 0);
-
-    m_MaterialEditor.RegisterShader("Select curvature", "res/shaders/terrain/select_curvature.glsl");
-    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uCurvatureUpper", "Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uCurvatureLower", "Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select curvature", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
-    m_MaterialEditor.Attach<SliderIntTask>("Select curvature", "uID", "Material id", 0, max_layer_id, 0);
-
-    m_MaterialEditor.RegisterShader("Select all", "res/shaders/terrain/select_all.glsl");
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uHeightUpper", "Height Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uHeightLower", "Height Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uSlopeUpper", "Slope Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uSlopeLower", "Slope Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uCurvatureLower", "Curvature Lower", 0.0f, 1.0f, 0.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uCurvatureUpper", "Curvature Upper", 0.0f, 1.0f, 1.0f);
-    m_MaterialEditor.Attach<SliderFloatTask>("Select all", "uBlend", "Blending", 0.0f, 0.1f, 0.01f);
-    m_MaterialEditor.Attach<SliderIntTask>("Select all", "uID", "Material id", 0, max_layer_id, 0);
-
-    //Initial procedures:
-    m_MaterialEditor.AddProcedureInstance("One material");
-
     //-----Set update flags
-    m_UpdateFlags = Height | Normal | Shadow | Material;
+    m_UpdateFlags = Height | Normal | Shadow;
 
     //-----Mipmap related things
     
@@ -267,21 +218,6 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir) {
     m_ResourceManager.RequestPreviewUpdate(m_Shadowmap);
 }
 
-void MapGenerator::UpdateMaterial() {
-    ProfilerGPUEvent we("Map::UpdateMaterial");
-
-    const int res = m_Materialmap->getResolutionX();
-
-    m_Heightmap->Bind();
-
-    m_Materialmap->BindImage(0, 0);
-    m_MaterialEditor.OnDispatch(res);
-
-    m_Materialmap->Bind();
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    m_ResourceManager.RequestPreviewUpdate(m_Materialmap);
-}
 
 void MapGenerator::GenMaxMips() {
     if (m_MipLevels == 0) return;
@@ -316,9 +252,6 @@ void MapGenerator::Update(const glm::vec3& sun_dir) {
     if ((m_UpdateFlags & Shadow) != None)
         UpdateShadow(sun_dir);
 
-    if ((m_UpdateFlags & Material) != None)
-        UpdateMaterial();
-
     m_UpdateFlags = None;
 }
 
@@ -332,10 +265,6 @@ void MapGenerator::BindNormalmap(int id) const {
 
 void MapGenerator::BindShadowmap(int id) const {
     m_Shadowmap->Bind(id);
-}
-
-void MapGenerator::BindMaterialmap(int id) const {
-    m_Materialmap->Bind(id);
 }
 
 void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
@@ -364,7 +293,7 @@ void MapGenerator::ImGuiTerrain(bool &open, bool update_shadows) {
     ImGui::End();
 
     if (height_changed) {
-        m_UpdateFlags = m_UpdateFlags | Height | Normal | Material;
+        m_UpdateFlags = m_UpdateFlags | Height | Normal;
 
         if (update_shadows)
             m_UpdateFlags = m_UpdateFlags | Shadow;
@@ -423,19 +352,6 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows) {
     }
 }
 
-void MapGenerator::ImGuiMaterials(bool& open) {
-    ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
-
-    ImGui::Begin(LOFI_ICONS_MATERIALMAP "Material Map", &open, ImGuiWindowFlags_NoFocusOnAppearing);
-
-    bool material_changed = m_MaterialEditor.OnImGui();
-
-    ImGui::End();
-
-    if (material_changed)
-        m_UpdateFlags = m_UpdateFlags | Material;
-}
-
 void MapGenerator::RequestShadowUpdate() const {
     m_UpdateFlags = m_UpdateFlags | Shadow;
 }
@@ -452,7 +368,6 @@ void MapGenerator::OnSerialize(nlohmann::ordered_json& output)
     output["Scale Y"] = m_ScaleY;
 
     m_HeightEditor.OnSerialize(output);
-    m_MaterialEditor.OnSerialize(output);
 }
 
 void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
@@ -461,9 +376,8 @@ void MapGenerator::OnDeserialize(nlohmann::ordered_json& input)
     m_ScaleY = input["Scale Y"];
 
     m_HeightEditor.OnDeserialize(input[m_HeightEditor.getName()]);
-    m_MaterialEditor.OnDeserialize(input[m_MaterialEditor.getName()]);
 
-    m_UpdateFlags = Height | Normal | Shadow | Material;
+    m_UpdateFlags = Height | Normal | Shadow;
 }
 
 //Settings structs operator overloads:

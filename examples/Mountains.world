@@ -221,7 +221,9 @@
             "3_Curves": {
                 "Exponent": 1.7369999885559082
             }
-        },
+        }
+    },
+    "MaterialMap Editor": {
         "Material": {
             "0_One material": {
                 "Material id": 0

@@ -201,7 +201,9 @@
                 "Flatness": 0.14000000059604645,
                 "Strength": 0.8159999847412109
             }
-        },
+        }
+    },
+    "MaterialMap Editor": {
         "Material": {
             "0_One material": {
                 "Material id": 0

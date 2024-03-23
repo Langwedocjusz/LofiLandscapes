@@ -6,6 +6,7 @@
 
 #include "MapGenerator.h"
 #include "MaterialGenerator.h"
+#include "MaterialMapGenerator.h"
 #include "SkyRenderer.h"
 #include "Clipmap.h"
 
@@ -15,7 +16,7 @@ class TerrainRenderer {
 public:
     TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
                     const MapGenerator& map, const MaterialGenerator& material,
-                    const SkyRenderer& sky);
+                    const MaterialMapGenerator& material_map, const SkyRenderer& sky);
     ~TerrainRenderer();
 
     void Init(uint32_t subdivisions, uint32_t levels);
@@ -57,6 +58,7 @@ private:
     const PerspectiveCamera& m_Camera;
     const MapGenerator& m_Map;
     const MaterialGenerator& m_Material;
+    const MaterialMapGenerator& m_MaterialMap;
     const SkyRenderer& m_Sky;
 
     ResourceManager& m_ResourceManager;

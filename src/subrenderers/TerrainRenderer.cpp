@@ -10,11 +10,12 @@
 
 TerrainRenderer::TerrainRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
                                  const MapGenerator& map, const MaterialGenerator& material,
-                                 const SkyRenderer& sky)
+                                 const MaterialMapGenerator& material_map, const SkyRenderer& sky)
     : m_ResourceManager(manager)
     , m_Camera(cam)
     , m_Map(map)
     , m_Material(material)
+    , m_MaterialMap(material_map)
     , m_Sky(sky)
 {
     m_ShadedShader    = m_ResourceManager.RequestVertFragShader("res/shaders/shaded.vert", "res/shaders/shaded.frag");
@@ -134,7 +135,7 @@ void TerrainRenderer::RenderShaded()
     m_ShadedShader->setUniform1i("normalmap", 0);
     m_Map.BindShadowmap(1);
     m_ShadedShader->setUniform1i("shadowmap", 1);
-    m_Map.BindMaterialmap(2);
+    m_MaterialMap.BindMaterialmap(2);
     m_ShadedShader->setUniform1i("materialmap", 2);
 
     m_Material.BindAlbedo(3);
