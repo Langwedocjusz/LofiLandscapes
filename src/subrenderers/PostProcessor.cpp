@@ -51,7 +51,7 @@ void PostProcessor::DoFXAA()
 		BindInputTexture(0);
 
 		m_LuminanceShader->Bind();
-		m_LuminanceShader->setUniform1i("InputTexture", 0);
+		m_LuminanceShader->setUniformSampler2D("InputTexture", 0);
 
 		const auto res_x = m_FrontBuffer->getResolutionX();
 		const auto res_y = m_FrontBuffer->getResolutionY();
@@ -68,7 +68,7 @@ void PostProcessor::DoFXAA()
 		BindInputTexture(0);
 
 		m_ContrastShader->Bind();
-		m_ContrastShader->setUniform1i("InputTexture", 0);
+		m_ContrastShader->setUniformSampler2D("InputTexture", 0);
 		m_ContrastShader->setUniform1f("uContrastThreshold", m_FXAAContrastThreshold);
 		m_ContrastShader->setUniform1f("uRelativeThreshold", m_FXAARelativeThreshold);
 		m_ContrastShader->setUniform1f("uSubpixelAmount", m_FXAASubpixelAmount);

@@ -40,7 +40,7 @@ void Shader::RetrieveActiveUniforms(const std::vector<std::string>& source_names
         int size;
         uint32_t type;
 
-        constexpr size_t max_name_length = 32;
+        constexpr size_t max_name_length = 64;
         char c_name[max_name_length];
         GLsizei name_length;
 
@@ -51,7 +51,7 @@ void Shader::RetrieveActiveUniforms(const std::vector<std::string>& source_names
 
         //Location can be different than 'i' index, 
         //so this call is needed
-        int location = glGetUniformLocation(m_ID, c_name);
+        const int location = glGetUniformLocation(m_ID, c_name);
 
         const std::string name(c_name, name_length);
 
@@ -71,11 +71,27 @@ void Shader::RetrieveActiveUniforms(const std::vector<std::string>& source_names
         }
 }
 
-int Shader::getUniformLocation(const std::string& name)
+static std::string_view StrUniformType(uint32_t type);
+
+int Shader::getUniformLocation(const std::string& name, uint32_t type)
 {
     if (m_UniformCache.count(name))
-        return m_UniformCache[name].Location;
-
+    {
+        const auto info = m_UniformCache[name];
+#ifdef ENABLE_UNIFORM_DEBUG_LOGGING
+        if (info.Type != type)
+        {
+            std::cerr << "Error:" << '\n';
+            LogFilepaths();
+            std::cerr << "Uniform " << name
+                      << " has type " << StrUniformType(info.Type)
+                      << ", but a " << StrUniformType(type)
+                      << " was provided" << '\n';
+        }
+#endif
+        return info.Location;
+    }
+        
     else
     {
 #ifdef ENABLE_UNIFORM_DEBUG_LOGGING
@@ -83,31 +99,7 @@ int Shader::getUniformLocation(const std::string& name)
         LogFilepaths();
         std::cerr << "Uniform " << name << " does not exist" << '\n';
 #endif
-
         return -1;
-    }
-}
-
-//Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
-static void compileShaderCode(const std::string& source, uint32_t& id, int program_type)
-{
-    const char* source_c = source.c_str();
-
-    id = glCreateShader(program_type);
-
-    glShaderSource(id, 1, &source_c, NULL);
-    glCompileShader(id);
-
-    int success = 0;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-
-    if (!success) 
-    {
-        char info_log[512];
-        glGetShaderInfoLog(id, 512, NULL, info_log);
-        glDeleteShader(id);
-
-        throw std::runtime_error(info_log);
     }
 }
 
@@ -194,6 +186,30 @@ static std::string loadSource(std::filesystem::path filepath,
     return full_source;
 }
 
+//Program type is assumed to be gl enum: {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER}
+static void compileShaderCode(const std::string& source, uint32_t& id, int program_type)
+{
+    const char* source_c = source.c_str();
+
+    id = glCreateShader(program_type);
+
+    glShaderSource(id, 1, &source_c, NULL);
+    glCompileShader(id);
+
+    int success = 0;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+
+    if (!success) 
+    {
+        constexpr size_t log_size = 512;
+        char info_log[log_size];
+        glGetShaderInfoLog(id, log_size, NULL, info_log);
+        glDeleteShader(id);
+
+        throw std::runtime_error(info_log);
+    }
+}
+
 void VertFragShader::Build()
 {
     std::filesystem::path current_path{ std::filesystem::current_path() };
@@ -241,8 +257,9 @@ void VertFragShader::Build()
 
     if (!success) 
     {
-        char info_log[512];
-        glGetProgramInfoLog(m_ID, 512, NULL, info_log);
+        constexpr size_t log_size = 512;
+        char info_log[log_size];
+        glGetProgramInfoLog(m_ID, log_size, NULL, info_log);
         std::cerr << "Error: Shader program linking failed: \n"
                   << "Filepaths: " << m_VertPath << ", " << m_FragPath << '\n'
                   << "Info: " << info_log << '\n';
@@ -302,8 +319,9 @@ void ComputeShader::Build()
     
     if (!success) 
     {
-        char info_log[512];
-        glGetProgramInfoLog(m_ID, 512, NULL, info_log);
+        constexpr size_t log_size = 512;
+        char info_log[log_size];
+        glGetProgramInfoLog(m_ID, log_size, NULL, info_log);
         std::cerr << "Error: Shader program linking failed: \n"
                   << "Filepath: " << m_ComputePath << '\n'
                   << "Info: " << info_log << '\n';
@@ -351,19 +369,16 @@ void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
         if (id == std::string::npos)
             throw std::runtime_error("Unable to find " + name);
 
-        //Id was before the beggining of the name, so shift it one past the end
-        id += name.size() + 2;
+        //Go to the end of name
+        id += name.size() + 1;
 
-        //Skip whitespaces
-        while (source_code[id] == ' ' || source_code[id] == '\n' || source_code[id] == '\t')
+        while (isspace(source_code[id]) || source_code[id] == '=')
         {
             id++;
         }
 
-        //Create a string
         std::string value;
 
-        //Load all digits into the string
         while (isdigit(source_code[id]))
         {
             value += source_code[id];
@@ -371,7 +386,7 @@ void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
         }
 
         if (value.empty())
-            throw std::runtime_error("Unable to parse value of " + name);
+            throw std::runtime_error("Unable to parse value: " + name);
 
         return std::stoi(value);
     };
@@ -384,8 +399,9 @@ void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
 
         catch (const std::exception& e)
         {
-            std::cerr << "Exception thrown when parsing: " << m_ComputePath << '\n';
-            std::cerr << e.what() << '\n';
+            std::cerr << "Error: Unable to retrieve local sizes: \n"
+                      << "Filepath: " << m_ComputePath << '\n'
+                      << e.what() << '\n';
 
             //Default to setting sizes as 1 if something goes wrong 
             value = 1;
@@ -399,100 +415,159 @@ void ComputeShader::RetrieveLocalSizes(const std::string& source_code)
 
 //=====Uniform setting==================================================
 
+void Shader::setUniformBool(const std::string& name, bool x)
+{
+    const int location = getUniformLocation(name, GL_BOOL);
+    glUniform1i(location, x);
+}
+
 void Shader::setUniform1i(const std::string& name, int x) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT);
     glUniform1i(location, x);
 }
 
 void Shader::setUniform2i(const std::string& name, int x, int y) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT_VEC2);
     glUniform2i(location, x, y);
 }
 
 void Shader::setUniform3i(const std::string& name, int x, int y, int z) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT_VEC3);
     glUniform3i(location, x, y, z);
 }
 
 void Shader::setUniform4i(const std::string& name, int x, int y, int z, int w) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT_VEC4);
     glUniform4i(location, x, y, z, w);
 }
 
 void Shader::setUniform1f(const std::string& name, float x) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT);
     glUniform1f(location, x);
 }
 
 void Shader::setUniform2f(const std::string& name, float x, float y) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_VEC2);
     glUniform2f(location, x, y);
 }
 
 void Shader::setUniform3f(const std::string& name, float x, float y, float z) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_VEC3);
     glUniform3f(location, x, y, z);
 }
 
 void Shader::setUniform4f(const std::string& name, float x, float y, float z, float w) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_VEC4);
     glUniform4f(location, x, y, z, w);
 }
 
 void Shader::setUniformMatrix4fv(const std::string& name, float data[16]) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_MAT4);
     glUniformMatrix4fv(location, 1, GL_FALSE, data);
+}
+
+void Shader::setUniformSampler1D(const std::string& name, int x)
+{
+    const int location = getUniformLocation(name, GL_SAMPLER_1D);
+    glUniform1i(location, x);
+}
+
+void Shader::setUniformSampler2D(const std::string& name, int x)
+{
+    const int location = getUniformLocation(name, GL_SAMPLER_2D);
+    glUniform1i(location, x);
+}
+
+void Shader::setUniformSampler3D(const std::string& name, int x)
+{
+    const int location = getUniformLocation(name, GL_SAMPLER_3D);
+    glUniform1i(location, x);
+}
+
+void Shader::setUniformSampler2DArray(const std::string& name, int x)
+{
+    const int location = getUniformLocation(name, GL_SAMPLER_2D_ARRAY);
+    glUniform1i(location, x);
+}
+
+void Shader::setUniformSamplerCube(const std::string& name, int x)
+{
+    const int location = getUniformLocation(name, GL_SAMPLER_CUBE);
+    glUniform1i(location, x);
 }
 
 //=====GLM overrides===================================================
 
 void Shader::setUniform2i(const std::string& name, glm::ivec2 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT_VEC2);
     glUniform2i(location, v.x, v.y);
 }
 
 void Shader::setUniform3i(const std::string& name, glm::ivec3 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name,GL_INT_VEC3);
     glUniform3i(location, v.x, v.y, v.z);
 }
 
 void Shader::setUniform4i(const std::string& name, glm::ivec4 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_INT_VEC4);
     glUniform4i(location, v.x, v.y, v.z, v.w);
 }
 
 void Shader::setUniform2f(const std::string& name, glm::vec2 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_VEC2);
     glUniform2f(location, v.x, v.y);
 }
 
 void Shader::setUniform3f(const std::string& name, glm::vec3 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name,GL_FLOAT_VEC3);
     glUniform3f(location, v.x, v.y, v.z);
 }
 
 void Shader::setUniform4f(const std::string& name, glm::vec4 v) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_VEC4);
     glUniform4f(location, v.x, v.y, v.z, v.w);
 }
 
 void Shader::setUniformMatrix4fv(const std::string& name, glm::mat4 mat) 
 {
-    const int location = getUniformLocation(name);
+    const int location = getUniformLocation(name, GL_FLOAT_MAT4);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+static std::string_view StrUniformType(uint32_t type)
+{
+    switch(type)
+    {
+        case GL_BOOL: return "bool";
+        case GL_INT: return "int";
+        case GL_INT_VEC2: return "ivec2";
+        case GL_INT_VEC3: return "ivec3";
+        case GL_INT_VEC4: return "ivec4";
+        case GL_FLOAT: return "float";
+        case GL_FLOAT_VEC2: return "vec2";
+        case GL_FLOAT_VEC3: return "vec3";
+        case GL_FLOAT_VEC4: return "vec4";
+        case GL_FLOAT_MAT4: return "mat4";
+        case GL_SAMPLER_1D: return "sampler1D";
+        case GL_SAMPLER_2D: return "sampler2D";
+        case GL_SAMPLER_3D: return "sampler3D";
+        case GL_SAMPLER_2D_ARRAY: return "sampler2DArray";
+        case GL_SAMPLER_CUBE: return "samplerCube";
+        default: return "Unknown type";
+    }
 }

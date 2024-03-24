@@ -207,7 +207,7 @@ void Renderer::OnRender()
         m_PostProcessor.BindOutput(0);
 
         m_PresentShader->Bind();
-        m_PresentShader->setUniform1i("framebuffer", 0);
+        m_PresentShader->setUniformSampler2D("framebuffer", 0);
 
         m_Quad.Draw();
     }

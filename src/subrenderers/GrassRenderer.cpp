@@ -256,7 +256,6 @@ void GrassRenderer::Render()
 	
 	m_PresentShader->setUniform1f("uGrassHeight", m_GrassHeight);
 	m_PresentShader->setUniform1f("uTilingFactor", m_Tiling);
-	m_PresentShader->setUniform1f("uMaxDepth", m_MaxDepth);
 	m_PresentShader->setUniform1f("uTime", m_Time);
 	m_PresentShader->setUniform2f("uScrollVel", m_ScrollingVelocity.x, m_ScrollingVelocity.y);
 	m_PresentShader->setUniform1f("uNoiseTiling", m_NoiseTiling);
@@ -270,20 +269,20 @@ void GrassRenderer::Render()
 	m_PresentShader->setUniform1f("uTranslucent", m_Translucent);
 	
 	m_RaycastResult->Bind(0);
-	m_PresentShader->setUniform1i("raycast_res", 0);
+	m_PresentShader->setUniformSampler3D("raycast_res", 0);
 	m_Noise->Bind(1);
-	m_PresentShader->setUniform1i("noise", 1);
+	m_PresentShader->setUniformSampler2D("noise", 1);
 	
 	
 	m_Map.BindNormalmap(2);
-	m_PresentShader->setUniform1i("normalmap", 2);
+	m_PresentShader->setUniformSampler2D("normalmap", 2);
 	m_Map.BindShadowmap(3);
-	m_PresentShader->setUniform1i("shadowmap", 3);
+	m_PresentShader->setUniformSampler2D("shadowmap", 3);
 	
 	m_Sky.BindIrradiance(4);
-	m_PresentShader->setUniform1i("irradiance", 4);
+	m_PresentShader->setUniformSamplerCube("irradiance", 4);
 	m_Sky.BindPrefiltered(5);
-	m_PresentShader->setUniform1i("prefiltered", 5);
+	m_PresentShader->setUniformSamplerCube("prefiltered", 5);
 
 	auto scale_y = m_Map.getScaleY();
 

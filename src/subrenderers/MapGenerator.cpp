@@ -210,7 +210,7 @@ void MapGenerator::UpdateShadow(const glm::vec3& sun_dir)
     m_ShadowmapShader->setUniform1i("uMinLvl", m_ShadowSettings.MinLevel);
     m_ShadowmapShader->setUniform1i("uStartCell", m_ShadowSettings.StartCell);
     m_ShadowmapShader->setUniform1f("uNudgeFactor", m_ShadowSettings.NudgeFac);
-    m_ShadowmapShader->setUniform1i("uSoftShadows", m_ShadowSettings.Soft);
+    m_ShadowmapShader->setUniformBool("uSoftShadows", m_ShadowSettings.Soft);
     m_ShadowmapShader->setUniform1f("uSharpness", m_ShadowSettings.Sharpness);
 
     m_ShadowmapShader->Dispatch(res, res, 1);

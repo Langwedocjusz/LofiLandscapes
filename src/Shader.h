@@ -14,6 +14,7 @@ public:
     void Reload();
 
     //Basic uniform setting functions
+    void setUniformBool(const std::string& name, bool x);
     void setUniform1i(const std::string& name, int x);
     void setUniform2i(const std::string& name, int x, int y);
     void setUniform3i(const std::string& name, int x, int y, int z);
@@ -23,6 +24,12 @@ public:
     void setUniform3f(const std::string& name, float x, float y, float z);
     void setUniform4f(const std::string& name, float x, float y, float z, float w);
     void setUniformMatrix4fv(const std::string& name, float data[16]);
+
+    void setUniformSampler1D(const std::string& name, int x);
+    void setUniformSampler2D(const std::string& name, int x);
+    void setUniformSampler3D(const std::string& name, int x);
+    void setUniformSampler2DArray(const std::string& name, int x);
+    void setUniformSamplerCube(const std::string& name, int x);
 
     //Overrides using glm
     void setUniform2i(const std::string& name, glm::ivec2 v);
@@ -37,7 +44,7 @@ protected:
     virtual void LogFilepaths() = 0;
 
     void RetrieveActiveUniforms(const std::vector<std::string>& source_names);
-    int getUniformLocation(const std::string& name);
+    int getUniformLocation(const std::string& name, uint32_t type);
 
     struct ShaderUniformInfo{
         int Location;

@@ -206,7 +206,7 @@ void SkyRenderer::UpdateMulti()
     m_MultiLUT->BindImage(0, 0);
 
     m_MultiShader->Bind();
-    m_MultiShader->setUniform1i("transLUT", 0);
+    m_MultiShader->setUniformSampler2D("transLUT", 0);
     m_MultiShader->setUniform3f("uGroundAlbedo", m_GroundAlbedo);
 
     const int res_x = m_MultiLUT->getResolutionX();
@@ -229,8 +229,8 @@ void SkyRenderer::UpdateSky()
     m_SkyLUT->BindImage(0, 0);
 
     m_SkyShader->Bind();
-    m_SkyShader->setUniform1i("transLUT", 0);
-    m_SkyShader->setUniform1i("multiLUT", 1);
+    m_SkyShader->setUniformSampler2D("transLUT", 0);
+    m_SkyShader->setUniformSampler2D("multiLUT", 1);
     m_SkyShader->setUniform3f("uSunDir", m_SunDir);
     m_SkyShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
 
@@ -292,8 +292,8 @@ void SkyRenderer::UpdateAerial()
     m_MultiLUT->Bind(1);
 
     m_AerialShader->Bind();
-    m_AerialShader->setUniform1i("transLUT", 0);
-    m_AerialShader->setUniform1i("multiLUT", 1);
+    m_AerialShader->setUniformSampler2D("transLUT", 0);
+    m_AerialShader->setUniformSampler2D("multiLUT", 1);
     m_AerialShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AerialShader->setUniform3f("uSunDir", m_SunDir);
     m_AerialShader->setUniform1f("uNear", glm::radians(m_Camera.getNearPlane()));
@@ -343,8 +343,8 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_MultiLUT->Bind(1);
 
     m_AScatterShader->Bind();
-    m_AScatterShader->setUniform1i("transLUT", 0);
-    m_AScatterShader->setUniform1i("multiLUT", 1);
+    m_AScatterShader->setUniformSampler2D("transLUT", 0);
+    m_AScatterShader->setUniformSampler2D("multiLUT", 1);
     m_AScatterShader->setUniform1f("uHeight", 0.000001f * m_Height); // meter -> megameter
     m_AScatterShader->setUniform3f("uSunDir", m_SunDir);
     m_AScatterShader->setUniform1f("uNear", glm::radians(m_Camera.getNearPlane()));
@@ -370,7 +370,7 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_Map.BindShadowmap(2);
 
     m_AShadowShader->Bind();
-    m_AShadowShader->setUniform1i("shadowmap", 2);
+    m_AShadowShader->setUniformSampler2D("shadowmap", 2);
     m_AShadowShader->setUniform3f("uPos", m_Camera.getPos());
     m_AShadowShader->setUniform3f("uSunDir", m_SunDir);
     m_AShadowShader->setUniform1f("uNear", glm::radians(m_Camera.getNearPlane()));
@@ -395,8 +395,8 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_ShadowVolume->Bind(1);
 
     m_ARaymarchShader->Bind();
-    m_ARaymarchShader->setUniform1i("scatterVolume", 0);
-    m_ARaymarchShader->setUniform1i("shadowVolume", 1);
+    m_ARaymarchShader->setUniformSampler3D("scatterVolume", 0);
+    m_ARaymarchShader->setUniformSampler3D("shadowVolume", 1);
 
     m_ARaymarchShader->setUniform1f("uBrightness", m_AerialBrightness);
     m_ARaymarchShader->setUniform1i("uShadows", m_ShowShadows);
@@ -417,8 +417,8 @@ void SkyRenderer::Render()
     m_SkyLUT->Bind(1);
 
     m_FinalShader->Bind();
-    m_FinalShader->setUniform1i("transLUT", 0);
-    m_FinalShader->setUniform1i("skyLUT", 1);
+    m_FinalShader->setUniformSampler2D("transLUT", 0);
+    m_FinalShader->setUniformSampler2D("skyLUT", 1);
     m_FinalShader->setUniform3f("uSunDir", m_SunDir);
 
     m_FinalShader->setUniform3f("uBotLeft", extents.BottomLeft);

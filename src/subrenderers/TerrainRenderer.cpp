@@ -122,6 +122,7 @@ void TerrainRenderer::RenderShaded()
     m_ShadedShader->setUniform1i("uFixTiling", int(m_FixTiling));
     m_ShadedShader->setUniform1i("uFog", int(m_Fog));
     m_ShadedShader->setUniform3f("uSunCol", m_Sky.getSunCol());
+    //m_ShadedShader->setUniform1f("uSunCol", 1.0f);
     m_ShadedShader->setUniform1f("uSunStr", m_SunStr);
     m_ShadedShader->setUniform1f("uSkyDiff", m_SkyDiff);
     m_ShadedShader->setUniform1f("uSkySpec", m_SkySpec);
@@ -132,23 +133,23 @@ void TerrainRenderer::RenderShaded()
     m_ShadedShader->setUniform1f("uAerialDist", m_Sky.getAerialDistScale());
 
     m_Map.BindNormalmap(0);
-    m_ShadedShader->setUniform1i("normalmap", 0);
+    m_ShadedShader->setUniformSampler2D("normalmap", 0);
     m_Map.BindShadowmap(1);
-    m_ShadedShader->setUniform1i("shadowmap", 1);
+    m_ShadedShader->setUniformSampler2D("shadowmap", 1);
     m_MaterialMap.BindMaterialmap(2);
-    m_ShadedShader->setUniform1i("materialmap", 2);
+    m_ShadedShader->setUniformSampler2D("materialmap", 2);
 
     m_Material.BindAlbedo(3);
-    m_ShadedShader->setUniform1i("albedo", 3);
+    m_ShadedShader->setUniformSampler2DArray("albedo", 3);
     m_Material.BindNormal(4);
-    m_ShadedShader->setUniform1i("normal", 4);
+    m_ShadedShader->setUniformSampler2DArray("normal", 4);
 
     m_Sky.BindIrradiance(5);
-    m_ShadedShader->setUniform1i("irradiance", 5);
+    m_ShadedShader->setUniformSamplerCube("irradiance", 5);
     m_Sky.BindPrefiltered(6);
-    m_ShadedShader->setUniform1i("prefiltered", 6);
+    m_ShadedShader->setUniformSamplerCube("prefiltered", 6);
     m_Sky.BindAerial(7);
-    m_ShadedShader->setUniform1i("aerial", 7);
+    m_ShadedShader->setUniformSampler3D("aerial", 7);
 
     auto scale_y = m_Map.getScaleY();
     
