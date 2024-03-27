@@ -224,7 +224,7 @@ static bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
             ImGui::Columns(2, "###col");
             ImGui::PushID(i);
 
-            res = res || procedures.at(instance.Name).OnImGui(data, id);
+            res |= procedures.at(instance.Name).OnImGui(data, id);
 
             ImGui::PopID();
             ImGui::Columns(1, "###col");
