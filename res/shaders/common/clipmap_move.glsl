@@ -1,3 +1,29 @@
+//Trim geometry needs to be mirrored along x/z axis
+//during each move. We simulate this with rotations, 
+//since we cannot change orientation as we are using face culling.
+//This is now done via a switch statement, since using an array of
+//rotation matrices was crashing Intel drivers on Windows.
+void Rotate(inout vec2 pos, int id)
+{
+    switch(id)
+    {
+        case 1:
+        {
+            pos.xy = vec2(-1,1) * pos.yx;
+            return;
+        }
+        case 2:
+        {
+            pos.xy = vec2(1,-1) * pos.yx;
+            return;
+        }
+        case 3:
+        {
+            pos *= -1.0;
+            return;
+        }
+    }
+}
 
 vec2 GetClipmapPos(vec2 vertex_pos, vec2 camera_pos, float quad_size, float trim_flag)
 {
@@ -14,17 +40,7 @@ vec2 GetClipmapPos(vec2 vertex_pos, vec2 camera_pos, float quad_size, float trim
 
         int id = id2.x + 2*id2.y;
 
-        //Trim geometry needs to be mirrored along x/z axis
-        //during each move. We simulate this with rotation matrices, 
-        //since we cannot change orientation as we are using face culling.
-        mat2 rotations[4] = mat2[4](
-            mat2(1.0, 0.0, 0.0, 1.0),
-            mat2(0.0, 1.0, -1.0, 0.0),
-            mat2(0.0, -1.0, 1.0, 0.0),
-            mat2(-1.0, 0.0, 0.0, -1.0)
-        );
-
-        pos2 = rotations[id] * pos2;
+        Rotate(pos2, id);
         pos2 += quad_size * vec2(1-id2.x, 1-id2.y);
     }
 
@@ -49,14 +65,7 @@ vec2 GetClipmapPos(vec2 vertex_pos, vec2 camera_pos, float quad_size, float trim
 
     if (trim_flag == 1.0)
     {
-        mat2 rotations[4] = mat2[4](
-            mat2(1.0, 0.0, 0.0, 1.0),
-            mat2(0.0, 1.0, -1.0, 0.0),
-            mat2(0.0, -1.0, 1.0, 0.0),
-            mat2(-1.0, 0.0, 0.0, -1.0)
-        );
-
-        pos2 = rotations[id] * pos2;
+        Rotate(pos2, id);
         pos2 += quad_size * vec2(1-id2.x, 1-id2.y);
     }
 

@@ -473,19 +473,19 @@ void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t 
 {
     for (const auto& grid : m_Grids)
     {
-        grid.BindBufferBase(1);
+        grid.BindBufferBase(binding);
         shader->Dispatch(grid.VertexCount(), 1, 1);
     }
 
     for (const auto& fill : m_Fills)
     {
-        fill.BindBufferBase(1);
+        fill.BindBufferBase(binding);
         shader->Dispatch(fill.VertexCount(), 1, 1);
     }
 
     for (const auto& trim : m_Trims)
     {
-        trim.BindBufferBase(1);
+        trim.BindBufferBase(binding);
         shader->Dispatch(trim.VertexCount(), 1, 1);
     }
 
@@ -505,7 +505,7 @@ void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t 
         {
             auto& grid = m_Grids[grid_id];
 
-            grid.BindBufferBase(1);
+            grid.BindBufferBase(binding);
             shader->Dispatch(grid.VertexCount(), 1, 1);
 
             grid_id++;
@@ -513,16 +513,16 @@ void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t 
 
         auto& fill = m_Fills[level];
         
-        fill.BindBufferBase(1);
+        fill.BindBufferBase(binding);
         shader->Dispatch(fill.VertexCount(), 1, 1);
         
         auto& trim = m_Trims[level];
         
-        trim.BindBufferBase(1);
+        trim.BindBufferBase(binding);
         shader->Dispatch(trim.VertexCount(), 1, 1);
     }
 
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT); 
 }
 
 void Clipmap::Draw(const Camera& cam, float scale_y)
