@@ -20,7 +20,7 @@ GrassRenderer::GrassRenderer(ResourceManager& manager, const PerspectiveCamera& 
 	m_RaycastShader = m_ResourceManager.RequestComputeShader("res/shaders/grass/raycast.glsl");
 	m_NoiseGenerator = m_ResourceManager.RequestComputeShader("res/shaders/grass/noise.glsl");
 
-	m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
+	m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/displace.glsl");
 
 	m_PresentShader = m_ResourceManager.RequestVertFragShader(
 		"res/shaders/grass/present.vert", 

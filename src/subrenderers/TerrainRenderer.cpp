@@ -18,10 +18,15 @@ TerrainRenderer::TerrainRenderer(ResourceManager& manager, const PerspectiveCame
     , m_MaterialMap(material_map)
     , m_Sky(sky)
 {
-    m_ShadedShader    = m_ResourceManager.RequestVertFragShader("res/shaders/shaded.vert", "res/shaders/shaded.frag");
-    m_WireframeShader = m_ResourceManager.RequestVertFragShader("res/shaders/wireframe.vert", "res/shaders/wireframe.frag");
-
-    m_DisplaceShader = m_ResourceManager.RequestComputeShader("res/shaders/displace.glsl");
+    m_ShadedShader    = m_ResourceManager.RequestVertFragShader(
+        "res/shaders/terrain/shaded.vert", "res/shaders/terrain/shaded.frag"
+    );
+    m_WireframeShader = m_ResourceManager.RequestVertFragShader(
+        "res/shaders/terrain/wireframe.vert", "res/shaders/terrain/wireframe.frag"
+    );
+    m_DisplaceShader = m_ResourceManager.RequestComputeShader(
+        "res/shaders/terrain/displace.glsl"
+    );
 }
 
 TerrainRenderer::~TerrainRenderer() {}

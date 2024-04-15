@@ -21,6 +21,8 @@ uniform int uFog;
 
 uniform float uAerialDist;
 
+#include "../common/clipmap_move.glsl"
+
 mat3 rotation(vec3 N){
     vec3 T = vec3(1.0, 0.0, 0.0);
     T = normalize(T - dot(N,T)*N);
@@ -29,44 +31,18 @@ mat3 rotation(vec3 N){
 }
 
 void main() {
-    vec2 hoffset = uPos.xz - mod(uPos.xz, aQuadSize);
-    vec3 offset = vec3(hoffset.x, 0.0, hoffset.y);
+    vec2 pos2 = GetClipmapPos(aPos.xz, uPos.xz, aQuadSize, aTrimFlag);
+    vec3 pos3 = vec3(pos2.x, aPos.y, pos2.y);
 
-    vec2 pos2 = aPos.xz;
-    vec3 pos3 = aPos.xyz;
-
-    if (aTrimFlag == 1.0)
-    {
-        ivec2 id2 = ivec2(hoffset/aQuadSize);
-
-        id2.x = id2.x % 2;
-        id2.y = id2.y % 2;
-
-        int id = id2.x + 2*id2.y;
-
-        mat2 rotations[4] = mat2[4](
-            mat2(1.0, 0.0, 0.0, 1.0),
-            mat2(0.0, 1.0, -1.0, 0.0),
-            mat2(0.0, -1.0, 1.0, 0.0),
-            mat2(-1.0, 0.0, 0.0, -1.0)
-        );
-
-        pos2 = rotations[id] * pos2;
-        pos2 += aQuadSize * vec2(1-id2.x, 1-id2.y);
-
-        pos3.x = pos2.x;
-        pos3.z = pos2.y;
-    }
-
-    uv = (2.0/uScaleXZ) * (pos2 + hoffset);
+    uv = (2.0/uScaleXZ) * pos2;
     uv = 0.5*uv + 0.5;
 
     vec3 norm = 2.0*texture(normalmap, uv).rgb - 1.0;
     norm_rot = rotation(normalize(norm));
 
-    frag_pos = pos3 + offset;
+    frag_pos = pos3;
 
-    vec4 pos = uMVP * vec4(pos3 + offset, 1.0);
+    vec4 pos = uMVP * vec4(pos3, 1.0);
 
     if (uFog == 1) {
         //normalized device coordinates should be from [-1, 1], to sample fog we need [0,1]

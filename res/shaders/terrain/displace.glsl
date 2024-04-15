@@ -26,6 +26,8 @@ uniform vec2 uPos;
 #define EDGE_FLAG_HORIZONTAL 1.0
 #define EDGE_FLAG_VERTICAL 2.0
 
+#include "../common/clipmap_move.glsl"
+
 float getHeight(vec2 uv)
 {
     return 0.5 * uScaleY * texture(heightmap, uv).r;
@@ -43,38 +45,19 @@ bool OffsetSamples(float pos, float quad_size, int id)
 void main() {
     uint i = gl_GlobalInvocationID.x;
 
+    vec2 vert_pos = verts[i].Pos.xz;
     float quad_size = verts[i].QuadSize;
+    float trim_flag = verts[i].TrimFlag;
 
-    vec2 hoffset = uPos - mod(uPos, quad_size);
-
-    vec2 pos2 = verts[i].Pos.xz;
-
-    //Trim geometry needs to be mirrored along x/z axis
-    //during each move. We simulate this with rotation matrices, 
-    //since we cannot change orientation as we are using face culling.
-    mat2 rotations[4] = mat2[4](
-        mat2(1.0, 0.0, 0.0, 1.0),
-        mat2(0.0, 1.0, -1.0, 0.0),
-        mat2(0.0, -1.0, 1.0, 0.0),
-        mat2(-1.0, 0.0, 0.0, -1.0)
-    );
-
-    ivec2 id2 = ivec2(hoffset/quad_size);
-    id2.x = id2.x % 2;
-    id2.y = id2.y % 2;
-
-    int id = id2.x + 2*id2.y;
-
-    bool is_trim_vertex = (verts[i].TrimFlag == 1.0);
-
-    if(is_trim_vertex)
-    {
-        pos2 = rotations[id] * pos2;
-        pos2 += quad_size * vec2(1-id2.x, 1-id2.y);
-    }
+    bool is_trim_vertex = (trim_flag == 1.0);
 
     //Base texture coordinate needs to be calculated after considering
     //possible movement of trim geometry
+    int id;
+    ivec2 id2;
+    vec2 hoffset;
+    vec2 pos2 = GetClipmapPos(vert_pos, uPos, quad_size, trim_flag, id, id2, hoffset);
+
     vec2 uv = (2.0/uScaleXZ) * (pos2 + hoffset);
     uv = 0.5*uv + 0.5;
 

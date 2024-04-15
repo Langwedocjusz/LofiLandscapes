@@ -11,35 +11,14 @@ uniform vec2 uPos;
 
 out vec3 EdgeColor;
 
+#include "../common/clipmap_move.glsl"
+
 void main() 
 {
-    vec2 hoffset = uPos - mod(uPos, aQuadSize);
+    vec2 pos2 = GetClipmapPos(aPos.xz, uPos, aQuadSize, aTrimFlag);
+    vec3 pos3 = vec3(pos2.x, aPos.y, pos2.y);
 
-    vec2 pos2 = aPos.xz;
-
-    if (aTrimFlag == 1.0)
-    {
-        ivec2 id2 = ivec2(hoffset/aQuadSize);
-
-        id2.x = id2.x % 2;
-        id2.y = id2.y % 2;
-
-        int id = id2.x + 2*id2.y;
-
-        mat2 rotations[4] = mat2[4](
-            mat2(1.0, 0.0, 0.0, 1.0),
-            mat2(0.0, 1.0, -1.0, 0.0),
-            mat2(0.0, -1.0, 1.0, 0.0),
-            mat2(-1.0, 0.0, 0.0, -1.0)
-        );
-
-        pos2 = rotations[id] * pos2;
-        pos2 += aQuadSize * vec2(1-id2.x, 1-id2.y);
-    }
-
-    vec3 pos = vec3(pos2.x, aPos.y, pos2.y) + vec3(hoffset.x, 0.0, hoffset.y);
-
-    gl_Position = uMVP * vec4(pos, 1.0);
+    gl_Position = uMVP * vec4(pos3, 1.0);
 
     //Debug visualization of edge flags
 

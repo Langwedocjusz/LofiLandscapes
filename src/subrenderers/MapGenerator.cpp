@@ -14,9 +14,9 @@ MapGenerator::MapGenerator(ResourceManager& manager)
     : m_ResourceManager(manager)
     , m_HeightEditor(manager, "Height")
 {
-    m_NormalmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/normal.glsl");
-    m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/terrain/shadow.glsl");
-    m_MipShader       = m_ResourceManager.RequestComputeShader("res/shaders/terrain/maximal_mip.glsl");
+    m_NormalmapShader = m_ResourceManager.RequestComputeShader("res/shaders/map/normal.glsl");
+    m_ShadowmapShader = m_ResourceManager.RequestComputeShader("res/shaders/map/shadow.glsl");
+    m_MipShader       = m_ResourceManager.RequestComputeShader("res/shaders/map/maximal_mip.glsl");
 
     m_Heightmap   = m_ResourceManager.RequestTexture2D("Heightmap");
     m_Normalmap   = m_ResourceManager.RequestTexture2D("Normalmap");
@@ -65,17 +65,17 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type)
     //-----Setup heightmap editor:
     std::vector<std::string> labels{ "Average", "Add", "Subtract" };
 
-    m_HeightEditor.RegisterShader("Const Value", "res/shaders/terrain/const_val.glsl");
+    m_HeightEditor.RegisterShader("Const Value", "res/shaders/map/const_val.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0f, 1.0f, 0.0f);
 
-    m_HeightEditor.RegisterShader("FBM", "res/shaders/terrain/fbm.glsl");
+    m_HeightEditor.RegisterShader("FBM", "res/shaders/map/fbm.glsl");
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uScale", "Scale", 1.0f, 64.0f, 32.0f);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
     m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
-    m_HeightEditor.RegisterShader("Advanced FBM", "res/shaders/terrain/advanced_fbm.glsl");
+    m_HeightEditor.RegisterShader("Advanced FBM", "res/shaders/map/advanced_fbm.glsl");
 
     const std::vector<std::string> noise_types{ "Value", "Perlin" };
     m_HeightEditor.Attach<GLEnumTask>("Advanced FBM", "uNoiseType", "Noise Type", noise_types);
@@ -90,7 +90,7 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type)
     m_HeightEditor.Attach<GLEnumTask>("Advanced FBM", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Advanced FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
-    m_HeightEditor.RegisterShader("Voronoi", "res/shaders/terrain/voronoi.glsl");
+    m_HeightEditor.RegisterShader("Voronoi", "res/shaders/map/voronoi.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uScale", "Scale", 1.0f, 64.0f, 8.0f);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0f, 1.0f, 1.0f);
 
@@ -100,15 +100,15 @@ void MapGenerator::Init(int height_res, int shadow_res, int wrap_type)
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
-    m_HeightEditor.RegisterShader("Curves", "res/shaders/terrain/curves.glsl");
+    m_HeightEditor.RegisterShader("Curves", "res/shaders/map/curves.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Curves", "uExponent", "Exponent", 0.1f, 4.0f, 1.0f);
 
-    m_HeightEditor.RegisterShader("Terrace", "res/shaders/terrain/terrace.glsl");
+    m_HeightEditor.RegisterShader("Terrace", "res/shaders/map/terrace.glsl");
     m_HeightEditor.Attach<SliderIntTask>("Terrace", "uNumTerrace", "Number", 1, 10, 4);
     m_HeightEditor.Attach<SliderFloatTask>("Terrace", "uFlatness", "Flatness", 0.0f, 1.0f, 0.0f);
     m_HeightEditor.Attach<SliderFloatTask>("Terrace", "uStrength", "Strength", 0.0f, 1.0f, 0.0f);
 
-    m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/terrain/radial_cutoff.glsl");
+    m_HeightEditor.RegisterShader("Radial cutoff", "res/shaders/map/radial_cutoff.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uBias", "Bias", 0.0f, 1.0f, 0.5f);
     m_HeightEditor.Attach<SliderFloatTask>("Radial cutoff", "uSlope", "Slope", 0.0f, 10.0f, 4.0f);
 

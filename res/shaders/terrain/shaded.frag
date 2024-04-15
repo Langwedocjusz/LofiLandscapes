@@ -35,7 +35,7 @@ uniform float uRefStr;
 uniform float uTilingFactor;
 uniform float uNormalStrength;
 
-#include "./common/pbr.glsl"
+#include "../common/pbr.glsl"
 
 #define SUM_COMPONENTS(v) (v.x + v.y + v.z + v.w)
 
