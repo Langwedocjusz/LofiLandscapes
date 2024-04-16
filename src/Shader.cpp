@@ -108,12 +108,51 @@ static bool isspace(char ch)
     return std::isspace(static_cast<unsigned char>(ch));
 }
 
+static void getUniformNames(const std::string& current_line, std::vector<std::string>& uniform_names)
+{
+    const std::string uniform_token{"uniform"};
+
+    auto uniform_pos = current_line.find(uniform_token);
+
+    if (uniform_pos != std::string::npos)
+    {
+        bool commented_out = false;
+        bool uniform_buffer = false;
+
+        auto comment_id1 = current_line.find("//");
+        if (comment_id1 != std::string::npos && comment_id1 < uniform_pos)
+            commented_out = true;
+
+        auto comment_id2 = current_line.find("/*");
+        if (comment_id2 != std::string::npos && comment_id2 < uniform_pos)
+            commented_out = true;
+
+        auto layout_pos = current_line.find("layout");
+        if (layout_pos != std::string::npos && layout_pos < uniform_pos)
+            uniform_buffer = true;
+
+        if (!commented_out && !uniform_buffer)
+        {
+            auto start_id = uniform_pos + uniform_token.size();
+
+            //Skip type declaration ('int', 'float' etc)
+            while(isspace(current_line[start_id])) start_id++;
+            while(!isspace(current_line[start_id])) start_id++;
+            while(isspace(current_line[start_id])) start_id++;
+
+            auto end_id = start_id;
+            while(!isspace(current_line[end_id]) && current_line[end_id] != ';') end_id++;
+
+            uniform_names.push_back(current_line.substr(start_id, end_id - start_id));
+        }
+    }
+}
+
 static std::string loadSource(std::filesystem::path filepath, 
         std::vector<std::string>& uniform_names, 
         bool recursive_call = false)
 {
     const std::string include_token{"#include"};
-    const std::string uniform_token{"uniform"};
 
     std::ifstream input{ filepath };
 
@@ -129,34 +168,7 @@ static std::string loadSource(std::filesystem::path filepath,
     while (std::getline(input, current_line))
     {
         //Save names of all uniform variables
-        auto uniform_pos = current_line.find(uniform_token);
-
-        if (uniform_pos != std::string::npos)
-        {
-            bool commented_out = false;
-
-            auto comment_id1 = current_line.find("//");
-            if (comment_id1 != std::string::npos && comment_id1 < uniform_pos)
-                commented_out = true;
-
-            auto comment_id2 = current_line.find("/*");
-            if (comment_id2 != std::string::npos && comment_id2 < uniform_pos)
-                commented_out = true;
-
-            if (!commented_out)
-            {
-                auto start_id = uniform_pos + uniform_token.size();
-
-                while(isspace(current_line[start_id])) start_id++;
-                while(!isspace(current_line[start_id])) start_id++;
-                while(isspace(current_line[start_id])) start_id++;
-
-                auto end_id = start_id;
-                while(!isspace(current_line[end_id]) && current_line[end_id] != ';') end_id++;
-
-                uniform_names.push_back(current_line.substr(start_id, end_id - start_id));
-            }
-        }
+        getUniformNames(current_line, uniform_names);
 
         //Recursively read from other files if '#include' is present
         if (current_line.find(include_token) != std::string::npos)

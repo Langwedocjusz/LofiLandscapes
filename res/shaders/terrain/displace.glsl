@@ -1,11 +1,10 @@
 #version 450 core
 
 struct Vert {
-    vec4 Pos; //includes 1 float (4 bytes) of padding
-    float QuadSize;
-    float EdgeFlag;
-    float TrimFlag;
-    float Padding;
+    float PosX;
+    float PosY;
+    float PosZ;
+    int EdgeFlag;
 };
 
 layout(std430, binding = 1) buffer vertexBuffer
@@ -15,6 +14,21 @@ layout(std430, binding = 1) buffer vertexBuffer
 
 layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
+//#define MAX_DRAWABLE_ID 132
+//layout(std430, binding = 2) readonly buffer ssbo
+//{
+//    float QuadSizes[MAX_DRAWABLE_ID];
+//    float TrimFlags[MAX_DRAWABLE_ID];
+//};
+
+#define MAX_LEVELS 10
+layout(std140, binding = 2) uniform ubo
+{
+    float QuadSizes[MAX_LEVELS];
+};
+
+uniform int uDrawableID;
+
 uniform sampler2D heightmap;
 
 uniform float uScaleXZ;
@@ -22,9 +36,9 @@ uniform float uScaleY;
 uniform vec2 uPos;
 
 //Needs to match enum used to generate vertex data
-#define EDGE_FLAG_NONE 0.0
-#define EDGE_FLAG_HORIZONTAL 1.0
-#define EDGE_FLAG_VERTICAL 2.0
+#define EDGE_FLAG_NONE 0
+#define EDGE_FLAG_HORIZONTAL 1
+#define EDGE_FLAG_VERTICAL 2
 
 #include "../common/clipmap_move.glsl"
 
@@ -45,9 +59,12 @@ bool OffsetSamples(float pos, float quad_size, int id)
 void main() {
     uint i = gl_GlobalInvocationID.x;
 
-    vec2 vert_pos = verts[i].Pos.xz;
-    float quad_size = verts[i].QuadSize;
-    float trim_flag = verts[i].TrimFlag;
+    vec2 vert_pos = vec2(verts[i].PosX, verts[i].PosZ);
+
+    //float quad_size = QuadSizes[uDrawableID];
+    //float trim_flag = TrimFlags[uDrawableID];
+    float quad_size = QuadSizes[abs(uDrawableID)-1];
+    float trim_flag = float(uDrawableID < 0.0);
 
     bool is_trim_vertex = (trim_flag == 1.0);
 
@@ -107,5 +124,5 @@ void main() {
     float height = getHeight(uv);
     #endif
 
-    verts[i].Pos.y = height;
+    verts[i].PosY = height;
 }

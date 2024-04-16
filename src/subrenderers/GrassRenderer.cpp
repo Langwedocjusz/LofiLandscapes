@@ -131,18 +131,19 @@ void GrassRenderer::UpdateGeometry()
 	m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
 	m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
 
-	const uint32_t binding_id = 1;
+	//m_Clipmap.BindSSBO(m_SSBOBinding);
+    m_Clipmap.BindUBO(m_UBOBinding);
 
 	if (m_UpdateAllLevels)
 	{
-		m_Clipmap.RunCompute(m_DisplaceShader, binding_id);
+		m_Clipmap.RunCompute(m_DisplaceShader, m_VertBinding);
 	}
 
 	else
 	{
 		const glm::vec2 prev{ m_Camera.getPrevPos().x, m_Camera.getPrevPos().z };
 
-		m_Clipmap.RunCompute(m_DisplaceShader, binding_id, curr, prev);
+		m_Clipmap.RunCompute(m_DisplaceShader, m_VertBinding, curr, prev);
 	}
 
 	m_UpdateAllLevels = false;
@@ -286,12 +287,16 @@ void GrassRenderer::Render()
 
 	auto scale_y = m_Map.getScaleY();
 
+	//m_Clipmap.BindSSBO(m_SSBOBinding);
+    m_Clipmap.BindUBO(m_UBOBinding);
+
 	for (uint32_t i=0; i<m_Clipmap.MaxGridIDUpTo(m_LodLevels); i++)
 	{
 		const auto& grid = m_Clipmap.getGrids()[i];
 
 		if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
 		{
+			m_PresentShader->setUniform1i("uDrawableID", grid.DrawableID);
 			grid.Draw();
 		}
 	}
@@ -300,6 +305,7 @@ void GrassRenderer::Render()
 	{
 		const auto& fill = m_Clipmap.getFills()[i];
 
+		m_PresentShader->setUniform1i("uDrawableID", fill.DrawableID);
 		fill.Draw();
 	}
 
@@ -307,6 +313,7 @@ void GrassRenderer::Render()
 	{
 		const auto& trim = m_Clipmap.getTrims()[i];
 
+		m_PresentShader->setUniform1i("uDrawableID", trim.DrawableID);
 		trim.Draw();
 	}
 }
