@@ -16,26 +16,27 @@ struct ClipmapVertex {
     int EdgeFlag;
 };
 
-class Drawable{
-public:
-    ~Drawable();
-
-    void GenGLBuffers();
-    void BindBufferBase(uint32_t id = 0) const;
-    void Draw() const;
-    
-    std::vector<ClipmapVertex> VertexData;
-    std::vector<uint32_t> IndexData;
-
-    size_t VertexCount() const { return VertexData.size(); }
-    size_t ElementCount() const { return IndexData.size(); }
-
-    int DrawableID = 0;
-protected:
-    uint32_t m_VAO = 0, m_VBO = 0, m_EBO = 0;
+struct DrawCommand{
+    uint32_t  Count = 0;
+    uint32_t  InstanceCount = 0;
+    uint32_t  FirstIndex = 0;
+    int       BaseVertex = 0;
+    uint32_t  BaseInstance = 0;
 };
 
-class DrawableWithBounding : public Drawable {
+class Drawable{
+public:
+    DrawCommand Command;
+    uint32_t VertexCount = 0;
+    int DrawableID = 0;
+
+    //Assumes all apropriate buffers are already bound
+    void Draw() const;
+
+    void BindBufferRange(uint32_t vertex_buffer, uint32_t binding) const;
+};
+
+class DrawableWithBounding : public Drawable{
 public:
     AABB BoundingBox;
 };
@@ -50,10 +51,11 @@ public:
     const std::vector<Drawable>& getTrims() const { return m_Trims; }
     const std::vector<Drawable>& getFills() const { return m_Fills; }
 
-    //Binds Shader Storage Buffer Object with data needed for drawing/calling compute
-    //void BindSSBO(uint32_t binding);
     //Binds Uniform Buffer Object with data needed for drawing
     void BindUBO(uint32_t binding);
+
+    //Binds both vertex/element buffers and the ubo
+    void BindBuffers(uint32_t ubo_binding);
 
     //Dispatches the compute shader for all grids/fills of the clipmap
     //Each time the shader is dispatched with (VertexCount, 1, 1) invocations 
@@ -74,11 +76,12 @@ public:
     static uint32_t NumGridsPerLevel(uint32_t level);
     static uint32_t MaxGridIDUpTo(uint32_t level);
 
-
 private:
-    void GenerateGrids(uint32_t level, float grid_size, float quad_size, int& drawable_id);
-    void GenerateFills(uint32_t level, float grid_size, float quad_size, int& drawable_id);
-    void GenerateTrims(uint32_t level, float grid_size, float quad_size, int& drawable_id);
+    void GenerateGrids(uint32_t level, float grid_size, float quad_size);
+    void GenerateFills(uint32_t level, float grid_size, float quad_size);
+    void GenerateTrims(uint32_t level, float grid_size, float quad_size);
+
+    void GenGLBuffers();
 
     float m_BaseGridSize = 4.0f;
 
@@ -90,6 +93,12 @@ private:
     std::vector<DrawableWithBounding> m_Grids;
     std::vector<Drawable> m_Trims, m_Fills;
 
+    std::vector<ClipmapVertex> m_VertexData;
+    std::vector<uint32_t> m_IndexData;
+
+    std::vector<float> m_UBOData;
+
+    //GL handles:
+    uint32_t m_VAO = 0, m_VBO = 0, m_EBO = 0;
     uint32_t m_UBO = 0;
-    //uint32_t m_SSBO = 0;
 };

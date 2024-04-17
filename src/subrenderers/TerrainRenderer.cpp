@@ -49,7 +49,6 @@ void TerrainRenderer::Update()
     m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
     m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
 
-    //m_Clipmap.BindSSBO(m_SSBOBinding);
     m_Clipmap.BindUBO(m_UBOBinding);
 
     if (m_UpdateAll)
@@ -89,8 +88,7 @@ void TerrainRenderer::RenderWireframe() {
 
     m_WireframeShader->setUniform3f("uCol", grid_color);
 
-    //m_Clipmap.BindSSBO(m_SSBOBinding);
-    m_Clipmap.BindUBO(m_UBOBinding);
+    m_Clipmap.BindBuffers(m_UBOBinding);
 
     for (const auto& grid : m_Clipmap.getGrids())
     {
@@ -165,8 +163,7 @@ void TerrainRenderer::RenderShaded()
 
     auto scale_y = m_Map.getScaleY();
     
-    //m_Clipmap.BindSSBO(m_SSBOBinding);
-    m_Clipmap.BindUBO(m_UBOBinding);
+    m_Clipmap.BindBuffers(m_UBOBinding);
 
     m_Clipmap.Draw(m_ShadedShader, m_Camera, scale_y);
 }

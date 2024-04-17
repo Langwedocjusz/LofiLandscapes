@@ -131,7 +131,6 @@ void GrassRenderer::UpdateGeometry()
 	m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
 	m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
 
-	//m_Clipmap.BindSSBO(m_SSBOBinding);
     m_Clipmap.BindUBO(m_UBOBinding);
 
 	if (m_UpdateAllLevels)
@@ -287,8 +286,7 @@ void GrassRenderer::Render()
 
 	auto scale_y = m_Map.getScaleY();
 
-	//m_Clipmap.BindSSBO(m_SSBOBinding);
-    m_Clipmap.BindUBO(m_UBOBinding);
+    m_Clipmap.BindBuffers(m_UBOBinding);
 
 	for (uint32_t i=0; i<m_Clipmap.MaxGridIDUpTo(m_LodLevels); i++)
 	{
