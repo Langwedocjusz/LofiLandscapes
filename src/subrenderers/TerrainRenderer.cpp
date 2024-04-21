@@ -207,3 +207,8 @@ void TerrainRenderer::OnImGui(bool& open)
 
     ImGui::End();
 }
+
+void TerrainRenderer::OnImGuiDebugCulling(bool& open)
+{
+    m_Clipmap.ImGuiDebugCulling(m_Camera, m_Map.getScaleY(), open);
+}

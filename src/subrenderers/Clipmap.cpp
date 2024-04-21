@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "ImGuiUtils.h"
+
 void Drawable::Draw() const
 {
     glDrawElementsBaseVertex(
@@ -638,4 +640,56 @@ void Clipmap::Draw(const std::shared_ptr<VertFragShader>& shader, const Camera& 
         shader->setUniform1i("uDrawableID", trim.DrawableID);
         trim.Draw();
     }
+}
+
+void Clipmap::ImGuiDebugCulling(const Camera& cam, float scale_y, bool& open)
+{
+    ImGui::Begin("Frustum culling debug", &open);
+
+    static int max_lvl = m_Levels;
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderInt("Max level", &max_lvl, 1, m_Levels);
+	ImGui::Columns(1, "###col");
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    auto ImToGlm = [](ImVec2 v) {return glm::vec2(v.x, v.y);};
+
+	const glm::vec2 draw_start = ImToGlm(ImGui::GetCursorScreenPos());
+	const glm::vec2 draw_size  = ImToGlm(ImGui::GetContentRegionAvail());
+
+    const float clipmap_size = m_BaseGridSize * std::pow(2, max_lvl + 1);
+
+    auto WorldToWindow = [&](glm::vec3 pos){
+        const glm::vec2 pos2{pos.x, pos.z};
+        const glm::vec2 normalized = pos2/clipmap_size + 0.5f;
+
+        return draw_start + std::min(draw_size.x, draw_size.y) * normalized;
+    };
+
+    ImGui::BeginChild("CPU Timing", ImVec2(draw_size.x, draw_size.y), true);
+
+    for (int lvl=0; lvl<max_lvl; lvl++)
+    {
+        for (int i=0; i<NumGridsPerLevel(lvl); i++)
+        {
+            const auto& grid = m_Grids[MaxGridIDUpTo(lvl) + i];
+            const auto& aabb = grid.BoundingBox;
+
+            const bool in_frustum = cam.IsInFrustum(aabb, scale_y);
+
+            const ImU32 fill_color = in_frustum ? IM_COL32(100, 250, 100, 255) : IM_COL32(64, 64, 64, 255);
+            const ImU32 border_color = IM_COL32(0,0,0,255);
+
+            const glm::vec2 min_pos = WorldToWindow(aabb.Center - aabb.Extents);
+            const glm::vec2 max_pos = WorldToWindow(aabb.Center + aabb.Extents);
+
+            drawList->AddRectFilled(ImVec2(min_pos.x, min_pos.y), ImVec2(max_pos.x, max_pos.y), fill_color);
+            drawList->AddRect(ImVec2(min_pos.x, min_pos.y), ImVec2(max_pos.x, max_pos.y), border_color);
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::End();
 }

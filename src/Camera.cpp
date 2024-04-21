@@ -106,7 +106,7 @@ void PerspectiveCamera::updateFrustum(float aspect)
     //Camera position in coordinate system tied to the grid:
     const glm::vec3 pos = glm::vec3(0.0f, m_Pos.y, 0.0f);
 
-    const float halfV = m_FarPlane * tanf(glm::radians(m_Fov));
+    const float halfV = m_FarPlane * tanf(glm::radians(0.5f*m_Fov));
     const float halfH = aspect * halfV; //aspect = horizontal/vertical
 
     const glm::vec3 farFront = m_FarPlane * m_Front;
@@ -130,7 +130,7 @@ void PerspectiveCamera::OnImGui(bool& open)
 
     ImGui::Begin(LOFI_ICONS_CAMERA "Camera", &open, ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColSliderFloat("Fov", &(m_Fov), 0.0f, 90.0f);
+    ImGuiUtils::ColSliderFloat("Fov", &m_Fov, 0.0f, 90.0f);
     ImGui::Columns(1, "###col");
     ImGui::End();
 }
@@ -161,9 +161,7 @@ void FPCamera::Update(float aspect, float deltatime)
     
     m_ViewProj = m_Proj * m_View;
 
-    //In principle frustum update should be done here, although at the moment
-    //we are only rendering clipmap and sky which have fixed positions
-    //with repect to the camera origin, so this is of little consequence for now
+    updateFrustum(aspect);
 }
 
 void FPCamera::ProcessKeyboard(float deltatime)
@@ -192,7 +190,6 @@ void FPCamera::ProcessMouse(float xoffset, float yoffset, float aspect)
     if (m_Pitch < -89.0f) m_Pitch = -89.0f;
 
     updateVectors();
-    updateFrustum(aspect);
 }
 
 void FPCamera::OnKeyPressed(int keycode, bool repeat)

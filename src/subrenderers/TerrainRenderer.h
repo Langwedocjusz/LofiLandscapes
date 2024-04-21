@@ -28,6 +28,7 @@ public:
     void RenderShaded();
 
     void OnImGui(bool& open);
+    void OnImGuiDebugCulling(bool& open);
 
     bool DoShadows() { return m_Shadows; }
     bool DoFog() { return m_Fog; }

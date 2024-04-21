@@ -71,6 +71,8 @@ public:
     //Calls draw function on all grids/fills, using frustum culling
     void Draw(const std::shared_ptr<VertFragShader>& shader, const Camera& cam, float scale_y);
 
+    void ImGuiDebugCulling(const Camera& cam, float scale_y, bool& open);
+
     bool LevelShouldUpdate(uint32_t level, glm::vec2 curr, glm::vec2 prev) const;
 
     static uint32_t NumGridsPerLevel(uint32_t level);

@@ -270,6 +270,7 @@ void Renderer::OnImGuiRender()
 
             ImGui::MenuItem("Show Texture Browser", NULL, &m_ShowTexBrowser);
             ImGui::MenuItem("Show Profiler", NULL, &m_ShowProfiler);
+            ImGui::MenuItem("Show Frustum Culling", NULL, &m_ShowCulling);
 
             ImGui::EndMenu();
         }
@@ -326,6 +327,9 @@ void Renderer::OnImGuiRender()
 
     if (m_ShowProfiler)
         Profiler::OnImGui(m_ShowProfiler);
+
+    if (m_ShowCulling)
+        m_TerrainRenderer.OnImGuiDebugCulling(m_ShowCulling);
 
     //-----Help popup
 
