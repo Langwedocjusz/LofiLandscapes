@@ -1,27 +1,30 @@
 #version 450 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in float aQuadSize;
+layout (location = 1) in uint aAuxData;
 
-layout (location = 3) in float aTrimFlag;
+#define MAX_LEVELS 10
+layout(std140, binding = 2) uniform ubo
+{
+    float QuadSizes[MAX_LEVELS];
+};
+
+uniform sampler2D normalmap;
+uniform sampler3D aerial;
+
+uniform vec3 uPos;
+uniform mat4 uMVP;
+uniform float uScaleXZ;
+
+uniform int uFog;
+uniform float uAerialDist;
 
 out vec2 uv;
 out mat3 norm_rot;
 out vec3 frag_pos;
 out vec4 fog_data;
 
-uniform float uScaleXZ;
-uniform vec3 uPos;
-uniform mat4 uMVP;
-
-uniform sampler2D normalmap;
-uniform sampler3D aerial;
-
-uniform int uFog;
-
-uniform float uAerialDist;
-
-#include "../common/clipmap_move.glsl"
+#include "../common/clipmap.glsl"
 
 mat3 rotation(vec3 N){
     vec3 T = vec3(1.0, 0.0, 0.0);
@@ -31,7 +34,14 @@ mat3 rotation(vec3 N){
 }
 
 void main() {
-    vec2 pos2 = GetClipmapPos(aPos.xz, uPos.xz, aQuadSize, aTrimFlag);
+    bool trim_flag = false;
+    uint edge_flag = 0, lvl = 0;
+
+    UnpackAux(aAuxData, trim_flag, edge_flag, lvl);
+
+    float quad_size = QuadSizes[lvl];
+
+    vec2 pos2 = GetClipmapPos(aPos.xz, uPos.xz, quad_size, trim_flag);
     vec3 pos3 = vec3(pos2.x, aPos.y, pos2.y);
 
     uv = (2.0/uScaleXZ) * pos2;

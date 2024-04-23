@@ -59,7 +59,7 @@ private:
          m_ShowSkyMenu     = false,  m_ShowMapMaterialMenu = false,
          m_ShowGrassMenu   = false,  m_ShowPostMenu        = false;
 
-    bool m_ShowTexBrowser = false, m_ShowProfiler = false;
+    bool m_ShowTexBrowser = false, m_ShowProfiler = false, m_ShowCulling = false;
 
     bool m_ShowHelpPopup = true;
 

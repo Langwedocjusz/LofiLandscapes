@@ -28,6 +28,7 @@ public:
     void RenderShaded();
 
     void OnImGui(bool& open);
+    void OnImGuiDebugCulling(bool& open);
 
     bool DoShadows() { return m_Shadows; }
     bool DoFog() { return m_Fog; }
@@ -51,6 +52,11 @@ private:
 
     std::shared_ptr<VertFragShader> m_ShadedShader, m_WireframeShader;
     std::shared_ptr<ComputeShader> m_DisplaceShader;
+
+    //Binding ids for shader buffers
+    static constexpr uint32_t m_VertBinding = 1;
+    //static constexpr uint32_t m_SSBOBinding = 2;
+    static constexpr uint32_t m_UBOBinding = 2;
 
     Clipmap m_Clipmap;
 

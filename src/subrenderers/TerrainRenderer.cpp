@@ -49,18 +49,18 @@ void TerrainRenderer::Update()
     m_DisplaceShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
     m_DisplaceShader->setUniform1f("uScaleY", m_Map.getScaleY());
 
-    const uint32_t binding_id = 1;
+    m_Clipmap.BindUBO(m_UBOBinding);
 
     if (m_UpdateAll)
     {
-        m_Clipmap.RunCompute(m_DisplaceShader, binding_id);
+        m_Clipmap.RunCompute(m_DisplaceShader, m_VertBinding);
     }
 
     else
     {
         const glm::vec2 prev{ m_Camera.getPrevPos().x, m_Camera.getPrevPos().z };
 
-        m_Clipmap.RunCompute(m_DisplaceShader, binding_id, curr, prev);
+        m_Clipmap.RunCompute(m_DisplaceShader, m_VertBinding, curr, prev);
     }
 
     m_UpdateAll = false;
@@ -88,27 +88,23 @@ void TerrainRenderer::RenderWireframe() {
 
     m_WireframeShader->setUniform3f("uCol", grid_color);
 
+    m_Clipmap.BindBuffers(m_UBOBinding);
+
     for (const auto& grid : m_Clipmap.getGrids())
     {
         if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-        {
             grid.Draw();
-        }
     }
 
     m_WireframeShader->setUniform3f("uCol", fill_color);
 
     for (const auto& fill : m_Clipmap.getFills())
-    {
         fill.Draw();
-    }
 
     m_WireframeShader->setUniform3f("uCol", trim_color);
 
     for (const auto& trim : m_Clipmap.getTrims())
-    {
         trim.Draw();
-    }
 }
 
 void TerrainRenderer::RenderShaded()
@@ -158,7 +154,9 @@ void TerrainRenderer::RenderShaded()
 
     auto scale_y = m_Map.getScaleY();
     
-    m_Clipmap.Draw(m_Camera, scale_y);
+    m_Clipmap.BindBuffers(m_UBOBinding);
+
+    m_Clipmap.Draw(m_ShadedShader, m_Camera, scale_y);
 }
 
 void TerrainRenderer::OnImGui(bool& open) 
@@ -199,4 +197,9 @@ void TerrainRenderer::OnImGui(bool& open)
     ImGuiUtils::EndGroupPanel();
 
     ImGui::End();
+}
+
+void TerrainRenderer::OnImGuiDebugCulling(bool& open)
+{
+    m_Clipmap.ImGuiDebugCulling(m_Camera, m_Map.getScaleY(), open);
 }

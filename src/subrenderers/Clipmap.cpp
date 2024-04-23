@@ -6,56 +6,49 @@
 #include <algorithm>
 #include <iostream>
 
-Drawable::~Drawable() 
-{
-    glDeleteVertexArrays(1, &m_VAO);
-    glDeleteBuffers(1, &m_VBO);
-    glDeleteBuffers(1, &m_EBO);
-}
-
-void Drawable::GenGLBuffers()
-{
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_EBO);
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(ClipmapVertex) * VertexData.size(),
-                 &VertexData[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * IndexData.size(),
-                 &IndexData[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, PosX)));
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, QuadSize)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, EdgeFlag)));
-    glEnableVertexAttribArray(2);
-
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, TrimFlag)));
-    glEnableVertexAttribArray(3);
-}
-
-void Drawable::BindBufferBase(uint32_t id) const
-{
-    glBindVertexArray(m_VAO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, id, m_VBO);
-}
+#include "ImGuiUtils.h"
 
 void Drawable::Draw() const
 {
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glDrawElements(GL_TRIANGLES, ElementCount(), GL_UNSIGNED_INT, 0);
+    glDrawElementsBaseVertex(
+        GL_TRIANGLES, 
+        IndexCount, 
+        GL_UNSIGNED_INT,
+ 	    (void*)(sizeof(uint32_t) * FirstIndex), 
+        BaseVertex
+    );
 }
 
-enum EdgeFlag {
+void Drawable::BindBufferRange(uint32_t vertex_buffer, uint32_t binding) const
+{
+    //Position (in bytes) of this drawable's data in the global vertex buffer
+    const auto start = sizeof(ClipmapVertex) * BaseVertex;
+    const auto size  = sizeof(ClipmapVertex) * VertexCount;
+
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, binding, vertex_buffer, start, size);
+}
+
+//We will only store information about a vertex being on 
+//vertical/horizontal edge, or not being at an edge at all.
+//This doesn't describe corners well, but that's not a problem,
+//since by construction of the clipmap, the corners are always aligned
+//with the higher levels by default.
+
+enum EdgeData {
+    NoEdge = 0, Horizontal = 1, Vertical = 2
+};
+
+static uint32_t PackAuxData(bool is_trim, EdgeData edge_data, uint32_t lvl)
+{
+    const uint32_t trim = static_cast<uint32_t>(is_trim);
+    const uint32_t edge = static_cast<uint32_t>(edge_data) << 1;
+    const uint32_t level = lvl << 3;
+    
+    return trim | edge | level;
+}
+
+//Denotes position of the current grid in its ring of the clipmap
+enum GridPosFlag {
     None   = 0,
     Left   = (1 << 0),
     Right  = (1 << 1),
@@ -67,91 +60,91 @@ enum EdgeFlag {
     RightTop = Right | Top
 };
 
-//We will only store information about a vertex being on 
-//vertical/horizontal edge, or not being at an edge at all.
-//This doesn't descrive corners well, but that's not a problem,
-//since by construction of the clipmap, the corners are always aligned
-//with the higher levels by default.
-
-enum EdgeData {
-    NoEdge = 0, Horizontal = 1, Vertical = 2
+struct GridInfo{
+    uint32_t VertsPerLine;
+    float SideLength;
+    glm::vec2 GlobalOffset;
+    GridPosFlag PosFlag;
+    uint32_t Level;
 };
 
-//n - number of verts per line, l - side length of the grid
-static void GenerateGrid(Drawable& grid,
-                  uint32_t n, float l,
-                  glm::vec2 global_offset,
-                  EdgeFlag edge_flag)
+static void GenerateGrid(std::vector<ClipmapVertex>& verts, 
+        std::vector<uint32_t>& elements,
+        Drawable& drawable,
+        GridInfo info)
 {
-    const auto vert_count = n * n;
-    const auto idx_count = 6 * (n - 1) * (n - 1); //1 quad = 6 indices
+    const auto vert_count = info.VertsPerLine * info.VertsPerLine;
+    //1 quad = 6 indices:
+    const auto idx_count = 6 * (info.VertsPerLine - 1) * (info.VertsPerLine - 1);
 
-    const float quad_size = l / static_cast<float>(n - 1);
+    const float quad_size = info.SideLength / static_cast<float>(info.VertsPerLine - 1);
 
-    //Aliases
-    auto& verts = grid.VertexData;
-    auto& elements = grid.IndexData;
+    //Setup draw command data
+    drawable.IndexCount = idx_count;
+    drawable.InstanceCount = 1;
+    drawable.BaseVertex = verts.size();
+    drawable.FirstIndex = elements.size();
+    drawable.BaseInstance = 0;
+    drawable.VertexCount = vert_count;
 
-    verts.reserve(vert_count);
-    elements.reserve(idx_count);
-
-    auto GetOffset = [n, quad_size](uint32_t i)
+    auto GetOffset = [info, quad_size](uint32_t i)
     {
         return glm::vec2{
-            quad_size * static_cast<float>(i % n),
-            quad_size * static_cast<float>(i / n)
+            quad_size * static_cast<float>(i % info.VertsPerLine),
+            quad_size * static_cast<float>(i / info.VertsPerLine)
         };
     };
 
-    auto GetEdgeData = [edge_flag, n](uint32_t i)
+    auto GetEdgeData = [info](uint32_t i) -> EdgeData
     {
-        const auto idx = i % n;
-        const auto idy = i / n;
+        const auto idx = i % info.VertsPerLine;
+        const auto idy = i / info.VertsPerLine;
 
-        const bool left_edge = (idx == 0);
-        const bool right_edge = (idx == n - 1);
+        const bool left_edge   = (idx == 0);
+        const bool right_edge  = (idx == info.VertsPerLine - 1);
         const bool bottom_edge = (idy == 0);
-        const bool top_edge = (idy == n - 1);
+        const bool top_edge    = (idy == info.VertsPerLine - 1);
 
-        if (left_edge && ((edge_flag & Left) != None))
-            return static_cast<float>(Vertical);
+        if (left_edge && ((info.PosFlag & Left) != None))
+            return Vertical;
 
-        if (right_edge && ((edge_flag & Right) != None))
-            return static_cast<float>(Vertical);
+        if (right_edge && ((info.PosFlag & Right) != None))
+            return Vertical;
 
-        if (top_edge && ((edge_flag & Top) != None))
-            return static_cast<float>(Horizontal);
+        if (top_edge && ((info.PosFlag & Top) != None))
+            return Horizontal;
 
-        if (bottom_edge && ((edge_flag & Bottom) != None))
-            return static_cast<float>(Horizontal);
+        if (bottom_edge && ((info.PosFlag & Bottom) != None))
+            return Horizontal;
 
-        return static_cast<float>(NoEdge);
+        return NoEdge;
     };
 
     //Vertex data:
-    for (uint32_t i=0; i<n*n; i++)
+    const glm::vec2 origin = glm::vec2(-info.SideLength / 2.0f) 
+                           + info.GlobalOffset;
+
+    for (uint32_t i=0; i<vert_count; i++)
     {
-        const glm::vec2 origin = glm::vec2(-l / 2.0f) + global_offset;
         const glm::vec2 offset = GetOffset(i);
 
         verts.push_back(ClipmapVertex{
             origin.x + offset.x, 0.0f, origin.y + offset.y, //position
-            0.0f,                                           //padding
-            quad_size,                                      //quad size
-            GetEdgeData(i),                                 //edge flag
-            0.0f,                                           //trim flag
-            0.0f                                            //padding
+            PackAuxData(false, GetEdgeData(i), info.Level)
         });
+
     }
 
     //Index data:
-    for (uint32_t i=0; i<n*n; i++)
+    for (uint32_t i=0; i<vert_count; i++)
     {
-        uint32_t ix = i%n;
-        uint32_t iy = i/n;
+        const auto n = info.VertsPerLine;
 
-        if (ix == n-1) continue;
-        if (iy == n-1) continue;
+        uint32_t ix = i % n;
+        uint32_t iy = i / n;
+
+        if (ix == n - 1) continue;
+        if (iy == n - 1) continue;
 
         elements.push_back(i);
         elements.push_back(i+1);
@@ -163,51 +156,68 @@ static void GenerateGrid(Drawable& grid,
     }
 }
 
-enum class Orientation {
+enum class StripOrientation {
     Horizontal, Vertical
 };
 
-//n - number of verts in line
-static void GenerateStrip(Drawable& fill, Orientation orientation, 
-                  uint32_t n, float quad_size,
-                  glm::vec2 global_offset,
-                  bool is_trim,
-                  bool level_zero)
+struct StripInfo{
+    uint32_t VertsPerLine;
+    float QuadSize;
+    StripOrientation Orientation;
+    glm::vec2 GlobalOffset;
+    bool IsTrim;
+    uint32_t Level;
+};
+
+static void GenerateStrip(std::vector<ClipmapVertex>& verts, 
+        std::vector<uint32_t>& elements,
+        Drawable& drawable,
+        StripInfo info)
 {
-    const auto start_id = fill.VertexCount();
+    const auto start_id = drawable.VertexCount;
 
-    //Aliases
-    auto& verts   = fill.VertexData;
-    auto& elements = fill.IndexData;
+    const auto vert_count = 2 * info.VertsPerLine;
+    const auto idx_count = 6 * (info.VertsPerLine - 1);
 
-    auto GenOffset = [n, quad_size, orientation](uint32_t i)
+    drawable.VertexCount += vert_count;
+
+    //Setup draw command data
+    bool first_call = drawable.IndexCount == 0;
+
+    drawable.IndexCount += idx_count;
+
+    if (first_call)
+    {
+        drawable.InstanceCount = 1;
+        drawable.BaseVertex = verts.size();
+        drawable.FirstIndex = elements.size();
+        drawable.BaseInstance = 0;
+    }
+
+    auto GenOffset = [info](uint32_t i)
     {
         const glm::vec2 res{
-            quad_size* static_cast<float>(i/2),
-            quad_size * static_cast<float>(i%2)
+            info.QuadSize * static_cast<float>(i/2),
+            info.QuadSize * static_cast<float>(i%2)
         };
 
-        if (orientation == Orientation::Vertical)
+        if (info.Orientation == StripOrientation::Vertical)
             return glm::vec2{ res.y, res.x };
-
         else
             return res;
     };
 
-    auto GetEdgeData = [orientation, is_trim, level_zero, global_offset, n](uint32_t i)
+    auto GetEdgeData = [info](uint32_t i) -> EdgeData
     {
         bool first_two = (i == 0 || i == 1);
-        bool last_two = (i == 2 * n - 1 || i == 2 * n - 2);
+        bool last_two = (i == 2 * info.VertsPerLine - 1 || i == 2 * info.VertsPerLine - 2);
 
-        bool horizontal = (orientation == Orientation::Horizontal);
+        bool horizontal = (info.Orientation == StripOrientation::Horizontal);
 
-        float orientation_aligned = horizontal ? static_cast<float>(Horizontal)
-                                                : static_cast<float>(Vertical);
+        auto orientation_aligned  = horizontal ? Horizontal : Vertical;
+        auto orientation_opposite = horizontal ? Vertical : Horizontal;
 
-        float orientation_opposite = horizontal ? static_cast<float>(Vertical)
-                                                : static_cast<float>(Horizontal);
-
-        if (is_trim)
+        if (info.IsTrim)
         {
             if (first_two || last_two)
                 return orientation_opposite;
@@ -218,21 +228,20 @@ static void GenerateStrip(Drawable& fill, Orientation orientation,
 
         else
         {
-            //On levels higher than zero edge will correspond to either the first two
-            //or the last two vertices. 
-            bool edge_at_start = (horizontal && (global_offset.x < 0.0f))
-                || ((!horizontal) && (global_offset.y < 0.0f));
-            
-
             //On level zero edge corresponds to both start and end.
-            if (level_zero)
+            if (info.Level == 0)
             {
                 if (first_two || last_two)
                     return orientation_opposite;
             }
 
+            //On levels higher than zero edge will correspond to either the first two
+            //or the last two vertices. 
             else
             {
+                bool edge_at_start = (horizontal  && (info.GlobalOffset.x < 0.0f))
+                                || ((!horizontal) && (info.GlobalOffset.y < 0.0f));
+
                 if (edge_at_start && first_two)
                     return orientation_opposite;
 
@@ -241,31 +250,27 @@ static void GenerateStrip(Drawable& fill, Orientation orientation,
             }
         }
 
-        return static_cast<float>(NoEdge);
+        return NoEdge;
     };
 
     //Vertex data:
-    for (uint32_t i=0; i<2*n; i++)
+    for (uint32_t i=0; i<vert_count; i++)
     {
-        const glm::vec2 origin = global_offset;
+        const glm::vec2 origin = info.GlobalOffset;
         const glm::vec2 offset = GenOffset(i);
 
         verts.push_back(ClipmapVertex{
             origin.x + offset.x, 0.0f, origin.y + offset.y, //position
-            0.0f,                                           //padding
-            quad_size,                                      //quad size
-            GetEdgeData(i),                                 //edge flag
-            static_cast<float>(is_trim),                    //trim flag
-            0.0f                                            //padding
+            PackAuxData(info.IsTrim, GetEdgeData(i), info.Level)
         });
     }
 
     //Index data:
-    for (uint32_t i=0; i<n-1; i++)
+    for (uint32_t i=0; i<info.VertsPerLine-1; i++)
     {
-        switch (orientation)
+        switch (info.Orientation)
         {
-            case Orientation::Horizontal:
+            case StripOrientation::Horizontal:
             {
                 elements.push_back(start_id + 2 * i);
                 elements.push_back(start_id + 2 * i + 2);
@@ -277,7 +282,7 @@ static void GenerateStrip(Drawable& fill, Orientation orientation,
 
                 break;
             }
-            case Orientation::Vertical:
+            case StripOrientation::Vertical:
             {
                 elements.push_back(start_id + 2*i);
                 elements.push_back(start_id + 2*i + 1);
@@ -291,6 +296,15 @@ static void GenerateStrip(Drawable& fill, Orientation orientation,
             }
         }
     }
+}
+
+Clipmap::~Clipmap()
+{
+    glDeleteVertexArrays(1, &m_VAO);
+    glDeleteBuffers(1, &m_VBO);
+    glDeleteBuffers(1, &m_EBO);
+
+    glDeleteBuffers(1, &m_UBO);
 }
 
 void Clipmap::Init(uint32_t subdivisions, uint32_t levels)
@@ -310,36 +324,69 @@ void Clipmap::Init(uint32_t subdivisions, uint32_t levels)
     m_Trims.reserve(num_trims);
     m_Fills.reserve(num_fills);
 
-    for (uint32_t level = 0; level < levels; level++)
-    {
+    auto getGridSize = [this](uint32_t lvl){
         //We are treating zeroth level as 2x2 grid instead of 4x4
         //which slightly complicates the computation of grid_size:
-        const float scale = (level == 0) ? 2.0f : std::pow(2.0f, level);
-        const float grid_size = scale * m_BaseGridSize;
+        const float scale = (lvl == 0) ? 2.0f : std::pow(2.0f, lvl);
 
-        const float quad_size = std::pow(2, level) * m_BaseQuadSize;
+        return scale * m_BaseGridSize;
+    };
 
-        GenerateGrids(level, grid_size, quad_size);
-        GenerateFills(level, grid_size, quad_size);
-        GenerateTrims(level, grid_size, quad_size);
+    auto getQuadSize = [this](uint32_t lvl){
+        return std::pow(2, lvl) * m_BaseQuadSize;
+    };
+
+    //Currently the ordering here is not critical, but we maintain
+    //it structured in this way for greater future flexibility
+    for (uint32_t lvl = 0; lvl < levels; lvl++)
+    {
+        GenerateGrids(lvl, getGridSize(lvl), getQuadSize(lvl));
     }
+    for (uint32_t lvl = 0; lvl < levels; lvl++)
+    {
+        GenerateFills(lvl, getGridSize(lvl), getQuadSize(lvl));
+    }
+    for (uint32_t lvl = 0; lvl < levels; lvl++)
+    {
+        GenerateTrims(lvl, getGridSize(lvl), getQuadSize(lvl));
+    }
+
+    //Setup UBO data. Store only quad sizes for each level:
+    for (uint32_t lvl = 0; lvl < levels; lvl++)
+    {
+        m_UBOData.push_back(getQuadSize(lvl));
+        //Padding needed since ubo's can only use std140 layout
+        //Where arrays have 16 byte alignment
+        m_UBOData.push_back(0.0f);
+        m_UBOData.push_back(0.0f);
+        m_UBOData.push_back(0.0f);
+    }
+
+    GenGLBuffers(); 
+
+    //Free buffer memory on cpu side
+    m_VertexData.clear();
+    m_IndexData.clear();
+    m_UBOData.clear();
+
+    std::vector<ClipmapVertex>().swap(m_VertexData);
+    std::vector<uint32_t>().swap(m_IndexData);
+    std::vector<float>().swap(m_UBOData);
 }
 
 void Clipmap::GenerateGrids(uint32_t level, float grid_size, float quad_size)
 {
     //Center positions of particular grids within a level (single ring of the clipmap)
     std::vector<glm::vec2> centers;
-
     //Additional offsets
     std::vector<glm::vec2> offsets;
+    //Edge flags
+    std::vector<GridPosFlag> pos_flags;
 
     const glm::vec2 top_left{ 0.0f, 1.0f };
     const glm::vec2 top_right{ 1.0f, 1.0f };
     const glm::vec2 bot_left{ 0.0f, 0.0f };
     const glm::vec2 bot_right{ 1.0f, 0.0f };
-
-    //Edge flags
-    std::vector<EdgeFlag> edge_flags;
 
     if (level == 0)
     {
@@ -349,7 +396,7 @@ void Clipmap::GenerateGrids(uint32_t level, float grid_size, float quad_size)
         offsets = { top_left, top_right,
                    bot_left, bot_right };
 
-        edge_flags = {LeftTop, RightTop,
+        pos_flags = {LeftTop, RightTop,
                       LeftBot, RightBot};
     }
 
@@ -365,28 +412,27 @@ void Clipmap::GenerateGrids(uint32_t level, float grid_size, float quad_size)
                     bot_left,                      bot_right,
                     bot_left, bot_left, bot_right, bot_right };
 
-        edge_flags = { LeftTop, Top,    Top,    RightTop,
-                       Left,                    Right,
-                       Left,                    Right,
-                       LeftBot, Bottom, Bottom, RightBot};
+        pos_flags = { LeftTop, Top,    Top,    RightTop,
+                      Left,                    Right,
+                      Left,                    Right,
+                      LeftBot, Bottom, Bottom, RightBot};
     }
 
     for (size_t i = 0; i < centers.size(); i++)
     {
-        //so the number of vertices needs to be twice as large (-1 is due to overlap)
+        //For level zero the number of vertices needs to be twice as large (-1 is due to overlap)
         const uint32_t num_verts = (level == 0) ? 2 * m_VertsPerLine - 1 : m_VertsPerLine;
 
         const glm::vec2 center_pos = grid_size * centers[i] + quad_size * offsets[i];
 
+        const GridInfo grid_info{num_verts, grid_size, center_pos, pos_flags[i], level};
+
         m_Grids.emplace_back();
-
-        GenerateGrid(m_Grids.back(), num_verts, grid_size, center_pos, edge_flags[i]);
-
-        m_Grids.back().GenGLBuffers();
+        GenerateGrid(m_VertexData, m_IndexData, m_Grids.back(), grid_info);
 
         //Bounding box parameters
         const float bb_center_height = 0.45f;
-        const float bb_vertical_extents = 0.55;
+        const float bb_vertical_extents = 0.55f;
 
         const glm::vec3 center{ center_pos.x, bb_center_height, center_pos.y };
         const glm::vec3 extents{ 0.5f * grid_size, bb_vertical_extents, 0.5f * grid_size };
@@ -398,8 +444,6 @@ void Clipmap::GenerateGrids(uint32_t level, float grid_size, float quad_size)
 
 void Clipmap::GenerateFills(uint32_t level, float grid_size, float quad_size)
 {
-    //const float quad_size = std::pow(2, level) * m_BaseQuadSize;
-
     if (level == 0)
     {
         //Length of 4 grids with 2 overlaps
@@ -408,10 +452,12 @@ void Clipmap::GenerateFills(uint32_t level, float grid_size, float quad_size)
         const glm::vec2 origin_x{ -grid_size, 0.0f };
         const glm::vec2 origin_y{ 0.0f, -grid_size };
 
+        const StripInfo info1{num_verts, quad_size, StripOrientation::Horizontal, origin_x, false, level};
+        const StripInfo info2{num_verts, quad_size, StripOrientation::Vertical,   origin_y, false, level};
+
         m_Fills.emplace_back();
-        GenerateStrip(m_Fills.back(), Orientation::Horizontal, num_verts, quad_size, origin_x, false, true);
-        GenerateStrip(m_Fills.back(), Orientation::Vertical,   num_verts, quad_size, origin_y, false, true);
-        m_Fills.back().GenGLBuffers();
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info1);
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info2);
     }
 
     else
@@ -423,12 +469,16 @@ void Clipmap::GenerateFills(uint32_t level, float grid_size, float quad_size)
         const glm::vec2 left{ -2.0f * grid_size, 0.0f };
         const glm::vec2 right{ grid_size + quad_size, 0.0f };
 
+        const StripInfo info1{num_verts, quad_size, StripOrientation::Vertical, top, false, level};
+        const StripInfo info2{num_verts, quad_size, StripOrientation::Vertical, bottom, false, level};
+        const StripInfo info3{num_verts, quad_size, StripOrientation::Horizontal, left, false, level};
+        const StripInfo info4{num_verts, quad_size, StripOrientation::Horizontal, right, false, level};
+
         m_Fills.emplace_back();
-        GenerateStrip(m_Fills.back(), Orientation::Vertical,   num_verts, quad_size, top,    false, false);
-        GenerateStrip(m_Fills.back(), Orientation::Vertical,   num_verts, quad_size, bottom, false, false);
-        GenerateStrip(m_Fills.back(), Orientation::Horizontal, num_verts, quad_size, left,   false, false);
-        GenerateStrip(m_Fills.back(), Orientation::Horizontal, num_verts, quad_size, right,  false, false);
-        m_Fills.back().GenGLBuffers();
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info1);
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info2);
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info3);
+        GenerateStrip(m_VertexData, m_IndexData, m_Fills.back(), info4);
     }
 }
 
@@ -443,10 +493,43 @@ void Clipmap::GenerateTrims(uint32_t level, float grid_size, float quad_size)
     const glm::vec2 origin_x{ grid_corner, -grid_corner - quad_size };
     const glm::vec2 origin_y{ -grid_corner - quad_size, grid_corner };
 
+    const StripInfo info1{num_verts, quad_size, StripOrientation::Vertical, origin_x, true, level};
+    const StripInfo info2{num_verts, quad_size, StripOrientation::Horizontal, origin_y, true, level};
+
     m_Trims.emplace_back();
-    GenerateStrip(m_Trims.back(), Orientation::Vertical,   num_verts, quad_size, origin_x, true, false);
-    GenerateStrip(m_Trims.back(), Orientation::Horizontal, num_verts, quad_size, origin_y, true, false);
-    m_Trims.back().GenGLBuffers();
+    GenerateStrip(m_VertexData, m_IndexData, m_Trims.back(), info1);
+    GenerateStrip(m_VertexData, m_IndexData, m_Trims.back(), info2);
+}
+
+void Clipmap::GenGLBuffers()
+{
+    //Generate Vertex Array and Buffer + Element Buffer
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
+
+    glBindVertexArray(m_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ClipmapVertex) * m_VertexData.size(),
+                 &m_VertexData[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * m_IndexData.size(),
+                 &m_IndexData[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, PosX)));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(ClipmapVertex), (void*)(offsetof(ClipmapVertex, AuxData)));
+    glEnableVertexAttribArray(1);
+
+    //Generate the UBO
+    glGenBuffers(1, &m_UBO);
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * m_UBOData.size(), &m_UBOData[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 uint32_t Clipmap::NumGridsPerLevel(uint32_t level)
@@ -471,22 +554,24 @@ bool Clipmap::LevelShouldUpdate(uint32_t level, glm::vec2 curr, glm::vec2 prev) 
 
 void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t binding)
 {
+    glBindVertexArray(m_VAO);
+
     for (const auto& grid : m_Grids)
     {
-        grid.BindBufferBase(binding);
-        shader->Dispatch(grid.VertexCount(), 1, 1);
+        grid.BindBufferRange(m_VBO, binding);
+        shader->Dispatch(grid.VertexCount, 1, 1);
     }
-
+    
     for (const auto& fill : m_Fills)
     {
-        fill.BindBufferBase(binding);
-        shader->Dispatch(fill.VertexCount(), 1, 1);
+        fill.BindBufferRange(m_VBO, binding);
+        shader->Dispatch(fill.VertexCount, 1, 1);
     }
-
+    
     for (const auto& trim : m_Trims)
     {
-        trim.BindBufferBase(binding);
-        shader->Dispatch(trim.VertexCount(), 1, 1);
+        trim.BindBufferRange(m_VBO, binding);
+        shader->Dispatch(trim.VertexCount, 1, 1);
     }
 
     glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
@@ -494,7 +579,7 @@ void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t 
 
 void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t binding, glm::vec2 curr, glm::vec2 prev)
 {
-    uint32_t grid_id = 0;
+    glBindVertexArray(m_VAO);
 
     for (uint32_t level = 0; level < m_Levels; level++)
     {
@@ -503,45 +588,101 @@ void Clipmap::RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t 
 
         for (uint32_t i = 0; i < NumGridsPerLevel(level); i++)
         {
-            auto& grid = m_Grids[grid_id];
+            auto& grid = m_Grids[MaxGridIDUpTo(level) + i];
 
-            grid.BindBufferBase(binding);
-            shader->Dispatch(grid.VertexCount(), 1, 1);
-
-            grid_id++;
+            grid.BindBufferRange(m_VBO, binding);
+            shader->Dispatch(grid.VertexCount, 1, 1);
         }
 
         auto& fill = m_Fills[level];
         
-        fill.BindBufferBase(binding);
-        shader->Dispatch(fill.VertexCount(), 1, 1);
+        fill.BindBufferRange(m_VBO, binding);
+        shader->Dispatch(fill.VertexCount, 1, 1);
         
         auto& trim = m_Trims[level];
-        
-        trim.BindBufferBase(binding);
-        shader->Dispatch(trim.VertexCount(), 1, 1);
+
+        trim.BindBufferRange(m_VBO, binding);
+        shader->Dispatch(trim.VertexCount, 1, 1);
     }
 
     glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT); 
 }
 
-void Clipmap::Draw(const Camera& cam, float scale_y)
+void Clipmap::BindUBO(uint32_t binding)
 {
+    glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_UBO);
+}
+
+void Clipmap::BindBuffers(uint32_t ubo_binding)
+{
+    glBindVertexArray(m_VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBindBufferBase(GL_UNIFORM_BUFFER, ubo_binding, m_UBO);
+}
+
+void Clipmap::Draw(const std::shared_ptr<VertFragShader>& shader, const Camera& cam, float scale_y)
+{    
     for (const auto& grid : m_Grids)
     {
         if (cam.IsInFrustum(grid.BoundingBox, scale_y))
-        {
             grid.Draw();
-        }
     }
 
     for (const auto& fill : m_Fills)
-    {
         fill.Draw();
-    }
 
     for (const auto& trim : m_Trims)
-    {
         trim.Draw();
+}
+
+void Clipmap::ImGuiDebugCulling(const Camera& cam, float scale_y, bool& open)
+{
+    ImGui::Begin("Frustum culling debug", &open);
+
+    static int max_lvl = m_Levels;
+    ImGui::Columns(2, "###col");
+    ImGuiUtils::ColSliderInt("Max level", &max_lvl, 1, m_Levels);
+	ImGui::Columns(1, "###col");
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    auto ImToGlm = [](ImVec2 v) {return glm::vec2(v.x, v.y);};
+
+	const glm::vec2 draw_start = ImToGlm(ImGui::GetCursorScreenPos());
+	const glm::vec2 draw_size  = ImToGlm(ImGui::GetContentRegionAvail());
+
+    const float clipmap_size = m_BaseGridSize * std::pow(2, max_lvl + 1);
+
+    auto WorldToWindow = [&](glm::vec3 pos){
+        const glm::vec2 pos2{pos.x, pos.z};
+        const glm::vec2 normalized = pos2/clipmap_size + 0.5f;
+
+        return draw_start + std::min(draw_size.x, draw_size.y) * normalized;
+    };
+
+    ImGui::BeginChild("CPU Timing", ImVec2(draw_size.x, draw_size.y), true);
+
+    for (int lvl=0; lvl<max_lvl; lvl++)
+    {
+        for (int i=0; i<NumGridsPerLevel(lvl); i++)
+        {
+            const auto& grid = m_Grids[MaxGridIDUpTo(lvl) + i];
+            const auto& aabb = grid.BoundingBox;
+
+            const bool in_frustum = cam.IsInFrustum(aabb, scale_y);
+
+            const ImU32 fill_color = in_frustum ? IM_COL32(100, 250, 100, 255) : IM_COL32(64, 64, 64, 255);
+            const ImU32 border_color = IM_COL32(0,0,0,255);
+
+            const glm::vec2 min_pos = WorldToWindow(aabb.Center - aabb.Extents);
+            const glm::vec2 max_pos = WorldToWindow(aabb.Center + aabb.Extents);
+
+            drawList->AddRectFilled(ImVec2(min_pos.x, min_pos.y), ImVec2(max_pos.x, max_pos.y), fill_color);
+            drawList->AddRect(ImVec2(min_pos.x, min_pos.y), ImVec2(max_pos.x, max_pos.y), border_color);
+        }
     }
+
+    ImGui::EndChild();
+
+    ImGui::End();
 }
