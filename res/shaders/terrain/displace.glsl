@@ -4,7 +4,7 @@ struct Vert {
     float PosX;
     float PosY;
     float PosZ;
-    int EdgeFlag;
+    uint AuxData;
 };
 
 layout(std430, binding = 1) buffer vertexBuffer
@@ -14,33 +14,24 @@ layout(std430, binding = 1) buffer vertexBuffer
 
 layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
-//#define MAX_DRAWABLE_ID 132
-//layout(std430, binding = 2) readonly buffer ssbo
-//{
-//    float QuadSizes[MAX_DRAWABLE_ID];
-//    float TrimFlags[MAX_DRAWABLE_ID];
-//};
-
 #define MAX_LEVELS 10
 layout(std140, binding = 2) uniform ubo
 {
     float QuadSizes[MAX_LEVELS];
 };
 
-uniform int uDrawableID;
-
 uniform sampler2D heightmap;
 
-uniform float uScaleXZ;
-uniform float uScaleY;
 uniform vec2 uPos;
+uniform float uScaleY;
+uniform float uScaleXZ;
 
 //Needs to match enum used to generate vertex data
 #define EDGE_FLAG_NONE 0
 #define EDGE_FLAG_HORIZONTAL 1
 #define EDGE_FLAG_VERTICAL 2
 
-#include "../common/clipmap_move.glsl"
+#include "../common/clipmap.glsl"
 
 float getHeight(vec2 uv)
 {
@@ -61,18 +52,18 @@ void main() {
 
     vec2 vert_pos = vec2(verts[i].PosX, verts[i].PosZ);
 
-    //float quad_size = QuadSizes[uDrawableID];
-    //float trim_flag = TrimFlags[uDrawableID];
-    float quad_size = QuadSizes[abs(uDrawableID)-1];
-    float trim_flag = float(uDrawableID < 0.0);
+    bool trim_flag = false;
+    uint edge_flag = 0, lvl = 0;
 
-    bool is_trim_vertex = (trim_flag == 1.0);
+    UnpackAux(verts[i].AuxData, trim_flag, edge_flag, lvl);
+
+    float quad_size = QuadSizes[lvl];
 
     //Base texture coordinate needs to be calculated after considering
     //possible movement of trim geometry
-    int id;
-    ivec2 id2;
-    vec2 hoffset;
+    int id = 0;
+    ivec2 id2 = ivec2(0);
+    vec2 hoffset = vec2(0);
     vec2 pos2 = GetClipmapPos(vert_pos, uPos, quad_size, trim_flag, id, id2, hoffset);
 
     vec2 uv = (2.0/uScaleXZ) * (pos2 + hoffset);
@@ -83,7 +74,7 @@ void main() {
 
     float height = 0.0;
 
-    if (verts[i].EdgeFlag == EDGE_FLAG_NONE)
+    if (edge_flag == EDGE_FLAG_NONE)
     {
         height = getHeight(uv);
     }
@@ -92,11 +83,11 @@ void main() {
     {
         //At this point the edge flag is either HORIZONTAL or VERTICAL
         //so we may store this in one bool
-        bool horizontal = (verts[i].EdgeFlag == EDGE_FLAG_HORIZONTAL);
+        bool horizontal = (edge_flag == EDGE_FLAG_HORIZONTAL);
 
         //Depending on the rotation of the trim mesh we may need to change 
         //the vertical/horizontal orientation of our seam-correction
-        bool swap_axes = (is_trim_vertex && (id == 1 || id == 2));
+        bool swap_axes = (trim_flag && (id == 1 || id == 2));
 
         if (swap_axes)
             horizontal = !horizontal;

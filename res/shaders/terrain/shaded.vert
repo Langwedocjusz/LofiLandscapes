@@ -1,14 +1,7 @@
 #version 450 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in int aEdgeFlag;
-
-//#define MAX_DRAWABLE_ID 132
-//layout(std430, binding = 2) buffer ssbo
-//{
-//    float QuadSizes[MAX_DRAWABLE_ID];
-//    float TrimFlags[MAX_DRAWABLE_ID];
-//};
+layout (location = 1) in uint aAuxData;
 
 #define MAX_LEVELS 10
 layout(std140, binding = 2) uniform ubo
@@ -16,24 +9,22 @@ layout(std140, binding = 2) uniform ubo
     float QuadSizes[MAX_LEVELS];
 };
 
-uniform int uDrawableID;
+uniform sampler2D normalmap;
+uniform sampler3D aerial;
+
+uniform vec3 uPos;
+uniform mat4 uMVP;
+uniform float uScaleXZ;
+
+uniform int uFog;
+uniform float uAerialDist;
 
 out vec2 uv;
 out mat3 norm_rot;
 out vec3 frag_pos;
 out vec4 fog_data;
 
-uniform float uScaleXZ;
-uniform vec3 uPos;
-uniform mat4 uMVP;
-
-uniform sampler2D normalmap;
-uniform sampler3D aerial;
-
-uniform int uFog;
-uniform float uAerialDist;
-
-#include "../common/clipmap_move.glsl"
+#include "../common/clipmap.glsl"
 
 mat3 rotation(vec3 N){
     vec3 T = vec3(1.0, 0.0, 0.0);
@@ -43,10 +34,12 @@ mat3 rotation(vec3 N){
 }
 
 void main() {
-    //float quad_size = QuadSizes[uDrawableID];
-    //float trim_flag = TrimFlags[uDrawableID];
-    float quad_size = QuadSizes[abs(uDrawableID)-1];
-    float trim_flag = float(uDrawableID < 0.0);
+    bool trim_flag = false;
+    uint edge_flag = 0, lvl = 0;
+
+    UnpackAux(aAuxData, trim_flag, edge_flag, lvl);
+
+    float quad_size = QuadSizes[lvl];
 
     vec2 pos2 = GetClipmapPos(aPos.xz, uPos.xz, quad_size, trim_flag);
     vec3 pos3 = vec3(pos2.x, aPos.y, pos2.y);

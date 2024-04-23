@@ -93,27 +93,18 @@ void TerrainRenderer::RenderWireframe() {
     for (const auto& grid : m_Clipmap.getGrids())
     {
         if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-        {
-            m_WireframeShader->setUniform1i("uDrawableID", grid.DrawableID);
             grid.Draw();
-        }
     }
 
     m_WireframeShader->setUniform3f("uCol", fill_color);
 
     for (const auto& fill : m_Clipmap.getFills())
-    {
-        m_WireframeShader->setUniform1i("uDrawableID", fill.DrawableID);
         fill.Draw();
-    }
 
     m_WireframeShader->setUniform3f("uCol", trim_color);
 
     for (const auto& trim : m_Clipmap.getTrims())
-    {
-        m_WireframeShader->setUniform1i("uDrawableID", trim.DrawableID);
         trim.Draw();
-    }
 }
 
 void TerrainRenderer::RenderShaded()

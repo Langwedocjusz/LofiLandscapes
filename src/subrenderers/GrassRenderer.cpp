@@ -293,25 +293,18 @@ void GrassRenderer::Render()
 		const auto& grid = m_Clipmap.getGrids()[i];
 
 		if (m_Camera.IsInFrustum(grid.BoundingBox, scale_y))
-		{
-			m_PresentShader->setUniform1i("uDrawableID", grid.DrawableID);
 			grid.Draw();
-		}
 	}
 
 	for (uint32_t i = 0; i < m_LodLevels; i++)
 	{
 		const auto& fill = m_Clipmap.getFills()[i];
-
-		m_PresentShader->setUniform1i("uDrawableID", fill.DrawableID);
 		fill.Draw();
 	}
 
 	for (uint32_t i = 0; i < m_LodLevels; i++)
 	{
 		const auto& trim = m_Clipmap.getTrims()[i];
-
-		m_PresentShader->setUniform1i("uDrawableID", trim.DrawableID);
 		trim.Draw();
 	}
 }

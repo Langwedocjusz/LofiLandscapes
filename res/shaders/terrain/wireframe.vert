@@ -1,14 +1,7 @@
 #version 450 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in int aEdgeFlag;
-
-//#define MAX_DRAWABLE_ID 132
-//layout(std430, binding = 2) buffer ssbo
-//{
-//    float QuadSizes[MAX_DRAWABLE_ID];
-//    float TrimFlags[MAX_DRAWABLE_ID];
-//};
+layout (location = 1) in uint aAuxData;
 
 #define MAX_LEVELS 10
 layout(std140, binding = 2) uniform ubo
@@ -16,21 +9,21 @@ layout(std140, binding = 2) uniform ubo
     float QuadSizes[MAX_LEVELS];
 };
 
-uniform int uDrawableID;
-
-uniform mat4 uMVP;
 uniform vec2 uPos;
+uniform mat4 uMVP;
 
 out vec3 EdgeColor;
 
-#include "../common/clipmap_move.glsl"
+#include "../common/clipmap.glsl"
 
 void main() 
 {
-    //float quad_size = QuadSizes[uDrawableID];
-    //float trim_flag = TrimFlags[uDrawableID];
-    float quad_size = QuadSizes[abs(uDrawableID)-1];
-    float trim_flag = float(uDrawableID < 0.0);
+    bool trim_flag = false;
+    uint edge_flag = 0, lvl = 0;
+
+    UnpackAux(aAuxData, trim_flag, edge_flag, lvl);
+
+    float quad_size = QuadSizes[lvl];
 
     vec2 pos2 = GetClipmapPos(aPos.xz, uPos, quad_size, trim_flag);
     vec3 pos3 = vec3(pos2.x, aPos.y, pos2.y);
@@ -44,10 +37,10 @@ void main()
     #define EDGE_FLAG_HORIZONTAL 1
     #define EDGE_FLAG_VERTICAL 2
 
-    if (aEdgeFlag == EDGE_FLAG_NONE)
+    if (edge_flag == EDGE_FLAG_NONE)
         EdgeColor = vec3(1.0);
-    else if (aEdgeFlag == EDGE_FLAG_HORIZONTAL)
+    else if (edge_flag == EDGE_FLAG_HORIZONTAL)
         EdgeColor = vec3(0.0, 1.0, 0.0);
-    else if (aEdgeFlag == EDGE_FLAG_VERTICAL)
+    else if (edge_flag == EDGE_FLAG_VERTICAL)
         EdgeColor = vec3(0.0, 0.0, 1.0);
 }

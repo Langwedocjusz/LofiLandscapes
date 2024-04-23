@@ -13,22 +13,21 @@
 
 struct ClipmapVertex {
     float PosX, PosY, PosZ;
-    int EdgeFlag;
-};
-
-struct DrawCommand{
-    uint32_t  Count = 0;
-    uint32_t  InstanceCount = 0;
-    uint32_t  FirstIndex = 0;
-    int       BaseVertex = 0;
-    uint32_t  BaseInstance = 0;
+    //Aux Data contains:
+    //trim flag - 1 bit
+    //edge flag - 2 bits
+    //lod level - the rest
+    uint32_t AuxData;
 };
 
 class Drawable{
 public:
-    DrawCommand Command;
-    uint32_t VertexCount = 0;
-    int DrawableID = 0;
+    uint32_t  IndexCount = 0;
+    uint32_t  InstanceCount = 0;
+    uint32_t  FirstIndex = 0;
+    int       BaseVertex = 0;
+    uint32_t  BaseInstance = 0;
+    uint32_t  VertexCount = 0;
 
     //Assumes all apropriate buffers are already bound
     void Draw() const;
@@ -85,22 +84,20 @@ private:
 
     void GenGLBuffers();
 
-    float m_BaseGridSize = 4.0f;
-
-    float m_BaseQuadSize;
-
     uint32_t m_Levels;
     uint32_t m_VertsPerLine;
+    float m_BaseGridSize = 4.0f;
+    float m_BaseQuadSize;
 
     std::vector<DrawableWithBounding> m_Grids;
     std::vector<Drawable> m_Trims, m_Fills;
 
-    std::vector<ClipmapVertex> m_VertexData;
-    std::vector<uint32_t> m_IndexData;
-
-    std::vector<float> m_UBOData;
-
     //GL handles:
     uint32_t m_VAO = 0, m_VBO = 0, m_EBO = 0;
     uint32_t m_UBO = 0;
+
+    //Temp GL Buffer data:
+    std::vector<ClipmapVertex> m_VertexData;
+    std::vector<uint32_t> m_IndexData;
+    std::vector<float> m_UBOData;
 };
