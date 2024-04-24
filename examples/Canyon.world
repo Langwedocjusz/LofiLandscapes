@@ -165,44 +165,6 @@
             }
         }
     },
-    "Terrain Editor": {
-        "Scale XZ": 200.0,
-        "Scale Y": 20.0,
-        "Height": {
-            "0_Const Value": {
-                "Value": 0.0
-            },
-            "1_Advanced FBM": {
-                "Noise Type": 1,
-                "Octaves": 1,
-                "Scale": 49.138999938964844,
-                "Roughness": 0.5,
-                "Lacunarity": 2.0,
-                "Altitude Erosion": 0.0,
-                "Slope Erosion": 0.0,
-                "Concave Erosion": 0.0,
-                "Blend Mode": 0,
-                "Weight": 2.0
-            },
-            "2_Advanced FBM": {
-                "Noise Type": 0,
-                "Octaves": 8,
-                "Scale": 60.720001220703125,
-                "Roughness": 0.49300000071525574,
-                "Lacunarity": 3.140000104904175,
-                "Altitude Erosion": 1.0,
-                "Slope Erosion": 0.7720000147819519,
-                "Concave Erosion": 0.6690000295639038,
-                "Blend Mode": 0,
-                "Weight": 0.14000000059604645
-            },
-            "3_Terrace": {
-                "Number": 5,
-                "Flatness": 0.14000000059604645,
-                "Strength": 0.8159999847412109
-            }
-        }
-    },
     "MaterialMap Editor": {
         "Material": {
             "0_One material": {
@@ -237,6 +199,44 @@
                 "Lower": 0.0,
                 "Blending": 0.05400000140070915,
                 "Material id": 2
+            }
+        }
+    },
+    "Terrain Editor": {
+        "Scale XZ": 200.0,
+        "Scale Y": 20.0,
+        "Height": {
+            "0_Const Value": {
+                "Value": 0.5
+            },
+            "1_Advanced FBM": {
+                "Noise Type": 1,
+                "Octaves": 1,
+                "Scale": 49.138999938964844,
+                "Roughness": 0.5,
+                "Lacunarity": 2.0,
+                "Altitude Erosion": 0.0,
+                "Slope Erosion": 0.0,
+                "Concave Erosion": 0.0,
+                "Blend Mode": 1,
+                "Weight": 1.0
+            },
+            "2_Advanced FBM": {
+                "Noise Type": 0,
+                "Octaves": 8,
+                "Scale": 60.720001220703125,
+                "Roughness": 0.49300000071525574,
+                "Lacunarity": 3.140000104904175,
+                "Altitude Erosion": 1.0,
+                "Slope Erosion": 0.7720000147819519,
+                "Concave Erosion": 0.6690000295639038,
+                "Blend Mode": 0,
+                "Weight": 0.14000000059604645
+            },
+            "3_Terrace": {
+                "Number": 5,
+                "Flatness": 0.14000000059604645,
+                "Strength": 0.8159999847412109
             }
         }
     }

@@ -48,10 +48,10 @@ vec4 noised(vec2 p) {
         vc = 2.0*hash22(id+vec2(0,1)) - 1.0;
         vd = 2.0*hash22(id+vec2(1,1)) - 1.0;
 
-        a = 0.5*dot(va, u - vec2(0,0)) + 0.5;
-        b = 0.5*dot(vb, u - vec2(1,0)) + 0.5;
-        c = 0.5*dot(vc, u - vec2(0,1)) + 0.5;
-        d = 0.5*dot(vd, u - vec2(1,1)) + 0.5;
+        a = dot(va, u - vec2(0,0)) + 0.5;
+        b = dot(vb, u - vec2(1,0)) + 0.5;
+        c = dot(vc, u - vec2(0,1)) + 0.5;
+        d = dot(vd, u - vec2(1,1)) + 0.5;
     }
     
     else
