@@ -79,6 +79,22 @@ void MaterialGenerator::Init(int material_res)
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
+
+    m_HeightEditor.RegisterShader("Wave", "res/shaders/materials/wave.glsl");
+    std::vector<std::string> wave_types{"Sine", "Saw"};
+    m_HeightEditor.Attach<GLEnumTask>("Wave", "uWaveType", "Wave type", wave_types);
+    std::vector<std::string> wave_directions{"X", "Z"};
+    m_HeightEditor.Attach<GLEnumTask>("Wave", "uDirection", "Direction", wave_directions);
+    m_HeightEditor.Attach<SliderIntTask>("Wave", "uFrequency", "Frequency", 1, 30, 1);
+
+    m_HeightEditor.Attach<SliderFloatTask>("Wave", "uDistortion", "Distortion", 0.0f, 2.0f, 0.0f);
+    m_HeightEditor.Attach<SliderIntTask>("Wave", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderIntTask>("Wave", "uScale", "Scale", 1, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("Wave", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
+
+    m_HeightEditor.Attach<GLEnumTask>("Wave", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("Wave", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+
     //Albedo
     m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");
     m_AlbedoEditor.Attach<ColorEdit3Task>("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
