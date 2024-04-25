@@ -55,7 +55,7 @@ void MaterialGenerator::Init(int material_res)
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
     //=====Initialize material editors:
-    std::vector<std::string> labels{ "Average", "Add", "Subtract" };
+    std::vector<std::string> labels{ "Average", "Add", "Subtract", "Avg. with const"};
 
     //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
@@ -65,8 +65,11 @@ void MaterialGenerator::Init(int material_res)
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderIntTask>("FBM", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uAmplitude", "Amplitude", 0.0f, 5.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uBias", "Bias", -1.0f, 1.0f, 0.0f);
     m_HeightEditor.Attach<GLEnumTask>("FBM", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("FBM", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("FBM", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
 
 
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
@@ -78,6 +81,7 @@ void MaterialGenerator::Init(int material_res)
 
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
 
 
     m_HeightEditor.RegisterShader("Wave", "res/shaders/materials/wave.glsl");
@@ -94,6 +98,7 @@ void MaterialGenerator::Init(int material_res)
 
     m_HeightEditor.Attach<GLEnumTask>("Wave", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Wave", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Wave", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
 
     //Albedo
     m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");

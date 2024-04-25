@@ -8,15 +8,11 @@ uniform int uOctaves;
 uniform int uScale;
 uniform float uRoughness;
 
-uniform int uBlendMode;
-
-#define BLEND_AVERAGE  0
-#define BLEND_ADD      1
-#define BLEND_SUBTRACT 2
-
-uniform float uWeight;
+uniform float uAmplitude;
+uniform float uBias;
 
 #include "../common/hash.glsl"
+#include "blending.glsl"
 
 float noise(vec2 p, float scale) {
     vec2 id = floor(p);
@@ -61,31 +57,14 @@ float fbm(in vec2 p, int octaves) {
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
 
     float prev = float(imageLoad(heightmap, texelCoord));
 
-    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
-    
     float h = fbm(float(uScale)*uv, uOctaves);
-    h = clamp(h, 0.0, 1.0);
+    h = uAmplitude * h + uBias;
 
-    switch(uBlendMode) {
-        case BLEND_AVERAGE:
-        {
-            h = mix(prev, h, uWeight);
-            break;
-        }
-        case BLEND_ADD:
-        {
-            h = prev + uWeight*h;
-            break;
-        }
-        case BLEND_SUBTRACT:
-        {
-            h = prev - uWeight*h;
-            break;
-        }
-    }
+    h = BlendResult(prev, h);
 
     vec4 res = vec4(h, vec3(0.0));
 

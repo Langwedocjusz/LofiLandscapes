@@ -13,15 +13,8 @@ uniform int uVoronoiType;
 #define VORONOI_F2    1
 #define VORONOI_F2_F1 2
 
-uniform int uBlendMode;
-
-#define BLEND_AVERAGE  0
-#define BLEND_ADD      1
-#define BLEND_SUBTRACT 2
-
-uniform float uWeight;
-
 #include "../common/hash.glsl"
+#include "blending.glsl"
 
 vec2 voronoi(vec2 x){
     vec2 p = floor(x);
@@ -52,10 +45,9 @@ vec2 voronoi(vec2 x){
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
 
     float prev = float(imageLoad(heightmap, texelCoord));
-
-    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
 
     vec2 voro = voronoi(float(uScale)*uv);
     float h = 0.0;
@@ -78,23 +70,7 @@ void main() {
         }
     }
 
-    switch(uBlendMode) {
-        case BLEND_AVERAGE:
-        {
-            h = mix(prev, h, uWeight);
-            break;
-        }
-        case BLEND_ADD:
-        {
-            h = prev + uWeight*h;
-            break;
-        }
-        case BLEND_SUBTRACT:
-        {
-            h = prev - uWeight*h;
-            break;
-        }
-    }
+    h = BlendResult(prev, h);
 
     vec4 res = vec4(h, vec3(0.0));
 

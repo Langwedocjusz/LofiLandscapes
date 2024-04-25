@@ -4,8 +4,6 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(r16f, binding = 0) uniform image2D heightmap;
 
-#include "../common/hash.glsl"
-
 uniform int uWaveType;
 
 #define WAVE_SINE 0
@@ -23,13 +21,8 @@ uniform int uOctaves;
 uniform int uScale;
 uniform float uRoughness;
 
-uniform int uBlendMode;
-
-#define BLEND_AVERAGE  0
-#define BLEND_ADD      1
-#define BLEND_SUBTRACT 2
-
-uniform float uWeight;
+#include "blending.glsl"
+#include "../common/hash.glsl"
 
 #define PI 3.1415926535
 
@@ -116,30 +109,13 @@ float Wave(vec2 p)
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
 
     float prev = float(imageLoad(heightmap, texelCoord));
 
-    vec2 uv = vec2(texelCoord)/imageSize(heightmap);
-
     float h = Wave(uv);
 
-    switch(uBlendMode) {
-        case BLEND_AVERAGE:
-        {
-            h = mix(prev, h, uWeight);
-            break;
-        }
-        case BLEND_ADD:
-        {
-            h = prev + uWeight*h;
-            break;
-        }
-        case BLEND_SUBTRACT:
-        {
-            h = prev - uWeight*h;
-            break;
-        }
-    }
+    h = BlendResult(prev, h);
 
     vec4 res = vec4(h, vec3(0.0));
 
