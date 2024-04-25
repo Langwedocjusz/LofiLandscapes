@@ -23,7 +23,12 @@ void ConstIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void ConstIntTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    data.push_back(input["Value"].get<int>());
+    const std::string name{"Value"};
+
+    if (input.contains(name))
+        data.push_back(input[name].get<int>());
+    else
+        ProvideDefaultData(data);
 }
 
 ConstFloatTask::ConstFloatTask(const std::string& uniform_name, float val)
@@ -47,7 +52,12 @@ void ConstFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void ConstFloatTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    data.push_back(input["Value"].get<float>());
+    const std::string name{"Value"};
+
+    if (input.contains(name))
+        data.push_back(input["Value"].get<float>());
+    else
+        ProvideDefaultData(data);
 }
 
 SliderIntTask::SliderIntTask(const std::string& uniform_name,
@@ -87,7 +97,10 @@ void SliderIntTask::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void SliderIntTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    data.push_back(input[UiName].get<int>());
+    if (input.contains(UiName))
+        data.push_back(input[UiName].get<int>());
+    else
+        ProvideDefaultData(data);
 }
 
 SliderFloatTask::SliderFloatTask(const std::string& uniform_name,
@@ -127,7 +140,10 @@ void SliderFloatTask::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void SliderFloatTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    data.push_back(input[UiName].get<float>());
+    if (input.contains(UiName))
+        data.push_back(input[UiName].get<float>());
+    else
+        ProvideDefaultData(data);
 }
 
 ColorEdit3Task::ColorEdit3Task(const std::string& uniform_name,
@@ -168,8 +184,13 @@ void ColorEdit3Task::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void ColorEdit3Task::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    auto values = input[UiName].get<std::array<float, 3>>();
-    data.push_back(glm::vec3(values[0], values[1], values[2]));
+    if (input.contains(UiName))
+    {
+        auto values = input[UiName].get<std::array<float, 3>>();
+        data.push_back(glm::vec3(values[0], values[1], values[2]));
+    }
+    else
+        ProvideDefaultData(data);
 }
 
 GLEnumTask::GLEnumTask(const std::string& uniform_name,
@@ -209,5 +230,8 @@ void GLEnumTask::ProvideDefaultData(std::vector<InstanceData>& data)
 
 void GLEnumTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
-    data.push_back(input[UiName].get<int>());
+    if (input.contains(UiName))
+        data.push_back(input[UiName].get<int>());
+    else
+        ProvideDefaultData(data);
 }
