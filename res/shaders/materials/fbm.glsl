@@ -22,14 +22,24 @@ float noise(vec2 p, float scale) {
     vec2 id = floor(p);
     vec2 u = fract(p);
 
-    float a = hash12(id+vec2(0,0), scale);
-    float b = hash12(id+vec2(1,0), scale);
-    float c = hash12(id+vec2(0,1), scale);
-    float d = hash12(id+vec2(1,1), scale);
+    vec2 va = 2.0*hash22(id+vec2(0,0), scale) - 1.0;
+    vec2 vb = 2.0*hash22(id+vec2(1,0), scale) - 1.0;
+    vec2 vc = 2.0*hash22(id+vec2(0,1), scale) - 1.0;
+    vec2 vd = 2.0*hash22(id+vec2(1,1), scale) - 1.0;
+
+    float a = dot(va, u - vec2(0,0)) + 0.5;
+    float b = dot(vb, u - vec2(1,0)) + 0.5;
+    float c = dot(vc, u - vec2(0,1)) + 0.5;
+    float d = dot(vd, u - vec2(1,1)) + 0.5;
 
     u = u*u*(3.0-2.0*u);
 
-    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    float k0 = a;
+    float k1 = b-a;
+    float k2 = c-a;
+    float k3 = a-b-c+d;
+
+    return k0 + k1*u.x + k2*u.y + k3*u.x*u.y;
 }
 
 float fbm(in vec2 p, int octaves) {
