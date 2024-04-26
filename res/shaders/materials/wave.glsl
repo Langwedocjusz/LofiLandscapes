@@ -22,50 +22,9 @@ uniform int uScale;
 uniform float uRoughness;
 
 #include "blending.glsl"
-#include "../common/hash.glsl"
+#include "common_fbm.glsl"
 
 #define PI 3.1415926535
-
-float noise(vec2 p, float scale) {
-    vec2 id = floor(p);
-    vec2 u = fract(p);
-
-    vec2 va = 2.0*hash22(id+vec2(0,0), scale) - 1.0;
-    vec2 vb = 2.0*hash22(id+vec2(1,0), scale) - 1.0;
-    vec2 vc = 2.0*hash22(id+vec2(0,1), scale) - 1.0;
-    vec2 vd = 2.0*hash22(id+vec2(1,1), scale) - 1.0;
-
-    float a = dot(va, u - vec2(0,0)) + 0.5;
-    float b = dot(vb, u - vec2(1,0)) + 0.5;
-    float c = dot(vc, u - vec2(0,1)) + 0.5;
-    float d = dot(vd, u - vec2(1,1)) + 0.5;
-
-    u = u*u*(3.0-2.0*u);
-
-    float k0 = a;
-    float k1 = b-a;
-    float k2 = c-a;
-    float k3 = a-b-c+d;
-
-    return k0 + k1*u.x + k2*u.y + k3*u.x*u.y;
-}
-
-float fbm(in vec2 p, int octaves) {
-    float normalization = 0.0;
-    float res = 0.0;
-
-    float A = 1.0, a = 1.0;
-
-    for (int i=0; i<octaves; i++) {
-        res += A*noise(a*p, float(uScale)*a);
-        normalization += A;
-
-        a *= 2.0;
-        A *= uRoughness;
-    }
-
-    return res/normalization;
-}
 
 float Pattern(float x)
 {
@@ -86,7 +45,7 @@ float Pattern(float x)
 
 float Wave(vec2 p)
 {
-    float distortion = uDistortion * fbm(float(uScale)*p, uOctaves);
+    float fnoise = fbm(float(uScale)*p, uOctaves, uScale, uRoughness);
 
     float x = 0.0;
 
@@ -94,12 +53,12 @@ float Wave(vec2 p)
     {
         case DIRECTION_X:
         {
-            x = p.x + distortion;
+            x = p.x + uDistortion * fnoise;
             break;
         }
         case DIRECTION_Z:
         {
-            x = p.y + distortion;
+            x = p.y + uDistortion * fnoise;
             break;
         }
     }

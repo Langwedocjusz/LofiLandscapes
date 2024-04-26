@@ -18,9 +18,9 @@ MaterialGenerator::MaterialGenerator(ResourceManager& manager)
 {
     m_NormalShader = m_ResourceManager.RequestComputeShader("res/shaders/materials/normal.glsl");
 
-    m_Height = m_ResourceManager.RequestTextureArray("Heightmaps");
-    m_Normal = m_ResourceManager.RequestTextureArray("Normalmaps");
-    m_Albedo = m_ResourceManager.RequestTextureArray("Albedomaps");
+    m_Height = m_ResourceManager.RequestTextureArray("Height Maps");
+    m_Normal = m_ResourceManager.RequestTextureArray("Normal Maps");
+    m_Albedo = m_ResourceManager.RequestTextureArray("Albedo Maps");
 }
 
 void MaterialGenerator::Init(int material_res) 
@@ -83,6 +83,19 @@ void MaterialGenerator::Init(int material_res)
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
 
+    m_HeightEditor.RegisterShader("Vorocracks", "res/shaders/materials/vorocracks.glsl");
+    m_HeightEditor.Attach<SliderIntTask>("Vorocracks", "uScale", "Scale", 0, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uRandomness", "Randomness", 0.0f, 1.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uThickness", "Thickness", 0.0f, 0.5f, 0.05f);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uDistortion", "Distortion", 0.0f, 2.0f, 0.0f);
+    m_HeightEditor.Attach<SliderIntTask>("Vorocracks", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderIntTask>("Vorocracks", "uDistScale", "Dist. Scale", 1, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
+
+    m_HeightEditor.Attach<GLEnumTask>("Vorocracks", "uBlendMode", "Blend Mode", labels);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Vorocracks", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
+
 
     m_HeightEditor.RegisterShader("Wave", "res/shaders/materials/wave.glsl");
     std::vector<std::string> wave_types{"Sine", "Saw"};
@@ -90,7 +103,6 @@ void MaterialGenerator::Init(int material_res)
     std::vector<std::string> wave_directions{"X", "Z"};
     m_HeightEditor.Attach<GLEnumTask>("Wave", "uDirection", "Direction", wave_directions);
     m_HeightEditor.Attach<SliderIntTask>("Wave", "uFrequency", "Frequency", 1, 30, 1);
-
     m_HeightEditor.Attach<SliderFloatTask>("Wave", "uDistortion", "Distortion", 0.0f, 2.0f, 0.0f);
     m_HeightEditor.Attach<SliderIntTask>("Wave", "uOctaves", "Octaves", 1, 16, 8);
     m_HeightEditor.Attach<SliderIntTask>("Wave", "uScale", "Scale", 1, 100, 1);
