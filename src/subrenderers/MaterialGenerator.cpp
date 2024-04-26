@@ -75,9 +75,13 @@ void MaterialGenerator::Init(int material_res)
     m_HeightEditor.RegisterShader("Voronoi", "res/shaders/materials/voronoi.glsl");
     m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uScale", "Scale", 0, 100, 1);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRandomness", "Randomness", 0.0f, 1.0f, 1.0f);
-
-    std::vector<std::string> voro_types{ "F1", "F2", "F2_F1" };
+    std::vector<std::string> voro_types{ "F1", "F2", "F2_F1", "F1 Smooth"};
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uVoronoiType", "Type", voro_types);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uSmoothness", "Smoothness", 0.0f, 1.0f, 0.0f);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uDistortion", "Distortion", 0.0f, 2.0f, 0.0f);
+    m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uOctaves", "Octaves", 1, 16, 8);
+    m_HeightEditor.Attach<SliderIntTask>("Voronoi", "uDistScale", "Dist. Scale", 1, 100, 1);
+    m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
 
     m_HeightEditor.Attach<GLEnumTask>("Voronoi", "uBlendMode", "Blend Mode", labels);
     m_HeightEditor.Attach<SliderFloatTask>("Voronoi", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);

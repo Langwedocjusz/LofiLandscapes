@@ -64,9 +64,7 @@ float VoroLinesDist(vec2 x)
 
 float VoroLines(vec2 p)
 {
-    float fnoise = fbm(float(uDistScale)*p, uOctaves, uDistScale, uRoughness);
-
-    float dist = VoroLinesDist(p + uDistortion * fnoise);
+    float dist = VoroLinesDist(p);
 
     return 1.0 - smoothstep(0.0,uThickness,dist);
 }
@@ -77,7 +75,10 @@ void main() {
 
     float prev = float(imageLoad(heightmap, texelCoord));
 
-    float h = VoroLines(float(uScale)*uv);
+    float fnoise = fbm(float(uDistScale)*uv, uOctaves, uDistScale, uRoughness);
+    uv = float(uScale)*uv + uDistortion*fnoise;
+
+    float h = VoroLines(uv);
 
     h = BlendResult(prev, h);
 
