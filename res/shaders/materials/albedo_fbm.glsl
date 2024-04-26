@@ -6,7 +6,9 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba8, binding = 0) uniform image2D albedo;
 
-uniform sampler2D heightmap;
+uniform int uOctaves;
+uniform int uScale;
+uniform float uRoughness;
 
 uniform float uEdge1;
 uniform float uEdge2;
@@ -14,6 +16,7 @@ uniform float uEdge2;
 uniform vec3 uCol1;
 uniform vec3 uCol2;
 
+#include "common_fbm.glsl"
 #include "albedo_blending.glsl"
 
 void main() {
@@ -22,7 +25,7 @@ void main() {
     
     vec3 prev = imageLoad(albedo, texelCoord).rgb;
 
-    float h = texture(heightmap, uv).r;
+    float h = fbm(float(uScale)*uv, uOctaves, uScale, uRoughness);
 
     float fac = saturate((h-uEdge1)/(uEdge2-uEdge1));
 

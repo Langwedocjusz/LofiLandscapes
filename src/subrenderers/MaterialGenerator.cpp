@@ -55,9 +55,9 @@ void MaterialGenerator::Init(int material_res)
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
     //=====Initialize material editors:
+    //Heightmap
     std::vector<std::string> labels{ "Average", "Add", "Subtract", "Avg. with const"};
 
-    //Heightmap
     m_HeightEditor.RegisterShader("Const Value", "res/shaders/materials/const_val.glsl");
     m_HeightEditor.Attach<SliderFloatTask>("Const Value", "uValue", "Value", 0.0f, 1.0f, 0.0f);
 
@@ -113,14 +113,31 @@ void MaterialGenerator::Init(int material_res)
     m_HeightEditor.Attach<SliderFloatTask>("Wave", "uSmoothClamp", "Smooth Clamp", 0.0f, 1.0f, 0.0f);
 
     //Albedo
-    m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/const_albedo.glsl");
+    std::vector<std::string> albedo_labels{ "Average", "Add", "Subtract", "Multiply"};
+
+    m_AlbedoEditor.RegisterShader("Const Albedo", "res/shaders/materials/albedo_const.glsl");
     m_AlbedoEditor.Attach<ColorEdit3Task>("Const Albedo", "uCol", "Albedo", glm::vec3(0.005f));
+    m_AlbedoEditor.Attach<GLEnumTask>("Const Albedo", "uBlendMode", "Blend Mode", albedo_labels);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Const Albedo", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
     m_AlbedoEditor.RegisterShader("Albedo Ramp", "res/shaders/materials/albedo_ramp.glsl");
     m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
     m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
     m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo Ramp", "uCol1", "Albedo 1", glm::vec3(0.0f));
     m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo Ramp", "uCol2", "Albedo 2", glm::vec3(1.0f));
+    m_AlbedoEditor.Attach<GLEnumTask>("Albedo Ramp", "uBlendMode", "Blend Mode", albedo_labels);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo Ramp", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
+
+    m_AlbedoEditor.RegisterShader("Albedo fbm", "res/shaders/materials/albedo_fbm.glsl");
+    m_AlbedoEditor.Attach<SliderIntTask>("Albedo fbm", "uOctaves", "Octaves", 1, 16, 8);
+    m_AlbedoEditor.Attach<SliderIntTask>("Albedo fbm", "uScale", "Scale", 0, 100, 1);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo fbm", "uRoughness", "Roughness", 0.0f, 1.0f, 0.5f);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo fbm", "uEdge1", "Edge 1", 0.0f, 1.0f, 0.0f);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo fbm", "uEdge2", "Edge 2", 0.0f, 1.0f, 1.0f);
+    m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo fbm", "uCol1", "Albedo 1", glm::vec3(0.0f));
+    m_AlbedoEditor.Attach<ColorEdit3Task>("Albedo fbm", "uCol2", "Albedo 2", glm::vec3(1.0f));
+    m_AlbedoEditor.Attach<GLEnumTask>("Albedo fbm", "uBlendMode", "Blend Mode", albedo_labels);
+    m_AlbedoEditor.Attach<SliderFloatTask>("Albedo fbm", "uWeight", "Weight", 0.0f, 1.0f, 1.0f);
 
     //Roughness
     m_RoughnessEditor.RegisterShader("Const Roughness", "res/shaders/materials/const_val_roughness.glsl");
