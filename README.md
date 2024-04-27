@@ -2,7 +2,7 @@
 
 Generation and rendering of procedural landscapes.
 
-![alt text](https://github.com/Langwedocjusz/LofiLandscapes/blob/main/img/banner1.png?raw=true)
+![alt text](https://github.com/Langwedocjusz/LofiLandscapes/blob/main/img/banner2.png?raw=true)
 
 ## Installation
 

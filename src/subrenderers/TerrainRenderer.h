@@ -39,12 +39,12 @@ private:
     //Settings
     glm::vec3 m_ClearColor{ 0.0f, 0.0f, 0.0f };
 
-    float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
+    float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.200f;
 
     float m_TilingFactor = 128.0f, m_NormalStrength = 0.333f;
 
     bool m_Shadows = true;
-    bool m_Materials = true, m_FixTiling = true;
+    bool m_Materials = true, m_FixTiling = false;
     bool m_Fog = true;
 
     //Private resources
