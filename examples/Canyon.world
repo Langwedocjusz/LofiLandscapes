@@ -9,15 +9,24 @@
                     "Scale": 10,
                     "Randomness": 1.0,
                     "Type": 0,
+                    "Smoothness": 0.0,
+                    "Distortion": 0.0,
+                    "Octaves": 8,
+                    "Dist. Scale": 1,
+                    "Roughness": 0.5,
                     "Blend Mode": 0,
-                    "Weight": 0.08100000023841858
+                    "Weight": 0.08100000023841858,
+                    "Smooth Clamp": 0.0
                 },
                 "2_FBM": {
                     "Octaves": 8,
                     "Scale": 32,
                     "Roughness": 0.5,
+                    "Amplitude": 1.0,
+                    "Bias": 0.0,
                     "Blend Mode": 0,
-                    "Weight": 0.050999999046325684
+                    "Weight": 0.050999999046325684,
+                    "Smooth Clamp": 0.0
                 }
             },
             "1": {
@@ -28,34 +37,52 @@
                     "Scale": 10,
                     "Randomness": 1.0,
                     "Type": 0,
+                    "Smoothness": 0.0,
+                    "Distortion": 0.0,
+                    "Octaves": 8,
+                    "Dist. Scale": 1,
+                    "Roughness": 0.5,
                     "Blend Mode": 0,
-                    "Weight": 0.125
+                    "Weight": 0.125,
+                    "Smooth Clamp": 0.0
                 },
                 "2_FBM": {
                     "Octaves": 8,
                     "Scale": 35,
                     "Roughness": 0.5,
+                    "Amplitude": 1.0,
+                    "Bias": 0.0,
                     "Blend Mode": 0,
-                    "Weight": 0.057999998331069946
+                    "Weight": 0.057999998331069946,
+                    "Smooth Clamp": 0.0
                 }
             },
             "2": {
                 "0_Const Value": {
                     "Value": 0.0
                 },
-                "1_FBM": {
-                    "Octaves": 2,
-                    "Scale": 26,
-                    "Roughness": 0.5,
+                "1_Voronoi": {
+                    "Scale": 62,
+                    "Randomness": 1.0,
+                    "Type": 3,
+                    "Smoothness": 1.0,
+                    "Distortion": 0.527999997138977,
+                    "Octaves": 8,
+                    "Dist. Scale": 47,
+                    "Roughness": 0.1860000044107437,
                     "Blend Mode": 0,
-                    "Weight": 0.09600000083446503
+                    "Weight": 0.20999999344348907,
+                    "Smooth Clamp": 0.0
                 },
                 "2_FBM": {
-                    "Octaves": 16,
-                    "Scale": 1,
+                    "Octaves": 8,
+                    "Scale": 100,
                     "Roughness": 1.0,
+                    "Amplitude": 1.0,
+                    "Bias": 0.0,
                     "Blend Mode": 0,
-                    "Weight": 0.06599999964237213
+                    "Weight": 0.05299999937415123,
+                    "Smooth Clamp": 0.0
                 }
             },
             "3": {
@@ -66,15 +93,24 @@
                     "Scale": 49,
                     "Randomness": 1.0,
                     "Type": 0,
+                    "Smoothness": 0.0,
+                    "Distortion": 0.0,
+                    "Octaves": 8,
+                    "Dist. Scale": 1,
+                    "Roughness": 0.5,
                     "Blend Mode": 2,
-                    "Weight": 1.0
+                    "Weight": 1.0,
+                    "Smooth Clamp": 0.0
                 },
                 "2_FBM": {
                     "Octaves": 8,
                     "Scale": 100,
                     "Roughness": 0.5,
+                    "Amplitude": 1.0,
+                    "Bias": 0.0,
                     "Blend Mode": 0,
-                    "Weight": 0.5270000100135803
+                    "Weight": 0.5270000100135803,
+                    "Smooth Clamp": 0.0
                 }
             },
             "4": {
@@ -90,7 +126,28 @@
                         0.626334547996521,
                         0.606242299079895,
                         0.2942211925983429
-                    ]
+                    ],
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "1_Albedo fbm": {
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 1.0,
+                    "Edge 1": 0.2709999978542328,
+                    "Edge 2": 0.550000011920929,
+                    "Albedo 1": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Blend Mode": 3,
+                    "Weight": 0.25
                 }
             },
             "1": {
@@ -99,7 +156,28 @@
                         0.8256227970123291,
                         0.46416646242141724,
                         0.21742378175258636
-                    ]
+                    ],
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "1_Albedo fbm": {
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 1.0,
+                    "Edge 1": 0.20000000298023224,
+                    "Edge 2": 0.6079999804496765,
+                    "Albedo 1": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Blend Mode": 3,
+                    "Weight": 0.3709999918937683
                 }
             },
             "2": {
@@ -108,7 +186,9 @@
                         0.9982776641845703,
                         1.0,
                         0.5160142183303833
-                    ]
+                    ],
+                    "Blend Mode": 0,
+                    "Weight": 1.0
                 }
             },
             "3": {
@@ -124,7 +204,28 @@
                         1.0,
                         0.7332480549812317,
                         0.3701067566871643
-                    ]
+                    ],
+                    "Blend Mode": 0,
+                    "Weight": 1.0
+                },
+                "1_Albedo fbm": {
+                    "Octaves": 8,
+                    "Scale": 100,
+                    "Roughness": 0.550000011920929,
+                    "Edge 1": 0.0,
+                    "Edge 2": 0.5640000104904175,
+                    "Albedo 1": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Albedo 2": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Blend Mode": 3,
+                    "Weight": 0.40700000524520874
                 }
             },
             "4": {
@@ -133,7 +234,9 @@
                         0.004999999888241291,
                         0.004999999888241291,
                         0.004999999888241291
-                    ]
+                    ],
+                    "Blend Mode": 0,
+                    "Weight": 1.0
                 }
             }
         },
