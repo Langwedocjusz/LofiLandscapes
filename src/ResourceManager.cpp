@@ -72,7 +72,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 	ImGui::Columns(2, "###col");
 
 	std::vector<std::string> options{ "Texture 2D", "Texture Array", "Cubemap", "Texture 3D" };
-	int tmp_id = static_cast<int>(m_PrevType);
+	size_t tmp_id = static_cast<int>(m_PrevType);
 
 	ImGuiUtils::ColCombo("Texture type", options, tmp_id);
 
@@ -80,12 +80,13 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 	std::shared_ptr<Texture> tmp_ptr = m_PreviewPtr;
 
-	static int tex_id = 0, tex_arr_id = 0, cube_id = 0, tex3d_id = 0;
+	static size_t tex_id = 0, tex_arr_id = 0, cube_id = 0, tex3d_id = 0;
 
-	int arr_layer = m_PreviewLayer, cube_side = m_PreviewSide;
+	int arr_layer = m_PreviewLayer;
+	size_t cube_side = m_PreviewSide;
 	float depth_3d = m_PreviewDepth;
 
-	auto ColComboTexture = [](auto& texture_cache, int& selected_id)
+	auto ColComboTexture = [](auto& texture_cache, size_t& selected_id)
 	{
 		ImGui::TextUnformatted("Texture name");
 		ImGui::NextColumn();
@@ -99,7 +100,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 
 		if (ImGui::BeginCombo("##Texture name", texture_cache.at(selected_id)->getName().c_str()))
 		{
-			for (int n = 0; n < texture_cache.size(); n++)
+			for (size_t n = 0; n < texture_cache.size(); n++)
 			{
 				bool is_selected = (selected_id == n);
 
@@ -159,7 +160,7 @@ void ResourceManager::DrawTextureBrowser(bool& open)
 		case PreviewType::Texture3D:
 		{
 			ColComboTexture(m_Texture3DCache, tex3d_id);
-			
+
 			ImGuiUtils::ColSliderFloat("Depth", &depth_3d, 0.0, 1.0);
 
 			tmp_ptr = m_Texture3DCache.at(tex3d_id);
@@ -263,8 +264,8 @@ void ResourceManager::OnUpdate()
 
 void ResourceManager::UpdatePreview()
 {
-	const glm::vec4 channel_flags{ 
-		float(m_PreviewChannels[0]), float(m_PreviewChannels[1]), 
+	const glm::vec4 channel_flags{
+		float(m_PreviewChannels[0]), float(m_PreviewChannels[1]),
 		float(m_PreviewChannels[2]), float(m_PreviewChannels[3])
 	};
 

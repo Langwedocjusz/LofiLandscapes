@@ -48,7 +48,7 @@ private:
 	//Raycast parameters
 	float m_ViewAngle = 1.03f;
 	float m_BaseWidth = 0.08f, m_Slant = 0.96f;
-	
+
 	int m_NumBlades = 10;
 
 	//Noise parameters
@@ -72,6 +72,14 @@ private:
 	float m_Roughness = 0.253f;
 	float m_Translucent = 1.63f;
 
+	//External handles
+	ResourceManager& m_ResourceManager;
+
+	const PerspectiveCamera& m_Camera;
+	const MapGenerator& m_Map;
+	const MaterialGenerator& m_Material;
+	const SkyRenderer& m_Sky;
+
 	//Private resources
 	std::shared_ptr<ComputeShader> m_RaycastShader;
 	std::shared_ptr<ComputeShader> m_NoiseGenerator;
@@ -89,13 +97,4 @@ private:
 
 	Clipmap m_Clipmap;
 	bool m_UpdateAllLevels = true;
-
-	//External handles
-	const PerspectiveCamera& m_Camera;
-	const MapGenerator& m_Map;
-	const MaterialGenerator& m_Material;
-	//const Clipmap& m_Clipmap;
-	const SkyRenderer& m_Sky;
-
-	ResourceManager& m_ResourceManager;
 };

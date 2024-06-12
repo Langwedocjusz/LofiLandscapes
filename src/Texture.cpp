@@ -7,7 +7,7 @@
 
 Texture::~Texture() {}
 
-static void InitTex2D(uint32_t& id, Texture2DSpec spec) 
+static void InitTex2D(uint32_t& id, Texture2DSpec spec)
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -25,7 +25,7 @@ static void InitTex2D(uint32_t& id, Texture2DSpec spec)
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, spec.Border);
 }
 
-static void InitTex3D(uint32_t& id, Texture3DSpec spec) 
+static void InitTex3D(uint32_t& id, Texture3DSpec spec)
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_3D, id);
@@ -49,26 +49,26 @@ Texture2D::Texture2D(const std::string& name)
     m_Name = name;
 }
 
-void Texture2D::Initialize(Texture2DSpec spec) 
+void Texture2D::Initialize(Texture2DSpec spec)
 {
     InitTex2D(m_ID, spec);
     m_Spec = spec;
 }
 
-void Texture2D::Bind(int id) const 
+void Texture2D::Bind(int id) const
 {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_ID);
 }
 
-void Texture2D::BindImage(int id, int mip) const 
+void Texture2D::BindImage(int id, int mip) const
 {
     int format = m_Spec.InternalFormat;
 
     glBindImageTexture(id, m_ID, mip, GL_FALSE, 0, GL_READ_WRITE, format);
 }
 
-void Texture2D::Resize(uint32_t width, uint32_t height)
+void Texture2D::Resize(int width, int height)
 {
     if (m_Spec.ResolutionX == width && m_Spec.ResolutionY == height)
         return;
@@ -83,7 +83,7 @@ void Texture2D::Resize(uint32_t width, uint32_t height)
         m_Spec.Format, m_Spec.Type, NULL);
 }
 
-void Texture2D::DrawToImGui(float width, float height) 
+void Texture2D::DrawToImGui(float width, float height)
 {
     ImGui::Image((void*)(intptr_t)m_ID, ImVec2(width, height));
 }
@@ -93,7 +93,7 @@ TextureArray::TextureArray(const std::string& name)
     m_Name = name;
 }
 
-void TextureArray::Initialize(Texture2DSpec spec, int layers) 
+void TextureArray::Initialize(Texture2DSpec spec, int layers)
 {
 
     auto log2 = [](int value) {
@@ -132,19 +132,19 @@ void TextureArray::Initialize(Texture2DSpec spec, int layers)
     m_Layers = layers;
 }
 
-void TextureArray::Bind(int id) const 
+void TextureArray::Bind(int id) const
 {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_ID);
 }
 
-void TextureArray::BindLayer(int id, int layer) const 
+void TextureArray::BindLayer(int id, int layer) const
 {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_2D, m_TextureViews[layer]);
 }
 
-void TextureArray::BindImage(int id, int layer, int mip) const 
+void TextureArray::BindImage(int id, int layer, int mip) const
 {
     int format = m_Spec.InternalFormat;
 
@@ -156,19 +156,19 @@ Texture3D::Texture3D(const std::string& name)
     m_Name = name;
 }
 
-void Texture3D::Initialize(Texture3DSpec spec) 
+void Texture3D::Initialize(Texture3DSpec spec)
 {
     InitTex3D(m_ID, spec);
     m_Spec = spec;
 }
 
-void Texture3D::Bind(int id) const 
+void Texture3D::Bind(int id) const
 {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_3D, m_ID);
 }
 
-void Texture3D::BindImage(int id, int mip) const 
+void Texture3D::BindImage(int id, int mip) const
 {
     int format = m_Spec.InternalFormat;
 
@@ -180,7 +180,7 @@ Cubemap::Cubemap(const std::string& name)
     m_Name = name;
 }
 
-void Cubemap::Initialize(CubemapSpec spec) 
+void Cubemap::Initialize(CubemapSpec spec)
 {
     glGenTextures(1, &m_ID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
@@ -201,13 +201,13 @@ void Cubemap::Initialize(CubemapSpec spec)
     m_Spec = spec;
 }
 
-void Cubemap::Bind(int id) const 
+void Cubemap::Bind(int id) const
 {
     glActiveTexture(GL_TEXTURE0 + id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
 }
 
-void Cubemap::BindImage(int id, int mip) const 
+void Cubemap::BindImage(int id, int mip) const
 {
     int format = m_Spec.InternalFormat;
 

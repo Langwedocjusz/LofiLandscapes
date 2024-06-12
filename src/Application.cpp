@@ -16,8 +16,8 @@
 
 #include <iostream>
 
-Application::Application(const std::string& title, uint32_t width, uint32_t height) 
-    : m_Window(title, width, height), m_Renderer(width, height) 
+Application::Application(const std::string& title, uint32_t width, uint32_t height)
+    : m_Window(title, width, height), m_Renderer(width, height)
 {
     //Initialize ImGui:
     IMGUI_CHECKVERSION();
@@ -29,7 +29,7 @@ Application::Application(const std::string& title, uint32_t width, uint32_t heig
     ImGui_ImplGlfw_InitForOpenGL(m_Window.getGLFWPointer(), true);
     ImGui_ImplOpenGL3_Init("#version 450");
     ImGui::StyleColorsDark();
-   
+
     //Set ImGui Style::
     ImGuiStyles::OverShiftedDarkMode();
 
@@ -57,21 +57,21 @@ Application::Application(const std::string& title, uint32_t width, uint32_t heig
     m_Window.setEventCallback(std::bind(&Application::OnEvent, this, std::placeholders::_1));
 }
 
-Application::~Application() 
+Application::~Application()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
-void Application::StartFrame() 
+void Application::StartFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void Application::EndFrame() 
+void Application::EndFrame()
 {
     ProfilerCPUEvent we("Application::EndFrame");
 
@@ -84,9 +84,9 @@ void Application::EndFrame()
     m_Window.OnUpdate();
 }
 
-void Application::StartMenu() 
+void Application::StartMenu()
 {
-    while (!m_Window.ShouldClose() && m_ShowStartMenu) 
+    while (!m_Window.ShouldClose() && m_ShowStartMenu)
     {
         StartFrame();
 
@@ -94,9 +94,9 @@ void Application::StartMenu()
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 
         ImGui::Begin("Start settings", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
-        
+
         ImGui::BeginChild("#Settings", ImVec2(0.0f, 0.9f*ImGui::GetContentRegionAvail().y), true);
-        
+
         //TERRAIN GEOMETRY-----------------------------------------------------------------------
 
         ImGuiUtils::BeginGroupPanel("Terrain geometry");
@@ -108,7 +108,7 @@ void Application::StartMenu()
         //World type selection
         std::vector<std::string> options{ "finite", "tiling" };
 
-        static int selected_id = 1;
+        static size_t selected_id = 1;
 
         ImGui::Columns(2, "###col");
         ImGuiUtils::ColCombo("World type", options, selected_id);
@@ -179,16 +179,16 @@ void Application::StartMenu()
     }
 }
 
-void Application::Init() 
+void Application::Init()
 {
     Profiler::OnInit();
 
     m_Renderer.Init(m_StartSettings);
 }
 
-void Application::Run() 
+void Application::Run()
 {
-    while (!m_Window.ShouldClose()) 
+    while (!m_Window.ShouldClose())
     {
         Profiler::NextFrame();
 
@@ -206,25 +206,25 @@ void Application::Run()
     }
 }
 
-void Application::OnEvent(Event& e) 
+void Application::OnEvent(Event& e)
 {
    EventType type = e.getEventType();
 
-   switch(type) 
+   switch(type)
    {
-        case EventType::WindowResize: 
+        case EventType::WindowResize:
         {
             WindowResizeEvent* ptr = dynamic_cast<WindowResizeEvent*>(&e);
             m_Renderer.OnWindowResize(ptr->getWidth(), ptr->getHeight());
-            break; 
+            break;
         }
-        case EventType::KeyPressed: 
+        case EventType::KeyPressed:
         {
             KeyPressedEvent* ptr = dynamic_cast<KeyPressedEvent*>(&e);
 
-            if(ptr->getKeycode() == LOFI_KEY_ESCAPE) 
+            if(ptr->getKeycode() == LOFI_KEY_ESCAPE)
             {
-                if (m_ShowMenu) 
+                if (m_ShowMenu)
                 {
                     m_Renderer.RestartMouse();
                     m_Window.CaptureCursor();
@@ -240,18 +240,18 @@ void Application::OnEvent(Event& e)
 
             break;
         }
-        case EventType::KeyReleased: 
+        case EventType::KeyReleased:
         {
-            if (!m_ShowMenu) 
+            if (!m_ShowMenu)
             {
                 KeyReleasedEvent* ptr = dynamic_cast<KeyReleasedEvent*>(&e);
                 m_Renderer.OnKeyReleased(ptr->getKeycode());
             }
             break;
         }
-        case EventType::MouseMoved: 
+        case EventType::MouseMoved:
         {
-            if (!m_ShowMenu) 
+            if (!m_ShowMenu)
             {
                 MouseMovedEvent* ptr = dynamic_cast<MouseMovedEvent*>(&e);
                 m_Renderer.OnMouseMoved(ptr->getX(), ptr->getY());
@@ -260,9 +260,15 @@ void Application::OnEvent(Event& e)
         }
         case EventType::MousePressed:
         {
-            //This needs to be called when menu is open
-            MousePressedEvent* ptr = dynamic_cast<MousePressedEvent*>(&e);
-            m_Renderer.OnMousePressed(ptr->getButton(), ptr->getMods());
+            break;
+        }
+        case EventType::MouseReleased:
+        {
+            break;
+        }
+        default:
+        {
+            std::cerr << "Application::OnEvent called with an Unhandled Event Type!" << '\n';
             break;
         }
    }

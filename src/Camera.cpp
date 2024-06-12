@@ -13,7 +13,7 @@ bool Plane::IsInFront(const AABB& aabb, float scale_y) const {
     const glm::vec3 extents = scale * aabb.Extents;
     const glm::vec3 normal = glm::abs(Normal);
 
-    //Absolute value of the projection of the extents 
+    //Absolute value of the projection of the extents
     //vector onto subspace orthogonal to the plane
     const float r = glm::dot(extents, normal);
 
@@ -47,7 +47,7 @@ glm::mat4 Camera::getViewMatrix() const
     return glm::lookAt(m_Pos, m_Pos + m_Front, m_Up);
 }
 
-void Camera::updateVectors() 
+void Camera::updateVectors()
 {
    m_Front.x = glm::cos(glm::radians(m_Yaw)) * glm::cos(glm::radians(m_Pitch));
    m_Front.y = glm::sin(glm::radians(m_Pitch));
@@ -58,7 +58,7 @@ void Camera::updateVectors()
    m_Up = glm::normalize(glm::cross(m_Right, m_Front));
 }
 
-bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const 
+bool Camera::IsInFrustum(const AABB& aabb, float scale_y) const
 {
     return m_Frustum.IsInFrustum(aabb, scale_y);
 }
@@ -101,7 +101,7 @@ void PerspectiveCamera::setAspect(float aspect)
     m_InvAspect = 1.0f / aspect;
 }
 
-void PerspectiveCamera::updateFrustum(float aspect) 
+void PerspectiveCamera::updateFrustum(float aspect)
 {
     //Camera position in coordinate system tied to the grid:
     const glm::vec3 pos = glm::vec3(0.0f, m_Pos.y, 0.0f);
@@ -140,7 +140,7 @@ void PerspectiveCamera::OnImGui(bool& open)
 FPCamera::FPCamera() {}
 FPCamera::~FPCamera() {}
 
-void FPCamera::Update(float aspect, float deltatime) 
+void FPCamera::Update(float aspect, float deltatime)
 {
     m_PrevPos = m_Pos;
 
@@ -154,11 +154,11 @@ void FPCamera::Update(float aspect, float deltatime)
     m_InvAspect = 1.0f / aspect;
 
     m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_Up);
-    
+
     m_Proj = glm::perspective(
         glm::radians(m_Fov), m_Aspect, m_NearPlane, m_FarPlane
     );
-    
+
     m_ViewProj = m_Proj * m_View;
 
     updateFrustum(aspect);
@@ -181,7 +181,7 @@ void FPCamera::ProcessKeyboard(float deltatime)
         m_Pos += velocity * m_Right;
 }
 
-void FPCamera::ProcessMouse(float xoffset, float yoffset, float aspect) 
+void FPCamera::ProcessMouse(float xoffset, float yoffset)
 {
     m_Pitch += m_Sensitivity * yoffset;
     m_Yaw += m_Sensitivity * xoffset;
@@ -217,7 +217,7 @@ void FPCamera::OnKeyPressed(int keycode, bool repeat)
 
 }
 
-void FPCamera::OnKeyReleased(int keycode) 
+void FPCamera::OnKeyReleased(int keycode)
 {
     switch(keycode) {
         case LOFI_KEY_W: {
@@ -239,7 +239,7 @@ void FPCamera::OnKeyReleased(int keycode)
     }
 }
 
-void FPCamera::OnMouseMoved(float x, float y, uint32_t width, uint32_t height, float aspect) 
+void FPCamera::OnMouseMoved(float x, float y, uint32_t width, uint32_t height)
 {
     float xpos = x/width;
     float ypos = y/height;
@@ -260,11 +260,11 @@ void FPCamera::OnMouseMoved(float x, float y, uint32_t width, uint32_t height, f
 
     if (abs(xoffset) > max_offset)
         xoffset = (xoffset > 0.0f) ? max_offset : -max_offset;
-    
+
     if (abs(yoffset) > max_offset)
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
-    ProcessMouse(xoffset, yoffset, aspect);
+    ProcessMouse(xoffset, yoffset);
 }
 
 void FPCamera::OnImGui(bool& open)

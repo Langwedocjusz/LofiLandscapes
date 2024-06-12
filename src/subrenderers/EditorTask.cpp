@@ -201,14 +201,14 @@ GLEnumTask::GLEnumTask(const std::string& uniform_name,
 
 void GLEnumTask::OnDispatch(Shader& shader, const InstanceData& data)
 {
-    auto value = std::get<int>(data);
-    shader.setUniform1i(UniformName, value);
+    const auto value = std::get<size_t>(data);
+    shader.setUniform1i(UniformName, static_cast<int>(value));
 }
 
 void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suffix)
 {
-    int* ptr = &std::get<int>(data);
-    int value = *ptr;
+    size_t* ptr = &std::get<size_t>(data);
+    size_t value = *ptr;
 
     ImGuiUtils::ColCombo(UiName, Labels, value, suffix);
 
@@ -220,18 +220,19 @@ void GLEnumTask::OnImGui(InstanceData& data, bool& state, const std::string& suf
 
 void GLEnumTask::OnSerialize(nlohmann::ordered_json& output, InstanceData data)
 {
-    output[UiName] = std::get<int>(data);
+    const auto value = std::get<size_t>(data);
+    output[UiName] = value;
 }
 
 void GLEnumTask::ProvideDefaultData(std::vector<InstanceData>& data)
 {
-    data.push_back(0);
+    data.push_back(static_cast<size_t>(0));
 }
 
 void GLEnumTask::ProvideData(std::vector<InstanceData>& data, nlohmann::ordered_json& input)
 {
     if (input.contains(UiName))
-        data.push_back(input[UiName].get<int>());
+        data.push_back(input[UiName].get<size_t>());
     else
         ProvideDefaultData(data);
 }

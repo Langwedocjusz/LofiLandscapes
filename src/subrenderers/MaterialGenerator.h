@@ -31,7 +31,7 @@ private:
     const int m_Layers = 5;
     int m_Current = 0;
 
-    std::shared_ptr<TextureArray> m_Height, m_Normal, m_Albedo;
+    ResourceManager& m_ResourceManager;
 
     //Heightmap generation
     TextureArrayEditor m_HeightEditor;
@@ -44,5 +44,5 @@ private:
     //Roughness generation:
     TextureArrayEditor m_RoughnessEditor;
 
-    ResourceManager& m_ResourceManager;
+    std::shared_ptr<TextureArray> m_Height, m_Normal, m_Albedo;
 };

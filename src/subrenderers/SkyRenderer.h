@@ -44,7 +44,7 @@ private:
 	void UpdateAerial();
 	void UpdateAerialWithShadows();
 
-	//This function exactly mirrors transmittance calculation from the 
+	//This function exactly mirrors transmittance calculation from the
 	//transmittance LUT, but only for the sun direction
 	void CalculateSunTransmittance();
 
@@ -80,6 +80,12 @@ private:
 	bool m_AerialShadows = false;
 	bool m_ShowShadows = true;
 
+	//External handles
+	ResourceManager& m_ResourceManager;
+
+	const PerspectiveCamera& m_Camera;
+	const MapGenerator& m_Map;
+
 	//Private resources
 	std::shared_ptr<Texture2D> m_TransLUT, m_MultiLUT, m_SkyLUT;
 	std::shared_ptr<Texture3D> m_AerialLUT;
@@ -94,10 +100,4 @@ private:
 
 	Quad m_Quad;
 	std::shared_ptr<VertFragShader> m_FinalShader;
-
-	//External handles
-	const PerspectiveCamera& m_Camera;
-	const MapGenerator& m_Map;
-
-	ResourceManager& m_ResourceManager;
 };

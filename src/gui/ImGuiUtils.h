@@ -17,7 +17,7 @@ namespace ImGuiUtils {
 	float GetLastItemRectWidth();
 
 	//Makes combo use std containers and makes it visually consistent with a button
-	void Combo(const std::string& label, const std::vector<std::string>& options, int& selected_id);
+	void Combo(const std::string& label, const std::vector<std::string>& options, size_t& selected_id);
 
 	//Centered button with size corresponding to label length
 	bool ButtonCentered(const std::string& label);
@@ -39,5 +39,5 @@ namespace ImGuiUtils {
 	void ColDragFloat2(const std::string& label, float* value, float speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const std::string& suffix = "");
 	void ColColorEdit3(const std::string& label, float* value, const std::string& suffix = "");
 	void ColColorEdit3(const std::string& label, glm::vec3* value, const std::string& suffix = "");
-	void ColCombo(const std::string& label, const std::vector<std::string>& options, int& selected_id, const std::string& suffix = "");
+	void ColCombo(const std::string& label, const std::vector<std::string>& options, size_t& selected_id, const std::string& suffix = "");
 }

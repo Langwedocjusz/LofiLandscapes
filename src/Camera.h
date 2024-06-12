@@ -71,7 +71,7 @@ protected:
     float m_Pitch, m_Yaw;
 
    float m_NearPlane = 0.1f, m_FarPlane = 1000.0f;
-    
+
     void updateVectors();
 
     Frustum m_Frustum;
@@ -115,7 +115,7 @@ public:
 
     //Aspect is assumed to be x/y
     void Update(float aspect, float deltatime);
-    
+
     glm::mat4 getViewMatrix() const override { return m_View; }
     glm::mat4 getProjMatrix() const override { return m_Proj; }
     glm::mat4 getViewProjMatrix() const override { return m_ViewProj; }
@@ -127,12 +127,12 @@ public:
 
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
-    void OnMouseMoved(float x, float y, uint32_t width, uint32_t height, float aspect);
+    void OnMouseMoved(float x, float y, uint32_t width, uint32_t height);
 
     void OnImGui(bool& open) override;
 private:
     void ProcessKeyboard(float deltatime);
-    void ProcessMouse(float xoffset, float yoffset, float aspect);
+    void ProcessMouse(float xoffset, float yoffset);
 
     enum CameraMovement {
         None = 0,

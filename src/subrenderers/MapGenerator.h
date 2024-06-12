@@ -61,12 +61,6 @@ private:
         Shadow   = (1 << 2),
     };
 
-    TextureEditor m_HeightEditor;
-    std::shared_ptr<Texture2D> m_Heightmap, m_Normalmap, m_Shadowmap;
-
-    std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
-    std::shared_ptr<ComputeShader> m_MipShader;
-    
     float m_ScaleXZ = 100.0f;
     float m_ScaleY = 20.0f;
 
@@ -75,8 +69,14 @@ private:
 
     mutable int m_UpdateFlags = None;
     int m_MipLevels = 0;
-    
+
     ResourceManager& m_ResourceManager;
+
+    TextureEditor m_HeightEditor;
+    std::shared_ptr<Texture2D> m_Heightmap, m_Normalmap, m_Shadowmap;
+
+    std::shared_ptr<ComputeShader> m_NormalmapShader, m_ShadowmapShader;
+    std::shared_ptr<ComputeShader> m_MipShader;
 };
 
 bool operator==(const ShadowmapSettings& lhs, const ShadowmapSettings& rhs);

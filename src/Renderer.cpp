@@ -38,7 +38,7 @@ Renderer::Renderer(uint32_t width, uint32_t height)
         std::bind(&MaterialGenerator::OnDeserialize, &m_Material, std::placeholders::_1)
     );
 
-    m_Serializer.RegisterSaveCallback("Material Editor", 
+    m_Serializer.RegisterSaveCallback("Material Editor",
         std::bind(&MaterialGenerator::OnSerialize, &m_Material, std::placeholders::_1)
     );
 
@@ -46,7 +46,7 @@ Renderer::Renderer(uint32_t width, uint32_t height)
         std::bind(&MaterialMapGenerator::OnDeserialize, &m_MaterialMap, std::placeholders::_1)
     );
 
-    m_Serializer.RegisterSaveCallback("MaterialMap Editor", 
+    m_Serializer.RegisterSaveCallback("MaterialMap Editor",
         std::bind(&MaterialMapGenerator::OnSerialize, &m_MaterialMap, std::placeholders::_1)
     );
 
@@ -58,7 +58,7 @@ Renderer::Renderer(uint32_t width, uint32_t height)
 
 Renderer::~Renderer() {}
 
-void Renderer::Init(StartSettings settings) 
+void Renderer::Init(StartSettings settings)
 {
     m_TerrainRenderer.Init(settings.Subdivisions, settings.LodLevels);
     m_Map.Init(settings.HeightRes, settings.ShadowRes, settings.WrapType);
@@ -71,7 +71,7 @@ void Renderer::Init(StartSettings settings)
         m_GrassRenderer.Init();
         m_GrassRenderer.RequestGeometryUpdate();
     }
-        
+
     glEnable(GL_DEPTH_TEST);
     //Depth function to allow sky with maximal depth (1.0)
     //being rendered after all geometry
@@ -119,7 +119,7 @@ void Renderer::Init(StartSettings settings)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::OnUpdate(float deltatime) 
+void Renderer::OnUpdate(float deltatime)
 {
     ProfilerCPUEvent we("Renderer::OnUpdate");
 
@@ -137,7 +137,7 @@ void Renderer::OnUpdate(float deltatime)
         m_TerrainRenderer.RequestFullUpdate();
         m_GrassRenderer.RequestGeometryUpdate();
     }
-        
+
     if (m_SkyRenderer.SunDirChanged() && m_TerrainRenderer.DoShadows())
         m_Map.RequestShadowUpdate();
 
@@ -157,15 +157,13 @@ void Renderer::OnUpdate(float deltatime)
     m_TerrainRenderer.Update();
 }
 
-void Renderer::OnRender() 
+void Renderer::OnRender()
 {
     ProfilerCPUEvent we("Renderer::OnRender");
 
-    const float scale_y  = m_Map.getScaleY();
-
     const glm::vec3 clear_color = m_TerrainRenderer.getClearColor();
 
-    if (m_Wireframe) 
+    if (m_Wireframe)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, m_WindowWidth, m_WindowHeight);
@@ -176,7 +174,7 @@ void Renderer::OnRender()
         m_TerrainRenderer.RenderWireframe();
     }
 
-    else 
+    else
     {
         //Initial rendering to framebuffer
         m_Framebuffer.BindFBO();
@@ -213,14 +211,14 @@ void Renderer::OnRender()
     }
 }
 
-void Renderer::OnImGuiRender() 
+void Renderer::OnImGuiRender()
 {
     ProfilerCPUEvent we("Renderer::OnImGuiRender");
 
     //-----Menu bar
-    if (ImGui::BeginMainMenuBar()) 
+    if (ImGui::BeginMainMenuBar())
     {
-        if (ImGui::BeginMenu("File")) 
+        if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("Save"))
                 m_Serializer.TriggerSave();
@@ -231,14 +229,14 @@ void Renderer::OnImGuiRender()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("View")) 
+        if (ImGui::BeginMenu("View"))
         {
-            if (ImGui::MenuItem("Shaded")) 
+            if (ImGui::MenuItem("Shaded"))
             {
                 m_Wireframe = false;
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            if (ImGui::MenuItem("Wireframe")) 
+            if (ImGui::MenuItem("Wireframe"))
             {
                 m_Wireframe = true;
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -246,7 +244,7 @@ void Renderer::OnImGuiRender()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Windows")) 
+        if (ImGui::BeginMenu("Windows"))
         {
             ImGui::MenuItem(LOFI_ICONS_TERRAIN     "Terrain",      NULL, &m_ShowTerrainMenu);
             ImGui::MenuItem(LOFI_ICONS_LIGHTING    "Lighting",     NULL, &m_ShowLightMenu);
@@ -263,7 +261,7 @@ void Renderer::OnImGuiRender()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Debug")) 
+        if (ImGui::BeginMenu("Debug"))
         {
             if (ImGui::MenuItem("Reload Shaders"))
                 m_ResourceManager.ReloadShaders();
@@ -294,10 +292,10 @@ void Renderer::OnImGuiRender()
     m_Serializer.OnImGui();
 
     //-----Windows
-    
+
     if (m_ShowCamMenu)
         m_Camera.OnImGui(m_ShowCamMenu);
-    
+
     if (m_ShowTerrainMenu)
         m_Map.ImGuiTerrain(m_ShowTerrainMenu, m_TerrainRenderer.DoShadows());
 
@@ -341,7 +339,7 @@ void Renderer::OnImGuiRender()
     ImGui::SetNextWindowSize(ImVec2(600.0f, 500.0f), ImGuiCond_FirstUseEver);
 
     if (ImGui::BeginPopupModal(popup_name.c_str(), &m_ShowHelpPopup)) {
-        
+
         ImGui::Bullet();
         ImGui::TextWrapped("Use escape to close/re-open the gui");
         ImGui::Bullet();
@@ -373,39 +371,34 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_ResizeFramebuffer = true;
 }
 
-void Renderer::OnKeyPressed(int keycode, bool repeat) 
+void Renderer::OnKeyPressed(int keycode, bool repeat)
 {
     m_Camera.OnKeyPressed(keycode, repeat);
 }
 
-void Renderer::OnKeyReleased(int keycode) 
+void Renderer::OnKeyReleased(int keycode)
 {
     m_Camera.OnKeyReleased(keycode);
 }
 
-void Renderer::OnMouseMoved(float x, float y) 
+void Renderer::OnMouseMoved(float x, float y)
 {
-    m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight, m_Aspect);
+    m_Camera.OnMouseMoved(x, y, m_WindowWidth, m_WindowHeight);
 }
 
-void Renderer::OnMousePressed(int button, int mods) 
-{
-    //std::cout << button << mods << '\n';
-}
-
-void Renderer::RestartMouse() 
+void Renderer::RestartMouse()
 {
     m_Camera.setMouseInit(true);
 }
 
-void Renderer::InitImGuiIniHandler() 
+void Renderer::InitImGuiIniHandler()
 {
-    auto MyUserData_ReadOpen = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name)
+    auto MyUserData_ReadOpen = [](ImGuiContext* /*ctx*/, ImGuiSettingsHandler* /*handler*/, const char* /*name*/)
     {
         return (void*)1;
     };
 
-    auto MyUserData_ReadLine = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line)
+    auto MyUserData_ReadLine = [](ImGuiContext* /*ctx*/, ImGuiSettingsHandler* handler, void* /*entry*/, const char* line)
     {
         Renderer* r = (Renderer*)handler->UserData;
         int value;
@@ -427,7 +420,7 @@ void Renderer::InitImGuiIniHandler()
         if (CheckLine("ShowHelp=%d\n"))            r->m_ShowHelpPopup       = bool(value);
     };
 
-    auto MyUserData_WriteAll = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
+    auto MyUserData_WriteAll = [](ImGuiContext* /*ctx*/, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
     {
         Renderer* r = (Renderer*)handler->UserData;
 

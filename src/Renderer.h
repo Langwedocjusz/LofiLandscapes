@@ -43,7 +43,6 @@ public:
     void OnKeyPressed(int keycode, bool repeat);
     void OnKeyReleased(int keycode);
     void OnMouseMoved(float x, float y);
-    void OnMousePressed(int button, int mods);
     void RestartMouse();
 private:
 
@@ -51,7 +50,7 @@ private:
     bool m_IncludeGrass = false;
 
     //Show menu window flags
-    //To-do: In practice using this is somewhat ugly, 
+    //To-do: In practice using this is somewhat ugly,
     // may switch to map<string, bool> or something like that
     bool m_ShowTerrainMenu = false,
          m_ShowLightMenu   = false,  m_ShowShadowMenu      = false,
@@ -65,25 +64,26 @@ private:
 
     uint32_t m_WindowWidth, m_WindowHeight;
     float m_Aspect, m_InvAspect;
-    
+
     FPCamera m_Camera;
     glm::vec3 m_LastPos = glm::vec3(0.0f);
 
     ResourceManager m_ResourceManager;
     Serializer m_Serializer;
 
-    MapGenerator m_Map;
-    MaterialGenerator m_Material;
-    MaterialMapGenerator m_MaterialMap;
-    TerrainRenderer m_TerrainRenderer;
-    GrassRenderer m_GrassRenderer;
-    SkyRenderer m_SkyRenderer;
-    PostProcessor m_PostProcessor;
-
     float m_InternalResScale = 1.0f;
     int m_InternalWidth, m_InternalHeight;
     bool m_ResizeFramebuffer = true;
     Framebuffer m_Framebuffer;
+
+    MapGenerator m_Map;
+    MaterialGenerator m_Material;
+    MaterialMapGenerator m_MaterialMap;
+    SkyRenderer m_SkyRenderer;
+    TerrainRenderer m_TerrainRenderer;
+    GrassRenderer m_GrassRenderer;
+    PostProcessor m_PostProcessor;
+
     Quad m_Quad;
     std::shared_ptr<VertFragShader> m_PresentShader;
 };

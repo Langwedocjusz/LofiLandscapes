@@ -11,7 +11,7 @@
 MaterialMapGenerator::MaterialMapGenerator(
         ResourceManager& manager, const MapGenerator& map)
     : m_ResourceManager(manager)
-    , m_MaterialEditor(manager, "Material")
+    , m_MaterialEditor(m_ResourceManager, "Material")
     , m_Map(map)
 {
     m_Materialmap = m_ResourceManager.RequestTexture2D("Materialmap");
@@ -68,7 +68,7 @@ void MaterialMapGenerator::Init(int res, int wrap_type)
     m_MaterialEditor.AddProcedureInstance("One material");
 }
 
-void MaterialMapGenerator::OnUpdate() 
+void MaterialMapGenerator::OnUpdate()
 {
     if (!m_UpdateQueued) return;
 
@@ -89,12 +89,12 @@ void MaterialMapGenerator::OnUpdate()
     m_UpdateQueued = false;
 }
 
-void MaterialMapGenerator::BindMaterialmap(int id) const 
+void MaterialMapGenerator::BindMaterialmap(int id) const
 {
     m_Materialmap->Bind(id);
 }
 
-void MaterialMapGenerator::OnImGui(bool& open) 
+void MaterialMapGenerator::OnImGui(bool& open)
 {
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 

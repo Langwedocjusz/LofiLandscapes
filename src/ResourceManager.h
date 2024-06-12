@@ -24,7 +24,7 @@ public:
 	template <typename T>
 	void RequestPreviewUpdate(std::shared_ptr<T> ptr)
 	{
-		static_assert(std::is_base_of<Texture, T>::value, 
+		static_assert(std::is_base_of<Texture, T>::value,
 			"Template argument does not derive from Texture"
 		);
 
@@ -54,7 +54,8 @@ private:
 
 	std::shared_ptr<Texture> m_PreviewPtr;
 
-	int m_PreviewLayer = 0, m_PreviewSide = 0;
+	int m_PreviewLayer = 0;
+	size_t m_PreviewSide = 0;
 	float m_PreviewDepth = 0.0f;
 
 	float m_PreviewScale = 1.0f;

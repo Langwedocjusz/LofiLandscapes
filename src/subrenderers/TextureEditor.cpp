@@ -11,12 +11,12 @@ Procedure::Procedure(ResourceManager& manager)
     : m_ResourceManager(manager)
 {}
 
-void Procedure::CompileShader(const std::string& filepath) 
+void Procedure::CompileShader(const std::string& filepath)
 {
     m_Shader = m_ResourceManager.RequestComputeShader(filepath);
 }
 
-void Procedure::OnDispatch(int res, const std::vector<InstanceData>& v_data) 
+void Procedure::OnDispatch(int res, const std::vector<InstanceData>& v_data)
 {
     m_Shader->Bind();
 
@@ -53,8 +53,8 @@ bool Procedure::OnImGui(std::vector<InstanceData>& v_data, uint32_t id)
 
 //===========================================================================
 
-ProcedureInstance::ProcedureInstance(const std::string& name) 
-    : Name(name) 
+ProcedureInstance::ProcedureInstance(const std::string& name)
+    : Name(name)
 {
 
 }
@@ -65,7 +65,7 @@ EditorBase::EditorBase(ResourceManager& manager)
     : m_ResourceManager(manager)
 {}
 
-void EditorBase::RegisterShader(const std::string& name, 
+void EditorBase::RegisterShader(const std::string& name,
                                 const std::string& filepath)
 {
     if (m_Procedures.count(name)) return;
@@ -185,7 +185,7 @@ static bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
 {
     bool res = false;
 
-    for (int i = 0; i < instances.size(); i++) {
+    for (size_t i = 0; i < instances.size(); i++) {
         auto& instance = instances[i];
         auto& data = instance.Data;
 
@@ -193,8 +193,6 @@ static bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
         const std::string name = instance.Name + "##" + std::to_string(id) + std::to_string(i);
 
         ImVec2 initial_pos = ImGui::GetCursorPos();
-
-        ImVec2 initial_pos_screen = ImGui::GetCursorScreenPos();
 
         bool uncolapsed = ImGui::CollapsingHeader(name.c_str(), &instance.KeepAlive, flags);
 

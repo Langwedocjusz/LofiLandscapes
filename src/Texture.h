@@ -37,7 +37,7 @@ public:
     void Bind(int id = 0) const;
     void BindImage(int id, int mip) const;
 
-    void Resize(uint32_t width, uint32_t height);
+    void Resize(int width, int height);
 
     void DrawToImGui(float width, float height);
 

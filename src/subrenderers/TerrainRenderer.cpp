@@ -79,7 +79,7 @@ void TerrainRenderer::RenderWireframe() {
     m_WireframeShader->Bind();
     m_WireframeShader->setUniform2f("uPos", m_Camera.getPos().x, m_Camera.getPos().z);
     m_WireframeShader->setUniformMatrix4fv("uMVP", mvp);
-    
+
     auto scale_y = m_Map.getScaleY();
 
     const glm::vec3 grid_color{ 1.0f, 1.0f, 1.0f };
@@ -153,13 +153,13 @@ void TerrainRenderer::RenderShaded()
     m_ShadedShader->setUniformSampler3D("aerial", 7);
 
     auto scale_y = m_Map.getScaleY();
-    
+
     m_Clipmap.BindBuffers(m_UBOBinding);
 
-    m_Clipmap.Draw(m_ShadedShader, m_Camera, scale_y);
+    m_Clipmap.Draw(m_Camera, scale_y);
 }
 
-void TerrainRenderer::OnImGui(bool& open) 
+void TerrainRenderer::OnImGui(bool& open)
 {
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
@@ -179,7 +179,7 @@ void TerrainRenderer::OnImGui(bool& open)
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
-    if ((shadows != m_Shadows) && m_Shadows) 
+    if ((shadows != m_Shadows) && m_Shadows)
         m_Map.RequestShadowUpdate();
 
     ImGuiUtils::BeginGroupPanel("Material options:");

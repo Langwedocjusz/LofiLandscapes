@@ -57,18 +57,18 @@ public:
     void BindBuffers(uint32_t ubo_binding);
 
     //Dispatches the compute shader for all grids/fills of the clipmap
-    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations 
+    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations
     //Binding is forwarded as glBindBufferBase argument for vertex buffer
     void RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t binding);
 
     //Conditionally runs the compute shader, for those grids/fill that should be updated
     //afted a change in the camera position.
-    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations 
+    //Each time the shader is dispatched with (VertexCount, 1, 1) invocations
     //Binding is forwarded as glBindBufferBase argument for vertex buffer
     void RunCompute(const std::shared_ptr<ComputeShader>& shader, uint32_t binding, glm::vec2 curr, glm::vec2 prev);
 
     //Calls draw function on all grids/fills, using frustum culling
-    void Draw(const std::shared_ptr<VertFragShader>& shader, const Camera& cam, float scale_y);
+    void Draw(const Camera& cam, float scale_y);
 
     void ImGuiDebugCulling(const Camera& cam, float scale_y, bool& open);
 

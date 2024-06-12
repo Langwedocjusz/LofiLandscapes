@@ -49,7 +49,7 @@ SkyRenderer::SkyRenderer(ResourceManager& manager, const PerspectiveCamera& cam,
     Init();
 }
 
-void SkyRenderer::Init() 
+void SkyRenderer::Init()
 {
     //Resolutions
     const int trans_res = 256, multi_res = 32, sky_res = 128; //Regular square
@@ -84,7 +84,7 @@ void SkyRenderer::Init()
     if (!m_AerialShadows)
     {
         m_AerialLUT->Initialize(Texture3DSpec{
-            32, 32, 32,
+            aerial_res, aerial_res, aerial_res,
             GL_RGBA16, GL_RGBA,
             GL_UNSIGNED_BYTE, GL_LINEAR, GL_LINEAR,
             GL_CLAMP_TO_EDGE,
@@ -146,7 +146,7 @@ void SkyRenderer::Init()
     m_UpdateFlags = Transmittance;
 }
 
-void SkyRenderer::Update(bool aerial) 
+void SkyRenderer::Update(bool aerial)
 {
 
     if ((m_UpdateFlags & Transmittance) != None)
@@ -180,7 +180,7 @@ void SkyRenderer::Update(bool aerial)
     m_SunDirChanged = false;
 }
 
-void SkyRenderer::UpdateTrans() 
+void SkyRenderer::UpdateTrans()
 {
     ProfilerGPUEvent we("Sky::UpdateTransLUT");
 
@@ -198,7 +198,7 @@ void SkyRenderer::UpdateTrans()
     m_ResourceManager.RequestPreviewUpdate(m_TransLUT);
 }
 
-void SkyRenderer::UpdateMulti() 
+void SkyRenderer::UpdateMulti()
 {
     ProfilerGPUEvent we("Sky::UpdateMultiLUT");
 
@@ -219,7 +219,7 @@ void SkyRenderer::UpdateMulti()
     m_ResourceManager.RequestPreviewUpdate(m_MultiLUT);
 }
 
-void SkyRenderer::UpdateSky() 
+void SkyRenderer::UpdateSky()
 {
     ProfilerGPUEvent we("Sky::UpdateSkyLUT");
 
@@ -238,7 +238,7 @@ void SkyRenderer::UpdateSky()
     const int res_y = m_SkyLUT->getResolutionY();
 
     m_SkyShader->Dispatch(res_x, res_y, 1);
-    
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_SkyLUT);
@@ -319,7 +319,7 @@ void SkyRenderer::UpdateAerial()
     const int res_z = m_AerialLUT->getResolutionZ();
 
     m_AerialShader->Dispatch(res_x, res_y, res_z);
-    
+
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     m_ResourceManager.RequestPreviewUpdate(m_AerialLUT);
@@ -384,7 +384,7 @@ void SkyRenderer::UpdateAerialWithShadows()
     m_AShadowShader->setUniform1f("uScaleXZ", m_Map.getScaleXZ());
 
     m_AShadowShader->Dispatch(res_x, res_y, res_z);
-    
+
     //We want to use result of the previous two, so we need a barrier here
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -407,7 +407,7 @@ void SkyRenderer::UpdateAerialWithShadows()
 }
 
 //Draws sky on a fullscreen quad, meant to be called after rendering scene geometry
-void SkyRenderer::Render() 
+void SkyRenderer::Render()
 {
     ProfilerGPUEvent we("Sky::Render");
 
@@ -431,7 +431,7 @@ void SkyRenderer::Render()
     m_Quad.Draw();
 }
 
-void SkyRenderer::OnImGui(bool& open) 
+void SkyRenderer::OnImGui(bool& open)
 {
     ImGui::SetNextWindowSize(ImVec2(300.0f, 600.0f), ImGuiCond_FirstUseEver);
 
@@ -493,7 +493,7 @@ void SkyRenderer::OnImGui(bool& open)
 
     ImGuiUtils::ColColorEdit3("Ground Albedo", &albedo);
 
-    if (albedo != m_GroundAlbedo) 
+    if (albedo != m_GroundAlbedo)
     {
         m_GroundAlbedo = albedo;
         m_UpdateFlags = m_UpdateFlags | SkyView;
@@ -522,22 +522,22 @@ void SkyRenderer::OnImGui(bool& open)
     ImGui::End();
 }
 
-void SkyRenderer::BindSkyLUT(int id) const 
+void SkyRenderer::BindSkyLUT(int id) const
 {
     m_SkyLUT->Bind(id);
 }
 
-void SkyRenderer::BindIrradiance(int id) const 
+void SkyRenderer::BindIrradiance(int id) const
 {
     m_IrradianceMap->Bind(id);
 }
 
-void SkyRenderer::BindPrefiltered(int id) const 
+void SkyRenderer::BindPrefiltered(int id) const
 {
     m_PrefilteredMap->Bind(id);
 }
 
-void SkyRenderer::BindAerial(int id) const 
+void SkyRenderer::BindAerial(int id) const
 {
     m_AerialLUT->Bind(id);
 }

@@ -20,9 +20,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 #Build current project as an executable
 add_executable(${PROJECT_NAME})
 
-#Add preprocessor definitions
-target_compile_definitions(${PROJECT_NAME} PRIVATE "GLFW_INCLUDE_NONE")
-
 #Specify source files
 file(GLOB_RECURSE headers src/*.h)
 file(GLOB_RECURSE sources src/*.cpp)
@@ -35,23 +32,28 @@ target_sources(${PROJECT_NAME} PRIVATE ${headers} ${sources} ${imgui_impl})
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 target_include_directories(${PROJECT_NAME} PUBLIC src/gui)
 
-#Add glfw
+#Add preprocessor definitions
+target_compile_definitions(${PROJECT_NAME} PRIVATE "GLFW_INCLUDE_NONE")
+
+#Enable more warnings
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+#Add dependencies
 add_subdirectory(vendor/glfw)
-target_link_libraries(${PROJECT_NAME} glfw)
-
-#Add glad
 add_subdirectory(vendor/glad)
-target_link_libraries(${PROJECT_NAME} glad)
-
-#Add imgui
 add_subdirectory(vendor/imgui)
+add_subdirectory(vendor/glm)
+add_subdirectory(vendor/json)
+
+target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} glad)
 target_link_libraries(${PROJECT_NAME} imgui)
-
-#Add glm
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/glm)
-
-#Add nlohmann json
-target_include_directories(${PROJECT_NAME} PUBLIC vendor/json/single_include)
+target_link_libraries(${PROJECT_NAME} glm)
+target_link_libraries(${PROJECT_NAME} json)
 
 #Directory structure for IDEs like Visual Studio
 source_group(src REGULAR_EXPRESSION "src/*")

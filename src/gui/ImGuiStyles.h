@@ -3,7 +3,7 @@
 #include "imgui.h"
 
 namespace ImGuiStyles{
-    
+
     void OverShiftedDarkMode() {
         //Based on the dark mode color theme posted by OverShifted:
         //https://github.com/ocornut/imgui/issues/707#issuecomment-678611331
@@ -11,7 +11,7 @@ namespace ImGuiStyles{
         const ImVec4 white = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 
         const ImVec4 light_grey_lighter = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-        const ImVec4 light_grey         = ImVec4(0.77f, 0.77f, 0.77f, 1.00f);
+        //const ImVec4 light_grey         = ImVec4(0.77f, 0.77f, 0.77f, 1.00f);
         const ImVec4 light_grey_darker  = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
 
         const ImVec4 mid_grey_lighter   = ImVec4(0.50f, 0.50, 0.50f, 1.00f);
@@ -95,7 +95,7 @@ namespace ImGuiStyles{
         style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
         style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
 
-        
+
         style.GrabRounding      = 1.0f;
         style.FrameRounding     = 1.0f;
         style.WindowRounding    = 1.0f;

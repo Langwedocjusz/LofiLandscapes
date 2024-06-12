@@ -6,13 +6,13 @@
 
 #include <variant>
 
-typedef std::variant<int, float, glm::vec3> InstanceData;
+typedef std::variant<int, float, glm::vec3, size_t> InstanceData;
 
 class EditorTask {
 public:
 
     virtual void OnDispatch(Shader& shader, const InstanceData& data) = 0;
-    virtual void OnImGui(InstanceData& data, bool& state, const std::string& suffix) {}
+    virtual void OnImGui(InstanceData& /*data*/, bool& /*state*/, const std::string& /*suffix*/) {}
     virtual void OnSerialize(nlohmann::ordered_json& output, InstanceData data) = 0;
 
     virtual void ProvideDefaultData(std::vector<InstanceData>& data) = 0;

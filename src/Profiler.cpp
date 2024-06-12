@@ -254,8 +254,8 @@ void Profiler::OnImGui(bool& open)
 
 
 ProfilerCPUEvent::ProfilerCPUEvent(const std::string& name)
-	: m_Start(std::chrono::high_resolution_clock::now())
-	, m_ID(Profiler::GetCPUEventID(name))
+	: m_ID(Profiler::GetCPUEventID(name))
+	, m_Start(std::chrono::high_resolution_clock::now())
 {
 
 }

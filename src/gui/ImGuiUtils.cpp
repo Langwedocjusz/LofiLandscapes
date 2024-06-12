@@ -23,7 +23,7 @@ float GetLastItemRectWidth()
 	return std::abs(rmax.x - rmin.x);
 }
 
-void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string>& options, int& selected_id) 
+void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string>& options, size_t& selected_id)
 {
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -33,7 +33,7 @@ void ImGuiUtils::Combo(const std::string& label, const std::vector<std::string>&
 
 	if (ImGui::BeginCombo(label.c_str(), options[selected_id].c_str()))
 	{
-		for (int n = 0; n < options.size(); n++)
+		for (size_t n = 0; n < options.size(); n++)
 		{
 			bool is_selected = (selected_id == n);
 
@@ -77,7 +77,6 @@ void ImGuiUtils::BeginGroupPanel(const char* name, const ImVec2& size)
 {
 	ImGui::BeginGroup();
 
-	auto cursorPos = ImGui::GetCursorScreenPos();
 	auto itemSpacing = ImGui::GetStyle().ItemSpacing;
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
@@ -255,7 +254,7 @@ void ImGuiUtils::ColColorEdit3(const std::string& label, glm::vec3* value, const
 	ColumnPostfix();
 }
 
-void ImGuiUtils::ColCombo(const std::string& label, const std::vector<std::string>& options, int& selected_id, const std::string& suffix)
+void ImGuiUtils::ColCombo(const std::string& label, const std::vector<std::string>& options, size_t& selected_id, const std::string& suffix)
 {
 	ColumnPrefix(label);
 	Combo(("##" + label + suffix).c_str(), options, selected_id);

@@ -39,13 +39,22 @@ private:
     //Settings
     glm::vec3 m_ClearColor{ 0.0f, 0.0f, 0.0f };
 
-    float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.200f;
+    float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
 
     float m_TilingFactor = 128.0f, m_NormalStrength = 0.333f;
 
     bool m_Shadows = true;
-    bool m_Materials = true, m_FixTiling = false;
+    bool m_Materials = true, m_FixTiling = true;
     bool m_Fog = true;
+
+    //External handles
+    ResourceManager& m_ResourceManager;
+
+    const PerspectiveCamera& m_Camera;
+    const MapGenerator& m_Map;
+    const MaterialGenerator& m_Material;
+    const MaterialMapGenerator& m_MaterialMap;
+    const SkyRenderer& m_Sky;
 
     //Private resources
     bool m_UpdateAll = true;
@@ -59,13 +68,4 @@ private:
     static constexpr uint32_t m_UBOBinding = 2;
 
     Clipmap m_Clipmap;
-
-    //External handles
-    const PerspectiveCamera& m_Camera;
-    const MapGenerator& m_Map;
-    const MaterialGenerator& m_Material;
-    const MaterialMapGenerator& m_MaterialMap;
-    const SkyRenderer& m_Sky;
-
-    ResourceManager& m_ResourceManager;
 };
