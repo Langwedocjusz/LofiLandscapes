@@ -220,7 +220,7 @@ static bool OnImGuiImpl(std::unordered_map<std::string, Procedure>& procedures,
         if (uncolapsed)
         {
             ImGui::Columns(2, "###col");
-            ImGui::PushID(i);
+            ImGui::PushID(static_cast<int>(i));
 
             res |= procedures.at(instance.Name).OnImGui(data, id);
 
@@ -316,14 +316,14 @@ TextureArrayEditor::TextureArrayEditor(ResourceManager& manager, const std::stri
         m_InstanceLists.push_back(std::vector<ProcedureInstance>());
 }
 
-void TextureArrayEditor::AddProcedureInstance(int layer, const std::string& name)
+void TextureArrayEditor::AddProcedureInstance(size_t layer, const std::string& name)
 {
     auto& instances = m_InstanceLists[layer];
 
     AddProcedureInstanceImpl(m_Procedures, instances, name);
 }
 
-void TextureArrayEditor::AddProcedureInstance(int layer, const std::string& name, nlohmann::ordered_json& input)
+void TextureArrayEditor::AddProcedureInstance(size_t layer, const std::string& name, nlohmann::ordered_json& input)
 {
     auto& instances = m_InstanceLists[layer];
 

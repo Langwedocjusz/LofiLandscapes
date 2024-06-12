@@ -312,7 +312,7 @@ void ResourceManager::UpdatePreview()
 		case PreviewType::Cubemap:
 		{
 			m_CubePrevShader.Bind();
-			m_CubePrevShader.setUniform1i("uSide", m_PreviewSide);
+			m_CubePrevShader.setUniform1i("uSide", static_cast<int>(m_PreviewSide));
 			m_CubePrevShader.setUniform2f("uRange", m_PreviewRange.x, m_PreviewRange.y);
 			m_CubePrevShader.setUniform4f("uChannelFlags", channel_flags);
 

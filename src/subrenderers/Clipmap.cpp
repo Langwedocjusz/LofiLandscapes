@@ -82,8 +82,8 @@ static void GenerateGrid(std::vector<ClipmapVertex>& verts,
     //Setup draw command data
     drawable.IndexCount = idx_count;
     drawable.InstanceCount = 1;
-    drawable.BaseVertex = verts.size();
-    drawable.FirstIndex = elements.size();
+    drawable.BaseVertex = static_cast<int>(verts.size());
+    drawable.FirstIndex = static_cast<uint32_t>(elements.size());
     drawable.BaseInstance = 0;
     drawable.VertexCount = vert_count;
 
@@ -189,8 +189,8 @@ static void GenerateStrip(std::vector<ClipmapVertex>& verts,
     if (first_call)
     {
         drawable.InstanceCount = 1;
-        drawable.BaseVertex = verts.size();
-        drawable.FirstIndex = elements.size();
+        drawable.BaseVertex = static_cast<int>(verts.size());
+        drawable.FirstIndex = static_cast<uint32_t>(elements.size());
         drawable.BaseInstance = 0;
     }
 
@@ -327,13 +327,14 @@ void Clipmap::Init(uint32_t subdivisions, uint32_t levels)
     auto getGridSize = [this](uint32_t lvl){
         //We are treating zeroth level as 2x2 grid instead of 4x4
         //which slightly complicates the computation of grid_size:
-        const float scale = (lvl == 0) ? 2.0f : std::pow(2.0f, lvl);
+        const float scale = (lvl == 0) ? 2.0f : static_cast<float>(std::pow(2.0f, lvl));
 
         return scale * m_BaseGridSize;
     };
 
-    auto getQuadSize = [this](uint32_t lvl){
-        return std::pow(2, lvl) * m_BaseQuadSize;
+    auto getQuadSize = [this](uint32_t lvl) -> float
+    {
+        return static_cast<float>(std::pow(2, lvl)) * m_BaseQuadSize;
     };
 
     //Currently the ordering here is not critical, but we maintain
@@ -544,7 +545,7 @@ uint32_t Clipmap::MaxGridIDUpTo(uint32_t level)
 
 bool Clipmap::LevelShouldUpdate(uint32_t level, glm::vec2 curr, glm::vec2 prev) const
 {
-    const float scale = std::pow(2, level) * m_BaseQuadSize;
+    const float scale = static_cast<float>(std::pow(2, level)) * m_BaseQuadSize;
 
     glm::vec2 p_offset = prev - glm::mod(prev, scale);
     glm::vec2 c_offset = curr - glm::mod(curr, scale);
@@ -651,7 +652,7 @@ void Clipmap::ImGuiDebugCulling(const Camera& cam, float scale_y, bool& open)
 	const glm::vec2 draw_start = ImToGlm(ImGui::GetCursorScreenPos());
 	const glm::vec2 draw_size  = ImToGlm(ImGui::GetContentRegionAvail());
 
-    const float clipmap_size = m_BaseGridSize * std::pow(2, max_lvl + 1);
+    const float clipmap_size = m_BaseGridSize * static_cast<float>(std::pow(2, max_lvl + 1));
 
     auto WorldToWindow = [&](glm::vec3 pos){
         const glm::vec2 pos2{pos.x, pos.z};

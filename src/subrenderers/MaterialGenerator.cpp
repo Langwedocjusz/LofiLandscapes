@@ -260,9 +260,9 @@ void MaterialGenerator::OnImGui(bool& open)
     float tmp_str = m_AOStrength, tmp_spr = m_AOSpread, tmp_c = m_AOContrast;
 
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColSliderFloat("AO Strength", &tmp_str, 0.01, 1.0);
-    ImGuiUtils::ColSliderFloat("AO Spread"  , &tmp_spr, 1.00, 10.0);
-    ImGuiUtils::ColSliderFloat("AO Contrast", &tmp_c,   0.10, 5.0);
+    ImGuiUtils::ColSliderFloat("AO Strength", &tmp_str, 0.01f, 1.0f);
+    ImGuiUtils::ColSliderFloat("AO Spread"  , &tmp_spr, 1.00f, 10.0f);
+    ImGuiUtils::ColSliderFloat("AO Contrast", &tmp_c,   0.10f, 5.0f);
     ImGui::Columns(1, "###col");
 
     if (tmp_str != m_AOStrength || tmp_spr != m_AOSpread || tmp_c != m_AOContrast)

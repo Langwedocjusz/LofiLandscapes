@@ -46,14 +46,15 @@ endif()
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/imgui)
-add_subdirectory(vendor/glm)
 add_subdirectory(vendor/json)
 
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} glad)
 target_link_libraries(${PROJECT_NAME} imgui)
-target_link_libraries(${PROJECT_NAME} glm)
 target_link_libraries(${PROJECT_NAME} json)
+
+#Glm currently added as include directory, since their cmake doesn't suppress warnings
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE vendor/glm)
 
 #Directory structure for IDEs like Visual Studio
 source_group(src REGULAR_EXPRESSION "src/*")

@@ -96,7 +96,7 @@ void Profiler::NextFrame()
 			size_t time;
 			glGetQueryObjectui64v(query_id, GL_QUERY_RESULT, &time);
 
-			float time_ms = float(time) * 1e-6;
+			float time_ms = float(time) * 1e-6f;
 
 			last_frame.Timings.push_back(time_ms);
 		}
@@ -265,7 +265,7 @@ ProfilerCPUEvent::~ProfilerCPUEvent()
 	using namespace std::chrono;
 
 	const auto current = high_resolution_clock::now();
-	const float time_ms = duration_cast<nanoseconds>(current - m_Start).count() * 1e-6;
+	const float time_ms = duration_cast<nanoseconds>(current - m_Start).count() * 1e-6f;
 
 	Profiler::SubmitCpuEvent(m_ID, time_ms);
 }

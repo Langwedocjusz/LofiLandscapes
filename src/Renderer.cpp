@@ -1,3 +1,6 @@
+//Temporary, to use sscanf with MSVC:
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "Renderer.h"
 #include "Keycodes.h"
 #include "Profiler.h"
@@ -15,7 +18,7 @@
 Renderer::Renderer(uint32_t width, uint32_t height)
     : m_WindowWidth(width), m_WindowHeight(height)
     , m_Aspect(float(m_WindowWidth) / float(m_WindowHeight))
-    , m_InvAspect(1.0 / m_Aspect)
+    , m_InvAspect(1.0f / m_Aspect)
     , m_Framebuffer(m_ResourceManager)
     , m_Map(m_ResourceManager)
     , m_Material(m_ResourceManager)
@@ -366,7 +369,7 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     m_InternalHeight = static_cast<uint32_t>(m_InternalResScale * static_cast<float>(height));
 
     m_Aspect = float(m_WindowWidth) / float(m_WindowHeight);
-    m_InvAspect = 1.0 / m_Aspect;
+    m_InvAspect = 1.0f / m_Aspect;
 
     m_ResizeFramebuffer = true;
 }

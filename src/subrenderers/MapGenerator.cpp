@@ -336,16 +336,16 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows)
     ImGuiUtils::BeginGroupPanel("Shadowmap settings:");
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderInt("Min level", &temp.MinLevel, 0, 12);
-    ImGuiUtils::ColSliderFloat("Nudge fac", &temp.NudgeFac, 1.005, 1.1);
+    ImGuiUtils::ColSliderFloat("Nudge fac", &temp.NudgeFac, 1.005f, 1.1f);
     ImGuiUtils::ColCheckbox("Soft Shadows", &temp.Soft);
-    ImGuiUtils::ColSliderFloat("Sharpness", &temp.Sharpness, 0.1, 3.0);
+    ImGuiUtils::ColSliderFloat("Sharpness", &temp.Sharpness, 0.1f, 3.0f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
     ImGuiUtils::BeginGroupPanel("AO settings:");
     ImGui::Columns(2, "###col");
     ImGuiUtils::ColSliderInt("AO Samples", &temp2.Samples, 1, 64);
-    ImGuiUtils::ColSliderFloat("AO Radius", &temp2.R, 0.0, 0.1);
+    ImGuiUtils::ColSliderFloat("AO Radius", &temp2.R, 0.0f, 0.1f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
@@ -359,7 +359,7 @@ void MapGenerator::ImGuiShadowmap(bool &open, bool update_shadows)
 
     if (temp != m_ShadowSettings)
     {
-        temp.StartCell = pow(2, temp.MinLevel);
+        temp.StartCell = static_cast<int>(std::pow(2, temp.MinLevel));
 
         m_ShadowSettings = temp;
 

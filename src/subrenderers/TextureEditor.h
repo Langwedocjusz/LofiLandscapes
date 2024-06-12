@@ -96,7 +96,7 @@ class TextureArrayEditor : public EditorBase {
 public:
     TextureArrayEditor(ResourceManager& manager, const std::string& name, int n);
 
-    void AddProcedureInstance(int layer, const std::string& name);
+    void AddProcedureInstance(size_t layer, const std::string& name);
 
     void OnDispatch(int layer, int res);
     bool OnImGui(int layer);
@@ -105,7 +105,7 @@ public:
 
     std::string getName() const { return m_Name; }
 private:
-    void AddProcedureInstance(int layer, const std::string& name, nlohmann::ordered_json& input);
+    void AddProcedureInstance(size_t layer, const std::string& name, nlohmann::ordered_json& input);
 
     std::vector<std::vector<ProcedureInstance>> m_InstanceLists;
 

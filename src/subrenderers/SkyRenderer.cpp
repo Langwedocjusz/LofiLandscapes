@@ -459,8 +459,8 @@ void SkyRenderer::OnImGui(bool& open)
 
     ImGuiUtils::BeginGroupPanel("Sun position");
     ImGui::Columns(2, "###col");
-    ImGuiUtils::ColSliderFloat("Phi", &phi, 0.0, 6.28);
-    ImGuiUtils::ColSliderFloat("Theta", &theta, 0.0, 0.5 * 3.14);
+    ImGuiUtils::ColSliderFloat("Phi", &phi, 0.0f, 6.28f);
+    ImGuiUtils::ColSliderFloat("Theta", &theta, 0.0f, 0.5f * 3.14f);
     ImGui::Columns(1, "###col");
     ImGuiUtils::EndGroupPanel();
 
@@ -622,7 +622,7 @@ void SkyRenderer::CalculateSunTransmittance()
     //Integrate transmittance
     const float dt = atm_dist / float(num_steps);
 
-    float t = 0.3 * dt; //starting offset
+    float t = 0.3f * dt; //starting offset
 
     glm::vec3 res(1.0f);
 

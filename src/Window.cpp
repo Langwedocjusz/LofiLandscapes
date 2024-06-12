@@ -98,7 +98,7 @@ Window::Window(const std::string& title, uint32_t width, uint32_t height)
         {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-            MouseMovedEvent event(xPos, yPos);
+            MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
             data.EventCallback(event);
         }
     );

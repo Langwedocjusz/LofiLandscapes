@@ -76,7 +76,10 @@ void Application::EndFrame()
     ProfilerCPUEvent we("Application::EndFrame");
 
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(m_Window.getWidth(), m_Window.getHeight());
+    io.DisplaySize = ImVec2(
+        static_cast<float>(m_Window.getWidth()), 
+        static_cast<float>(m_Window.getHeight())
+    );
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -136,9 +139,16 @@ void Application::StartMenu()
 
         //To do: create custom slider that takes in v, but displayes 2^v
         //For now just round to closest power of 2 manually
-        m_StartSettings.HeightRes = std::exp2(std::round(std::log2(m_StartSettings.HeightRes)));
-        m_StartSettings.ShadowRes = std::exp2(std::round(std::log2(m_StartSettings.ShadowRes)));
-        m_StartSettings.MaterialRes = std::exp2(std::round(std::log2(m_StartSettings.MaterialRes)));
+        auto RoundToPowerOf2 = [](int value) -> int
+        {
+            return static_cast<int>(
+                std::exp2(std::round(std::log2(value)))
+            );
+        };
+
+        m_StartSettings.HeightRes   = RoundToPowerOf2(m_StartSettings.HeightRes);
+        m_StartSettings.ShadowRes   = RoundToPowerOf2(m_StartSettings.ShadowRes);
+        m_StartSettings.MaterialRes = RoundToPowerOf2(m_StartSettings.MaterialRes);
 
         ImGui::Columns(1, "###col");
 

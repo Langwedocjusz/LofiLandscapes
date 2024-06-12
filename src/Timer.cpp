@@ -10,7 +10,7 @@ float Timer::getTime() {
     auto current = std::chrono::high_resolution_clock::now();
 
     return std::chrono::duration_cast<std::chrono::nanoseconds>
-        (current - m_Start).count() * 1e-9;
+        (current - m_Start).count() * 1e-9f;
 }
 
 void Timer::Update() {
