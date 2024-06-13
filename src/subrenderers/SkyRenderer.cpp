@@ -577,7 +577,7 @@ void SkyRenderer::CalculateSunTransmittance()
         return -b - glm::sqrt(discr);
     };
 
-    auto getScatteringValues = [](glm::vec3 pos, glm::vec3& rayleigh_s, float& mie_s, glm::vec3& extinction)
+    auto getScatteringValues = [=](glm::vec3 pos, glm::vec3& rayleigh_s, float& mie_s, glm::vec3& extinction)
     {
         //Atmosphere params
         constexpr glm::vec3 base_rayleigh_s{ 5.802f, 13.558f, 33.1f };
