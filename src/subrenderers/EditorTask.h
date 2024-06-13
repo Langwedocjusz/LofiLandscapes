@@ -10,6 +10,7 @@ typedef std::variant<int, float, glm::vec3, size_t> InstanceData;
 
 class EditorTask {
 public:
+    virtual ~EditorTask() = 0;
 
     virtual void OnDispatch(Shader& shader, const InstanceData& data) = 0;
     virtual void OnImGui(InstanceData& /*data*/, bool& /*state*/, const std::string& /*suffix*/) {}

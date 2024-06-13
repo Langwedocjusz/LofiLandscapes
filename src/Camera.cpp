@@ -258,10 +258,10 @@ void FPCamera::OnMouseMoved(float x, float y, uint32_t width, uint32_t height)
 
     const float max_offset = 0.1f;
 
-    if (abs(xoffset) > max_offset)
+    if (std::abs(xoffset) > max_offset)
         xoffset = (xoffset > 0.0f) ? max_offset : -max_offset;
 
-    if (abs(yoffset) > max_offset)
+    if (std::abs(yoffset) > max_offset)
         yoffset = (yoffset > 0.0f) ? max_offset : -max_offset;
 
     ProcessMouse(xoffset, yoffset);

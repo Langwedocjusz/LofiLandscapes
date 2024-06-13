@@ -32,7 +32,7 @@ private:
 
 	//===Temporary - those values are doubled in TerrainRenderer=====================
 
-	float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f, m_RefStr = 0.100f;
+	float m_SunStr = 2.0f, m_SkyDiff = 0.125f, m_SkySpec = 0.175f;
 
 	bool m_Shadows = true;
 	//===============================================================================
@@ -77,7 +77,7 @@ private:
 
 	const PerspectiveCamera& m_Camera;
 	const MapGenerator& m_Map;
-	const MaterialGenerator& m_Material;
+	[[maybe_unused]] const MaterialGenerator& m_Material;
 	const SkyRenderer& m_Sky;
 
 	//Private resources

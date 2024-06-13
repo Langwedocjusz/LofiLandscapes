@@ -2,6 +2,11 @@
 
 #include "ImGuiUtils.h"
 
+EditorTask::~EditorTask()
+{
+
+}
+
 ConstIntTask::ConstIntTask(const std::string& uniform_name, int val)
     : UniformName(uniform_name), Value(val) {}
 

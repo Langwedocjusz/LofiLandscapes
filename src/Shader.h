@@ -10,6 +10,8 @@
 
 class Shader{
 public:
+    virtual ~Shader() = 0;
+
     void Bind();
     void Reload();
 

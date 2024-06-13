@@ -86,8 +86,6 @@ private:
 
     std::string m_Name;
 
-    bool m_PopupOpen = true;
-
     uint32_t m_InstanceID;
     static uint32_t s_InstanceCount;
 };
@@ -110,8 +108,6 @@ private:
     std::vector<std::vector<ProcedureInstance>> m_InstanceLists;
 
     std::string m_Name;
-
-    bool m_PopupOpen = true;
 
     uint32_t m_InstanceID;
     static uint32_t s_InstanceCount;

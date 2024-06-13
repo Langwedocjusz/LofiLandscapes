@@ -577,7 +577,7 @@ void SkyRenderer::CalculateSunTransmittance()
         return -b - glm::sqrt(discr);
     };
 
-    auto getScatteringValues = [ground_rad](glm::vec3 pos, glm::vec3& rayleigh_s, float& mie_s, glm::vec3& extinction)
+    auto getScatteringValues = [](glm::vec3 pos, glm::vec3& rayleigh_s, float& mie_s, glm::vec3& extinction)
     {
         //Atmosphere params
         constexpr glm::vec3 base_rayleigh_s{ 5.802f, 13.558f, 33.1f };
@@ -603,7 +603,7 @@ void SkyRenderer::CalculateSunTransmittance()
         float mie_a = base_mie_a * mie_dens;
 
         //Ozone - uniform, triangle distribution
-        glm::vec3 ozone_a = base_ozone_a * glm::max(0.0f, 1.0f - abs(altitude - 25.0f) / 15.0f);
+        glm::vec3 ozone_a = base_ozone_a * glm::max(0.0f, 1.0f - std::abs(altitude - 25.0f) / 15.0f);
 
         //Extinction is a sum of absorbionts and scatterings
         extinction = rayleigh_s + rayleigh_a + mie_s + mie_a + ozone_a;
